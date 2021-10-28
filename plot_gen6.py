@@ -1,6 +1,6 @@
 from os import listdir
 
-import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 
@@ -211,88 +211,6 @@ def generate_hex_bg(size: tuple, par_a: float = -0.55, par_c: float = 1.08):
     bg = bg_duplicator(bg_element, size[0], size[1])
     parabola_gradient(bg, a=par_a, c=par_c)
     return bg
-
-
-def statistic_pie(data_list: list, color_tuple: tuple, legend: tuple, size: tuple, l_col: int = 1) -> plt.figure:
-    fig = plt.figure(figsize=size)
-    __data_list = []
-    __color_list = []
-
-    if data_list[0]:
-        wig = dict(width=0.4, edgecolor='w', lw=2)
-        __data_list.append(data_list[0])
-        __color_list.append(color_tuple[0])
-        for index in range(1, len(data_list)):
-            if data_list[index]:
-                __data_list.append(data_list[index])
-                __color_list.append(color_tuple[index])
-        if len(__data_list) == 1:
-            return None
-        plt.pie(__data_list, radius=1, colors=__color_list, autopct='%.1f%%', pctdistance=0.8,
-                wedgeprops=wig, textprops={'fontsize': 15}, startangle=0, counterclock=False)
-        plt.pie(__data_list[1:], radius=0.6, colors=__color_list[1:],
-                wedgeprops=wig, textprops={'fontsize': 15}, startangle=0, counterclock=False)
-    else:
-        for index in range(len(data_list)):
-            if data_list[index]:
-                __data_list.append(data_list[index])
-                __color_list.append(color_tuple[index])
-        wig = dict(width=0.6, edgecolor='w', lw=2)
-        plt.pie(__data_list, radius=1, colors=__color_list, autopct='%.1f%%', pctdistance=0.75,
-                wedgeprops=wig, textprops={'fontsize': 14}, startangle=0, counterclock=False)
-
-    patch = plt.pie(np.ones(len(color_tuple), dtype=int), radius=0, colors=color_tuple)[0]
-    plt.legend(patch, legend, fontsize=15, loc=(0, -0.5), ncol=l_col)
-
-    return fig
-
-
-def statistic_histogram(data_list: list, size: tuple, legend: list or tuple, color: tuple):
-    fig, ax = plt.subplots(figsize=size)
-    sns.histplot(data_list, palette=color, binwidth=2, legend=False, ax=ax, alpha=1)
-
-    ax.spines['bottom'].set_color('w')
-    ax.spines['bottom'].set_linewidth(2)
-    ax.spines['top'].set_color('w')
-    ax.spines['top'].set_linewidth(2)
-    ax.spines['left'].set_color('w')
-    ax.spines['left'].set_linewidth(2)
-    ax.spines['right'].set_color('w')
-    ax.spines['right'].set_linewidth(2)
-    ax.tick_params(axis='x', colors='w', width='2')
-    ax.tick_params(axis='y', colors='w', width='2')
-    plt.xlim((900, 1000))
-    plt.xticks(np.arange(900, 1001, 10), fontsize=13)
-    plt.yticks(fontsize=13)
-    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
-    plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.xlabel('')
-    plt.ylabel('')
-    plt.legend(legend, fontsize=14)
-
-    return fig
-
-
-def statistic_joint(data_frame: pd.DataFrame, size: int, low_score: int, high_vf: float, low_vf: float):
-    sns.set_style(rc={'xtick.color': 'w', 'ytick.color': 'w', 'axes.labelcolor': 'w'})
-    sns.set_context("talk")
-    x_lim_low = low_score // 100000 * 100000
-    sns.jointplot(data=data_frame, hue='lv', x='score', y='vf', height=size, xlim=(x_lim_low, 10000000),
-                  ylim=(low_vf - 0.2, high_vf + 0.2), alpha=0.9) \
-        .set_axis_labels('SCORE', 'VOLFORCE')
-
-
-
-def statistic_violin(data_frame: pd.DataFrame, size: tuple):
-    fig, ax = plt.subplots(figsize=size)
-    sns.set_context("notebook")
-    sns.violinplot(data=data_frame, x='lv', y='score', inner=None, color='.8')
-    sns.stripplot(data=data_frame, x='lv', y='score')
-
-    plt.ylabel('SCORE')
-    plt.xlabel('LEVEL')
-    plt.yticks([8700000, 9000000, 9300000, 9500000, 9700000, 9800000, 9900000, 10000000],
-               [870, 900, 930, 950, 970, 980, 990, 1000])
 
 
 def plot_single(record: list, profile: list):
@@ -768,7 +686,7 @@ def plot_summary_legacy(level_summary: np.array, profile: list):
     print('Plot successfully.')
 
 
-def plot_summary(music_map: list, profile: list, base_lv: int):
+def plot_summary_legacy_of_lunatic_kingdom(music_map: list, profile: list, base_lv: int):
     """
         Plot function which analyzes user's record.
 
@@ -788,6 +706,83 @@ def plot_summary(music_map: list, profile: list, base_lv: int):
             cv2.resize(__num_f, dsize=None, fx=refactor, fy=refactor, interpolation=cv2.INTER_AREA)
             cv2.resize(__num_l, dsize=None, fx=refactor, fy=refactor, interpolation=cv2.INTER_AREA)
         return __num_f, __num_l
+
+    def statistic_pie(data_list: list, color_tuple: tuple, legend: tuple, size: tuple, l_col: int = 1) -> plt.figure:
+        fig = plt.figure(figsize=size)
+        __data_list = []
+        __color_list = []
+
+        if data_list[0]:
+            wig = dict(width=0.4, edgecolor='w', lw=2)
+            __data_list.append(data_list[0])
+            __color_list.append(color_tuple[0])
+            for index in range(1, len(data_list)):
+                if data_list[index]:
+                    __data_list.append(data_list[index])
+                    __color_list.append(color_tuple[index])
+            if len(__data_list) == 1:
+                return None
+            plt.pie(__data_list, radius=1, colors=__color_list, autopct='%.1f%%', pctdistance=0.8,
+                    wedgeprops=wig, textprops={'fontsize': 15}, startangle=0, counterclock=False)
+            plt.pie(__data_list[1:], radius=0.6, colors=__color_list[1:],
+                    wedgeprops=wig, textprops={'fontsize': 15}, startangle=0, counterclock=False)
+        else:
+            for index in range(len(data_list)):
+                if data_list[index]:
+                    __data_list.append(data_list[index])
+                    __color_list.append(color_tuple[index])
+            wig = dict(width=0.6, edgecolor='w', lw=2)
+            plt.pie(__data_list, radius=1, colors=__color_list, autopct='%.1f%%', pctdistance=0.75,
+                    wedgeprops=wig, textprops={'fontsize': 14}, startangle=0, counterclock=False)
+
+        patch = plt.pie(np.ones(len(color_tuple), dtype=int), radius=0, colors=color_tuple)[0]
+        plt.legend(patch, legend, fontsize=15, loc=(0, -0.5), ncol=l_col)
+
+        return fig
+
+    def statistic_histogram(data_list: list, size: tuple, legend: list or tuple, color: tuple):
+        fig, ax = plt.subplots(figsize=size)
+        sns.histplot(data_list, palette=color, binwidth=2, legend=False, ax=ax, alpha=1)
+
+        ax.spines['bottom'].set_color('w')
+        ax.spines['bottom'].set_linewidth(2)
+        ax.spines['top'].set_color('w')
+        ax.spines['top'].set_linewidth(2)
+        ax.spines['left'].set_color('w')
+        ax.spines['left'].set_linewidth(2)
+        ax.spines['right'].set_color('w')
+        ax.spines['right'].set_linewidth(2)
+        ax.tick_params(axis='x', colors='w', width='2')
+        ax.tick_params(axis='y', colors='w', width='2')
+        plt.xlim((900, 1000))
+        plt.xticks(np.arange(900, 1001, 10), fontsize=13)
+        plt.yticks(fontsize=13)
+        plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+        plt.gca().yaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlabel('')
+        plt.ylabel('')
+        plt.legend(legend, fontsize=14)
+
+        return fig
+
+    def statistic_joint(data_frame: pd.DataFrame, size: int, low_score: int, high_vf: float, low_vf: float):
+        sns.set_style(rc={'xtick.color': 'w', 'ytick.color': 'w', 'axes.labelcolor': 'w'})
+        sns.set_context("talk")
+        x_lim_low = low_score // 100000 * 100000
+        sns.jointplot(data=data_frame, hue='lv', x='score', y='vf', height=size, xlim=(x_lim_low, 10000000),
+                      ylim=(low_vf - 0.2, high_vf + 0.2), alpha=0.9) \
+            .set_axis_labels('SCORE', 'VOLFORCE')
+
+    def statistic_violin(data_frame: pd.DataFrame, size: tuple):
+        fig, ax = plt.subplots(figsize=size)
+        sns.set_context("notebook")
+        sns.violinplot(data=data_frame, x='lv', y='score', inner=None, color='.8')
+        sns.stripplot(data=data_frame, x='lv', y='score')
+
+        plt.ylabel('SCORE')
+        plt.xlabel('LEVEL')
+        plt.yticks([8700000, 9000000, 9300000, 9500000, 9700000, 9800000, 9900000, 10000000],
+                   [870, 900, 930, 950, 970, 980, 990, 1000])
 
     card_num, user_name, aka_name, ap_card, skill = profile
     music_map_sort = music_map.copy()
@@ -1129,3 +1124,178 @@ def plot_summary(music_map: list, profile: list, base_lv: int):
     # It seems an image over 10k px is too big to Tencent
     # CNM, Tencent
     cv2.imwrite('%s/%s_summary.jpg' % (output, user_name), bg, params=[cv2.IMWRITE_JPEG_QUALITY, 93])
+
+
+def plot_summary(music_map: list, profile: list, lv_base: int):
+    """
+         Plot function which analyzes user's record.
+         :param music_map: a list of all available music records, each line of music_map should be like:
+                           [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf]
+                           all of them are strings, except vf is a float
+         :param profile:   a list of [card_num, user_name, aka_name, ap_card, skill], all strings
+         :param lv_base:   lowest level to analysis
+    """
+
+    def load_num(lv_int: int, refactor: float = False) -> tuple:
+        lv_str = str(lv_int).zfill(2)
+        __num_f = cv2.imread(img_archive + 'number/num_score_%s.png' % lv_str[0], cv2.IMREAD_UNCHANGED)
+        __num_l = cv2.imread(img_archive + 'number/num_score_%s.png' % lv_str[1], cv2.IMREAD_UNCHANGED)
+        if refactor:
+            cv2.resize(__num_f, dsize=None, fx=refactor, fy=refactor, interpolation=cv2.INTER_AREA)
+            cv2.resize(__num_l, dsize=None, fx=refactor, fy=refactor, interpolation=cv2.INTER_AREA)
+        return __num_f, __num_l
+
+    """
+    Read and initialize data
+    """
+    card_num, user_name, aka_name, ap_card, skill = profile  # get profile data
+    music_map_sort = music_map.copy()
+    music_map_sort.sort(key=lambda x: x[10], reverse=True)  # make a sorted map duplicate
+
+    vol_force = get_overall_vf(music_map_sort[0:50])  # Get overall volforce
+    log_write('Get overall volforce complete', file_name)
+
+    if music_map_sort[0][0]:  # validity check for floor and ceil
+        ceil_num = music_map_sort[0][-1] / 2
+    else:
+        ceil_num = 0.0
+    if music_map_sort[49][0]:
+        floor_num = music_map_sort[49][-1] / 2
+    else:
+        floor_num = 0.0
+
+    level_summary = np.zeros((21, 18), dtype=int)  # Get default level summary
+    clear_index = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+    grade_index = {0: 6, 1: 7, 2: 8, 3: 9, 4: 10, 5: 11, 6: 12, 7: 13, 8: 14, 9: 15, 10: 16}
+    # 0-5  |  [NoRecord, TrackCrash, NormalClear, HardClear, UltimateChain, PerfectUltimateChain]
+    #         [NO, CR, NC, HC, UC, PUC]
+    # 6-16 |  [NO, D, C, B, A, A+, AA, AA+, AAA, AAA+, S]
+    # 17   |  [sum]
+    for single_music in level_table:  # Calculating the sum of eachlevel
+        if not single_music[0]:
+            continue
+        nov, adv, exh, inf, mxm = int(single_music[7]), int(single_music[10]), int(single_music[13]), \
+                                  int(single_music[16]), int(single_music[19])
+        level_summary[nov][17] += 1
+        level_summary[adv][17] += 1
+        level_summary[exh][17] += 1
+        level_summary[inf][17] += 1
+        level_summary[mxm][17] += 1
+
+    # Due to the "Automation Paradise", there are 2 ghost song in music_db.xml which should be eliminated.
+    level_summary[7][17] -= 2
+    level_summary[13][17] -= 2
+    level_summary[16][17] -= 2
+    level_summary[18][17] -= 2
+
+    # Generate data frame for histogram, violin plot
+    score_list = []  # Each line should be [score: int, grade: int, lv: str, is_hist: bool, is_vio: bool]
+    for record in music_map:
+        if not record[0]:
+            continue
+        score, clear, grade, lv = int(record[3]), int(record[4]), int(record[5]), int(record[8])
+        level_summary[lv][clear_index[clear]] += 1
+        level_summary[lv][grade_index[grade]] += 1
+        score_list.append([score, grade, str(lv), (score > 9000000), (score > 8000000)])
+    score_df = pd.DataFrame(score_list, columns=['score', 'grade', 'lv', 'is_hist', 'is_vio'])
+
+    # Generate data frame for joint plot
+    vf_list, vf_size, low_score = [], 100, 10000000  # Just [score: int, vf: float, lv: str]
+    for record in music_map_sort[:vf_size]:
+        if record[0]:
+            score, lv, vf = int(record[3]), str(record[8]), record[10]
+            vf_list.append((score, vf / 2, lv))
+            low_score = min(low_score, score)
+    high_vf, low_vf = vf_list[0][1], vf_list[-1][1]
+    vf_df = pd.DataFrame(vf_list, columns=['score', 'vf', 'lv'])
+
+    """
+    Generate background and load image ingredients
+    """
+    px_prologue, px_chapters, px_epilogue = 450, 1800, 1500
+    y_px = px_prologue + px_chapters * (21 - lv_base) + px_epilogue
+    y_px = 2250  # FIXME: temp variable
+    bg = generate_hex_bg((y_px, 1080))
+
+    mark_ref, grade_ref = 1.1, 0.7
+    clear_list = load_marks(mark_ref)
+    grade_list = load_grade(grade_ref)
+    grade_bg = cv2.imread(img_archive + 'grade/box_medal.png', cv2.IMREAD_UNCHANGED)
+    cv2.resize(grade_bg, dsize=None, fx=mark_ref, fy=mark_ref, interpolation=cv2.INTER_AREA)
+
+    preface = Anchor(bg, 'preface')  # supreme anchor
+    prologue = Anchor(bg, 'prologue', free=(0, 0), father=preface)
+    chapters = Anchor(bg, 'chapters', free=(0, px_prologue), father=preface)
+    chapters.creat_grid(grid=(0, 20 - lv_base), precession=(0, px_chapters))
+    epilogue = Anchor(bg, 'epilogue', free=(0, y_px - px_epilogue), father=preface)
+
+    """
+    Prologue: Use profile
+    """
+    # Card field contains two images, namely appeal card and skill
+    card_field = Anchor(bg, 'card field', free=(180, 100), father=prologue)
+
+    ap_card_path = get_ap_card(ap_card)
+    card_img = cv2.imread(ap_card_path, cv2.IMREAD_UNCHANGED)
+    card_anc = AnchorImage(bg, 'appeal card', card_img, (0, 0), father=card_field)
+    card_anc.plot()
+
+    skill_img = cv2.imread(img_archive + 'skill/skill_' + skill.zfill(2) + '.png', cv2.IMREAD_UNCHANGED)
+    skill_ratio = card_img.shape[1] / skill_img.shape[1]
+    skill_img = cv2.resize(skill_img, dsize=None, fx=skill_ratio, fy=skill_ratio, interpolation=cv2.INTER_AREA)
+    skill_anc = AnchorImage(bg, 'skill', skill_img, (0, 220), father=card_field)
+    skill_anc.plot()
+
+    name_field = Anchor(bg, 'name field', free=(400, 100), father=prologue)
+
+    name_bar_size = (580, 4)
+    name_bar = simple_rectangle(name_bar_size, color_gray, bg.dtype)
+    name_bar_anc = AnchorImage(bg, 'name bar', name_bar, free=(10, 120), father=name_field)
+    parabola_gradient(name_bar, -0.65, 1.14)
+    name_bar_anc.plot()
+
+    vf_level = get_vf_property(vol_force, is_level=True)
+    force_img = cv2.imread(img_archive + 'vf/em6_' + str(vf_level).zfill(2) + '_i_eab.png', cv2.IMREAD_UNCHANGED)
+    force_img = cv2.resize(force_img, dsize=None, fx=0.35, fy=0.35, interpolation=cv2.INTER_AREA)
+    force_anc = AnchorImage(bg, 'volforce', force_img, free=(10, 120), father=name_field)
+    force_anc.plot()
+
+    """
+    Chapter ?: Summary for each level
+    """
+    # Initialize Level-title box, pilcrow, set of clear mark and set of grade mark
+    cen_box_size = (840, 16)
+    cen_box = simple_rectangle(cen_box_size, color_gray, bg.dtype)
+    parabola_gradient(cen_box, -1.4, 1.6, 'x+')
+    cen_box_anc = AnchorImage(bg, 'title box', cen_box, free=(0, 22))
+
+    pilcrow_size = (16, 16)
+    pilcrow = simple_rectangle(pilcrow_size, color_gray, bg.dtype)
+    pilcrow_anc = AnchorImage(bg, 'pilcrow', pilcrow, free=(0, 10))
+
+    sqrt_3, hex_y = np.sqrt(3), 200  # arrange icons in hex
+    clear_grid = Anchor(bg, 'clear grid', free=(0, 0))
+    clear_grid.creat_grid((1, 5), (int(hex_y * sqrt_3), hex_y))
+    clear_content = [None, None, None, None, None, None]
+    for index in range(6):
+        clear_content[index] = AnchorImage(bg, 'clear img %d' % index, clear_list[index], father=clear_grid)
+        clear_content[index].set_grid((index % 2, index))
+
+    grade_grid = Anchor(bg, 'grade grid', free=(0, 0))
+    grade_grid.creat_grid((1, 5), (int(hex_y * sqrt_3), hex_y))
+    grade_content = [None, None, None, None, None, None]
+    for index in range(6):
+        # Put elephant into fridge
+        grade_bg_temp = grade_bg.copy()
+
+
+        grade_content[index] = AnchorImage(bg, 'grade img %d' % index, grade_list[index], father=grade_grid)
+        grade_content[index].set_grid(((1 - (index % 2)), index))
+
+    # Plot them by level
+    for lv_index in range(21 - lv_base):
+        lv_cur = lv_index + lv_base
+        lv_field = Anchor(bg, 'level field', father=chapters)
+        lv_field.set_grid((0, lv_index))
+
+    cv2.imwrite('%s/%s_summary_temp.png' % (output, user_name), bg, params=[cv2.IMWRITE_PNG_COMPRESSION, 3])

@@ -122,6 +122,8 @@ def parabola_gradient(bg: np.array, a: float, c: float, axis: str = 'x0'):
 
 
 def simple_rectangle(size: tuple, color: tuple, dt: type):
+    x, y = size
+    size = (y, x)
     rect_b, rect_g, rect_r = \
         np.ones(size, dtype=dt) * color[0], np.ones(size, dtype=dt) * color[1], np.ones(size, dtype=dt) * color[2]
     rect_a = np.ones(size, dt) * 255
@@ -215,7 +217,7 @@ def set_spines_color(ax):
 
 
 class Anchor(object):
-    def __init__(self, bg: np.array, name: str, free: tuple = (0, 0)):
+    def __init__(self, bg: np.array, name: str, free: tuple = (0, 0), father: classmethod.__class__ = None):
         self.bg = bg
         self.name = name
         self.free = free
@@ -224,14 +226,16 @@ class Anchor(object):
         self.grid, self.precession = (0, 0), (0, 0)
         self.grid_id = (0, 0)
 
-        self.x, self.y = self.free
+        self.x, self.y = self.free[0], self.free[1]
+        if father is not None:
+            self.set_father(father)
 
     def update_pos(self):
         if not self.father:
             self.x, self.y = self.free
         else:
-            self.x = self.father.x + self.grid[0] * self.father.precession[0] + self.free[0]
-            self.x = self.father.y + self.grid[1] * self.father.precession[1] + self.free[1]
+            self.x = self.father.x + self.grid_id[0] * self.father.precession[0] + self.free[0]
+            self.y = self.father.y + self.grid_id[1] * self.father.precession[1] + self.free[1]
 
     def set_father(self, father: classmethod.__class__):
         self.father = father
@@ -251,20 +255,25 @@ class Anchor(object):
         self.grid_id = grid_id
         self.update_pos()
 
+    def set_absolute(self, absolute: tuple):
+        self.x, self.y = absolute
 
-class ImageAnchor(Anchor):
-    def __init__(self, bg: np.array, name: str, img: np.array, free: tuple = (0, 0)):
-        Anchor.__init__(self, bg, name, free)
+
+class AnchorImage(Anchor):
+    def __init__(self, bg: np.array, name: str, img: np.array,
+                 free: tuple = (0, 0), father: classmethod.__class__ = None):
+        Anchor.__init__(self, bg, name, free, father)
         self.img = img
 
-        self.size_x, self.size_y, self.chn = img.shape
+        self.size_y, self.size_x, self.chn = img.shape
 
     def plot(self, transparency: float = 1.0, is_cv2: bool = True):
         if is_cv2:
             png_superimpose(self.bg, self.img, (self.y, self.x), transparency)
 
 
-def plot_structure(supreme: Anchor):
-    if supreme.father is not None:
-        print('Only supreme anchor can be structured.')
-        return
+class AnchorText(Anchor):
+    def __init__(self, bg: np.array, name: str, text: str,
+                 free: tuple = (0, 0), father: classmethod.__class__ = None):
+        Anchor.__init__(self, bg, name, free, father)
+        self.text = text
