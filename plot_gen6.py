@@ -1,6 +1,7 @@
 from os import listdir
 
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 import pandas as pd
 import seaborn as sns
 
@@ -36,7 +37,8 @@ color_white = (245, 245, 245)
 color_black = (61, 61, 61)
 color_gray = (154, 154, 154)
 color_l_gray = (210, 210, 210)
-text_gold = (246, 222, 128)
+color_gold = (246, 222, 128)
+color_l_blue = (115, 203, 215)
 
 clear_img = {'1': 'crash', '2': 'comp', '3': 'comp_ex', '4': 'uc', '5': 'puc'}
 clear_table = {'1': 'FAILED', '2': 'NC', '3': 'HC', '4': 'UC', '5': 'PUC'}
@@ -642,7 +644,7 @@ def plot_summary_legacy(level_summary: np.array, profile: list):
         for sub_index in range(0, 4):
             mark_all = sum(level_summary[index][sub_index: 4])
             if mark_all == level_summary[index][7]:
-                text_color = text_gold
+                text_color = color_gold
             else:
                 text_color = color_white
             pen.text((x_index, y_index), str(int(level_summary[index][sub_index])), text_color, font=num_font)
@@ -656,7 +658,7 @@ def plot_summary_legacy(level_summary: np.array, profile: list):
         for sub_index in range(4, 7):
             level_all = sum(level_summary[index][sub_index: 7])
             if level_all == level_summary[index][7]:
-                text_color = text_gold
+                text_color = color_gold
             else:
                 text_color = color_white
             pen.text((x_index, y_index), str(int(level_summary[index][sub_index])), text_color, font=num_font)
@@ -1045,7 +1047,7 @@ def plot_summary_legacy_of_lunatic_kingdom(music_map: list, profile: list, base_
             clear_cur += data
             clear_data_small.append('(%d)' % clear_cur)
             if clear_cur == lv_sum:
-                clear_color.append(text_gold)
+                clear_color.append(color_gold)
             else:
                 clear_color.append(color_l_gray)
         clear_color.reverse()
@@ -1079,7 +1081,7 @@ def plot_summary_legacy_of_lunatic_kingdom(music_map: list, profile: list, base_
             grade_cur += data
             grade_data_small.append('(%d)' % grade_cur)
             if grade_cur == lv_sum:
-                grade_color.append(text_gold)
+                grade_color.append(color_gold)
             else:
                 grade_color.append(color_l_gray)
         grade_color.reverse()
@@ -1194,7 +1196,10 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         if not record[0]:
             continue
         score, clear, grade, lv = int(record[3]), int(record[4]), int(record[5]), int(record[8])
-        level_summary[lv][clear_index[clear]] += 1
+        if clear == 6:  # Saved = Track Crash
+            level_summary[lv][1] += 1
+        else:
+            level_summary[lv][clear_index[clear]] += 1
         level_summary[lv][grade_index[grade]] += 1
         score_list.append([score, grade, str(lv), (score > 9000000), (score > 8000000)])
     score_df = pd.DataFrame(score_list, columns=['score', 'grade', 'lv', 'is_hist', 'is_vio'])
@@ -1210,92 +1215,303 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     vf_df = pd.DataFrame(vf_list, columns=['score', 'vf', 'lv'])
 
     """
-    Generate background and load image ingredients
+    Generate background, text layer and load image ingredients
     """
     px_prologue, px_chapters, px_epilogue = 450, 1800, 1500
     y_px = px_prologue + px_chapters * (21 - lv_base) + px_epilogue
     y_px = 2250  # FIXME: temp variable
     bg = generate_hex_bg((y_px, 1080))
 
-    mark_ref, grade_ref = 1.1, 0.7
-    clear_list = load_marks(mark_ref)
+    blank_layer = np.zeros((y_px, 1080, 3), dtype=bg.dtype)  # generate text layer
+    text_layer = Image.fromarray(blank_layer)
+    text_layer.putalpha(1)
+    pen = ImageDraw.Draw(text_layer)
+
+    clear_ref, grade_ref, box_ref = 1, 0.45, 1.09
+    clear_list = load_marks()
     grade_list = load_grade(grade_ref)
-    grade_bg = cv2.imread(img_archive + 'grade/box_medal.png', cv2.IMREAD_UNCHANGED)
-    cv2.resize(grade_bg, dsize=None, fx=mark_ref, fy=mark_ref, interpolation=cv2.INTER_AREA)
+    clear_list[0] = cv2.resize(clear_list[0], dsize=None, fx=0.7, fy=0.7, interpolation=cv2.INTER_AREA)
 
     preface = Anchor(bg, 'preface')  # supreme anchor
     prologue = Anchor(bg, 'prologue', free=(0, 0), father=preface)
-    chapters = Anchor(bg, 'chapters', free=(0, px_prologue), father=preface)
-    chapters.creat_grid(grid=(0, 20 - lv_base), precession=(0, px_chapters))
-    epilogue = Anchor(bg, 'epilogue', free=(0, y_px - px_epilogue), father=preface)
+    chapters = Anchor(bg, 'chapters', free=(px_prologue, 0), father=preface)
+    chapters.creat_grid(grid=(20 - lv_base, 0), precession=(px_chapters, 0))
+    epilogue = Anchor(bg, 'epilogue', free=(y_px - px_epilogue, 0), father=preface)
 
     """
     Prologue: Use profile
     """
+    # Profile field includes card field and name field
+    profile_field = Anchor(bg, 'card field', free=(60, 100), father=prologue)
+    profile_size = (340, 800)
+
+    """
+    # Profile background
+    pbg_frame = simple_rectangle(profile_size, color_white, bg.dtype, 6)  # pbg = profile background
+    parabola_gradient(pbg_frame, -1, 1, 'x+')
+    pbg_frame_anc = AnchorImage(bg, 'profile bg frame', pbg_frame, father=profile_field)
+
+    pbg_belt = simple_rectangle((800, 40), color_white, bg.dtype)
+    parabola_gradient(pbg_belt, -1, 1, 'x+')
+    pbg_belt1_anc = AnchorImage(bg, 'profile bg belt upper', pbg_belt, father=profile_field)
+    pbg_belt2_anc = AnchorImage(bg, 'profile bg belt lower', pbg_belt, father=profile_field,
+                                free=(0, profile_size[1] - pbg_belt.shape[0]))
+
+    pbg_neon = simple_rectangle((80, profile_size[1]), (109,46,186), bg.dtype)
+    parabola_gradient(pbg_neon, -2, 1, 'x+')
+    pbg_neon_anc = AnchorImage(bg, 'profile skill neon', pbg_neon, father=profile_field)
+
+    pbg_neon_anc.plot(transparency=0.7)
+    pbg_belt1_anc.plot(transparency=0.5)
+    pbg_belt2_anc.plot(transparency=0.5)
+
+    pbg_frame_anc.plot()
+    """
+
     # Card field contains two images, namely appeal card and skill
-    card_field = Anchor(bg, 'card field', free=(180, 100), father=prologue)
+    card_field = Anchor(bg, 'card field', free=(40, 80), father=profile_field)
 
     ap_card_path = get_ap_card(ap_card)
     card_img = cv2.imread(ap_card_path, cv2.IMREAD_UNCHANGED)
     card_anc = AnchorImage(bg, 'appeal card', card_img, (0, 0), father=card_field)
-    card_anc.plot()
 
     skill_img = cv2.imread(img_archive + 'skill/skill_' + skill.zfill(2) + '.png', cv2.IMREAD_UNCHANGED)
     skill_ratio = card_img.shape[1] / skill_img.shape[1]
     skill_img = cv2.resize(skill_img, dsize=None, fx=skill_ratio, fy=skill_ratio, interpolation=cv2.INTER_AREA)
-    skill_anc = AnchorImage(bg, 'skill', skill_img, (0, 220), father=card_field)
+    skill_anc = AnchorImage(bg, 'skill', skill_img, (220, 0), father=card_field)
+
+    card_anc.plot()
     skill_anc.plot()
 
-    name_field = Anchor(bg, 'name field', free=(400, 100), father=prologue)
+    data_field = Anchor(bg, 'profile data field', free=(40, 300), father=profile_field)
 
-    name_bar_size = (580, 4)
+    name_bar_size = (4, 580)
     name_bar = simple_rectangle(name_bar_size, color_gray, bg.dtype)
-    name_bar_anc = AnchorImage(bg, 'name bar', name_bar, free=(10, 120), father=name_field)
+    name_bar_anc = AnchorImage(bg, 'name bar', name_bar, free=(120, 10), father=data_field)
     parabola_gradient(name_bar, -0.65, 1.14)
     name_bar_anc.plot()
 
     vf_level = get_vf_property(vol_force, is_level=True)
     force_img = cv2.imread(img_archive + 'vf/em6_' + str(vf_level).zfill(2) + '_i_eab.png', cv2.IMREAD_UNCHANGED)
     force_img = cv2.resize(force_img, dsize=None, fx=0.35, fy=0.35, interpolation=cv2.INTER_AREA)
-    force_anc = AnchorImage(bg, 'volforce', force_img, free=(10, 120), father=name_field)
+    force_anc = AnchorImage(bg, 'volforce', force_img, free=(120, 10), father=data_field)
+
+    name_field = Anchor(bg, 'name field', free=(6, 20), father=data_field)
+
+    user_font = ImageFont.truetype(font_DFHS, 55, encoding='utf-8', index=0)
+    user_anc = AnchorText(bg, 'user name', user_name, pen, user_font, free=(0, 0), father=name_field)
+    id_font = ImageFont.truetype(font_DFHS, 30, encoding='utf-8', index=0)
+    id_anc = AnchorText(bg, 'user id', 'ID  ' + card_num, pen, id_font, free=(65, 0), father=name_field)
+
+    vf_field = Anchor(bg, 'vf field', free=(155, 170), father=data_field)
+
+    vol_font = ImageFont.truetype(font_DFHS, 30, encoding='utf-8', index=0)
+    vol_anc = AnchorText(bg, 'vf text', 'VOLFORCE', pen, vol_font, free=(0, 0), father=vf_field)
+    vol_num_font = ImageFont.truetype(font_unipace, 29, encoding='utf-8')
+    vol_num_anc = AnchorText(bg, 'vf num', ('%.3f' % vol_force), pen, vol_num_font, free=(-1, 210), father=vf_field)
+
+    ceil_font = ImageFont.truetype(font_DFHS, 22, encoding='utf-8', index=0)
+    ceil_anc = AnchorText(bg, 'ceil text', 'CEIL', pen, ceil_font, free=(50, 119), father=vf_field)
+    floor_anc = AnchorText(bg, 'floor text', 'FLOOR', pen, ceil_font, free=(80, 89), father=vf_field)
+    ceil_num_font = ImageFont.truetype(font_unipace, 18, encoding='utf-8')
+    ceil_num_anc = AnchorText(bg, 'ceil num', ('%.3f' % ceil_num), pen, ceil_num_font, free=(50, 210), father=vf_field)
+    floor_num_anc = AnchorText(bg, 'floor num', ('%.3f' % floor_num), pen, ceil_num_font, (80, 210), father=vf_field)
+
     force_anc.plot()
 
+    user_anc.plot(color_white)
+    id_anc.plot(color_white)
+    vol_anc.plot(color_white)
+    vol_num_anc.plot(get_vf_property(vol_force))
+    ceil_anc.plot(color_white)
+    floor_anc.plot(color_white)
+    ceil_num_anc.plot(get_vf_property(ceil_num))
+    floor_num_anc.plot(get_vf_property(floor_num))
+
     """
-    Chapter ?: Summary for each level
+    Chapter 1: Data initialization
     """
     # Initialize Level-title box, pilcrow, set of clear mark and set of grade mark
-    cen_box_size = (840, 16)
+    cen_box_size = (16, 840)
     cen_box = simple_rectangle(cen_box_size, color_gray, bg.dtype)
     parabola_gradient(cen_box, -1.4, 1.6, 'x+')
-    cen_box_anc = AnchorImage(bg, 'title box', cen_box, free=(0, 22))
+    cen_box_anc = AnchorImage(bg, 'title box', cen_box, free=(22, -20))
+
+    subtitle_font = ImageFont.truetype(font_DFHS, 34, encoding='utf-8')
+    sta_b_font = ImageFont.truetype(font_unipace, 36, encoding='utf-8')
+    sta_s_font = ImageFont.truetype(font_unipace, 18, encoding='utf-8')
 
     pilcrow_size = (16, 16)
-    pilcrow = simple_rectangle(pilcrow_size, color_gray, bg.dtype)
-    pilcrow_anc = AnchorImage(bg, 'pilcrow', pilcrow, free=(0, 10))
+    pilcrow = simple_rectangle(pilcrow_size, color_white, bg.dtype)
+    pilcrow_anc = AnchorImage(bg, 'pilcrow', pilcrow, free=(10, -20))
 
-    sqrt_3, hex_y = np.sqrt(3), 200  # arrange icons in hex
-    clear_grid = Anchor(bg, 'clear grid', free=(0, 0))
-    clear_grid.creat_grid((1, 5), (int(hex_y * sqrt_3), hex_y))
+    icon_bg = cv2.imread(img_archive + 'grade/box_medal.png', cv2.IMREAD_UNCHANGED)
+    icon_bg = cv2.resize(icon_bg, dsize=None, fx=box_ref, fy=box_ref, interpolation=cv2.INTER_AREA)
+    icon_glow = outer_glow(icon_bg, color_l_blue, 25)
+    glow_anc = AnchorImage(bg, 'icon glow', icon_glow, free=(-icon_bg.shape[0], -icon_bg.shape[1]))
+
+    sqrt_3, hex_y = np.sqrt(3), 36  # arrange icons in hex
+    clear_grid = Anchor(bg, 'clear grid', free=(85, 40))
+    clear_grid.creat_grid((5, 5), (hex_y, int(hex_y * sqrt_3)))
     clear_content = [None, None, None, None, None, None]
+    clear_icon = [None, None, None, None, None, None]
+    clear_text_b = [None, None, None, None, None, None]
+    clear_text_s = [None, None, None, None, None, None]
     for index in range(6):
-        clear_content[index] = AnchorImage(bg, 'clear img %d' % index, clear_list[index], father=clear_grid)
-        clear_content[index].set_grid((index % 2, index))
+        __clear_bg = icon_bg.copy()
+        clear_content[index] = AnchorImage(bg, 'clear img %d' % index, __clear_bg, father=clear_grid)
+        clear_content[index].set_grid((index, index % 2))
+        clear_icon[index] = AnchorImage(__clear_bg, 'clear icon %d' % index, clear_list[index])
+        clear_icon[index].plot_center(offset=(1, 1))
+        clear_text_b[index] = AnchorText(bg, 'clear text big %d' % index, '', pen, sta_b_font, (10, -100), clear_grid)
+        clear_text_b[index].set_grid((index, index % 2 * 5))
+        clear_text_s[index] = AnchorText(bg, 'clear text small %d' % index, '', pen, sta_s_font, (50, -100), clear_grid)
+        clear_text_s[index].set_grid((index, index % 2 * 5))
 
-    grade_grid = Anchor(bg, 'grade grid', free=(0, 0))
-    grade_grid.creat_grid((1, 5), (int(hex_y * sqrt_3), hex_y))
+    grade_grid = Anchor(bg, 'grade grid', free=(85, 40))
+    grade_grid.creat_grid((5, 5), (hex_y, int(hex_y * sqrt_3)))
     grade_content = [None, None, None, None, None, None]
+    grade_icon = [None, None, None, None, None, None]
+    grade_text_b = [None, None, None, None, None, None]
+    grade_text_s = [None, None, None, None, None, None]
     for index in range(6):
-        # Put elephant into fridge
-        grade_bg_temp = grade_bg.copy()
-
-
-        grade_content[index] = AnchorImage(bg, 'grade img %d' % index, grade_list[index], father=grade_grid)
-        grade_content[index].set_grid(((1 - (index % 2)), index))
+        __grade_bg = icon_bg.copy()
+        grade_content[index] = AnchorImage(bg, 'grade bg %d' % index, __grade_bg, father=grade_grid)
+        grade_content[index].set_grid((index, (1 - (index % 2))))
+        grade_icon[index] = AnchorImage(__grade_bg, 'grade icon %d' % index, grade_list[index - 6])
+        grade_icon[index].plot_center()
+        grade_text_b[index] = AnchorText(bg, 'grade text big %d' % index, '', pen, sta_b_font, (10, -100), grade_grid)
+        grade_text_b[index].set_grid((index, (1 - (index % 2)) * 5))
+        grade_text_s[index] = AnchorText(bg, 'grade text small %d' % index, '', pen, sta_s_font, (50, -100), grade_grid)
+        grade_text_s[index].set_grid((index, (1 - (index % 2)) * 5))
 
     # Plot them by level
     for lv_index in range(21 - lv_base):
+        """
+        Chapter 2: Topmost level box
+        """
         lv_cur = lv_index + lv_base
+        lv_sum = level_summary[lv_cur][-1]
         lv_field = Anchor(bg, 'level field', father=chapters)
-        lv_field.set_grid((0, lv_index))
+        lv_field.set_grid((lv_index, 0))
 
-    cv2.imwrite('%s/%s_summary_temp.png' % (output, user_name), bg, params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
+        num_field = Anchor(bg, 'numbers', father=lv_field, free=(0, 140))
+
+        num_f, num_l = load_num(lv_cur)
+        num_f_anc = AnchorImage(bg, 'num former', img=num_f, father=num_field)
+        num_precession = 60 - (lv_cur // 10 == 1) * 10
+        num_l_anc = AnchorImage(bg, 'num latter', img=num_l, father=num_field, free=(0, num_precession))
+
+        cen_box_anc.set_father(num_field)
+
+        cen_box_anc.plot()
+        num_f_anc.plot()
+        num_l_anc.plot()
+
+        """
+        Chapter 3: Clear marks
+        """
+        clear_field = Anchor(bg, 'clear field', father=lv_field, free=(100, 140))
+
+        pilcrow_anc.set_father(clear_field)
+        clear_title_anc = AnchorText(bg, 'clear subtitle', 'Clear Marks', pen, subtitle_font, (0, 20), clear_field)
+        clear_grid.set_father(clear_field)
+
+        # Clear data and texts
+        clear_data = level_summary[lv_cur][:6]
+        clear_data_small = []
+        clear_cur, clear_color = 0, []
+
+        for data in clear_data[::-1]:
+            clear_cur += data
+            clear_data_small.append('(%d)' % clear_cur)
+            if clear_cur == lv_sum:
+                clear_color.append(color_gold)
+            else:
+                clear_color.append(color_l_gray)
+        clear_color.reverse()
+        clear_data_small.reverse()
+        clear_data_small[0] = clear_data_small[1] = '-'
+        clear_color[0] = clear_color[1] = color_l_gray
+        if clear_data[0] or clear_data[1]:
+            clear_color = [color_l_gray] * 6
+
+        pilcrow_anc.plot()
+        clear_title_anc.plot(color_l_gray)
+        for index in range(6):
+            clear_content[index].update_pos()
+            glow_anc.set_father(clear_content[index])
+            glow_anc.plot()
+        for index in range(6):
+            clear_content[index].plot()
+            clear_text_b[index].text = str(clear_data[index])
+            clear_text_b[index].plot(clear_color[index])
+            clear_text_s[index].text = clear_data_small[index]
+            clear_text_s[index].plot(clear_color[index])
+
+        """
+        Chapter 4: Grade Marks
+        """
+        grade_field = Anchor(bg, 'grade_field', father=lv_field, free=(100, 580))
+
+        pilcrow_anc.set_father(grade_field)
+        pilcrow_anc.set_free((10, -20))
+
+        grade_title_anc = AnchorText(bg, 'grade subtitle', 'Grade Marks', pen, subtitle_font, (0, 20), grade_field)
+        grade_grid.set_father(grade_field)
+
+        # Grade data and texts
+        grade_data = level_summary[lv_cur][6:17]
+        grade_data_small = []
+        grade_cur, grade_color = 0, []
+
+        for data in grade_data[::-1]:
+            grade_cur += data
+            grade_data_small.append('(%d)' % grade_cur)
+            if grade_cur == lv_sum:
+                grade_color.append(color_gold)
+            else:
+                grade_color.append(color_l_gray)
+        grade_color.reverse()
+        grade_data_small.reverse()
+        grade_data_small[0] = grade_data_small[1] = '-'
+        if grade_data[0] or grade_data[1]:
+            grade_color = [color_l_gray] * 6
+
+        grade_data = grade_data[-6:]
+        grade_data_small = grade_data_small[-6:]
+        grade_color = grade_color[-6:]
+
+        pilcrow_anc.plot()
+        grade_title_anc.plot(color_l_gray)
+        for index in range(6):
+            grade_content[index].update_pos()
+            glow_anc.set_father(grade_content[index])
+            glow_anc.plot()
+        for index in range(6):
+            grade_content[index].plot()
+            grade_text_b[index].text = str(grade_data[index])
+            grade_text_b[index].plot(grade_color[index])
+            grade_text_s[index].text = grade_data_small[index]
+            grade_text_s[index].plot(grade_color[index])
+
+        """
+        Chapter 5: Pie Plot
+        """
+        pie_field = Anchor(bg, 'pie for two', (500, 0), father=lv_field)
+        pie_px = (600, 1000)
+
+        """
+        Chapter 6: Histogram
+        """
+        hist_anc = Anchor(bg, 'histogram', (1000, 0), father=lv_field)
+        break
+
+    """
+    Epilogue: Joint plot and violin plot
+    """
+
+    text_layer = np.array(text_layer)
+    png_superimpose(bg, text_layer)
+
+    cv2.imwrite('%s/%s_summary_temp.png' % (output, user_name), bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])

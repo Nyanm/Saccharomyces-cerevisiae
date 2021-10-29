@@ -3,7 +3,6 @@ import cv2
 from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-from matplotlib.ticker import MaxNLocator
 
 
 def quick_show(img: np.array):
@@ -121,12 +120,12 @@ def parabola_gradient(bg: np.array, a: float, c: float, axis: str = 'x0'):
         return
 
 
-def simple_rectangle(size: tuple, color: tuple, dt: type):
-    x, y = size
-    size = (y, x)
+def simple_rectangle(size: tuple, color: tuple, dt: type, width: int = 0):
     rect_b, rect_g, rect_r = \
         np.ones(size, dtype=dt) * color[0], np.ones(size, dtype=dt) * color[1], np.ones(size, dtype=dt) * color[2]
     rect_a = np.ones(size, dt) * 255
+    if width:
+        rect_a[width: size[0] - width, width: size[1] - width] = 0
     return cv2.merge((rect_b, rect_g, rect_r, rect_a))
 
 
@@ -201,6 +200,10 @@ def hex_2_rgb(raw_color: str) -> tuple:
     return r, g, b
 
 
+def rgb_2_bgr(raw_color: tuple) -> tuple:
+    return raw_color[2], raw_color[1], raw_color[0]
+
+
 def rgb_2_hex(raw_color: tuple, add_well=True) -> str:
     if add_well:
         color = '#'
@@ -212,34 +215,56 @@ def rgb_2_hex(raw_color: tuple, add_well=True) -> str:
     return color
 
 
-def set_spines_color(ax):
-    pass
+def outer_glow(img: np.array, color: tuple, radius: int):
+    """
+    Using blur(box blur) to create outer glow, it returns only glow, not glowed image
+    :param img:    Image with alpha channel
+    :param color:  Color of the glow
+    :param radius: Size of the box. Higher the value, wider the glow.
+    :return:       Glow image which 9 times(3 * 3) bigger than the original one
+    """
+    img_y, img_x, chn = img.shape
+    alpha = np.zeros((3 * img_y, 3 * img_x), dtype=img.dtype)
+    alpha[img_y:2 * img_y, img_x: 2 * img_x] = img[:, :, 3]
+    alpha = cv2.blur(alpha, (radius, radius))
+    glow_r = np.ones((3 * img_y, 3 * img_x), dtype=img.dtype) * color[0]
+    glow_g = np.ones((3 * img_y, 3 * img_x), dtype=img.dtype) * color[1]
+    glow_b = np.ones((3 * img_y, 3 * img_x), dtype=img.dtype) * color[2]
+    glow = cv2.merge((glow_b, glow_g, glow_r, alpha))
+    return glow
 
 
 class Anchor(object):
+    """
+    Based on (y, x) axis system and (B, G, R, (A)) color system (in line with OpenCV)
+    It means PIL coordinate and color will be transformed into OpenCV way.
+    Honestly I don't know why they set these systems such counter-instinctively :(
+    """
+
     def __init__(self, bg: np.array, name: str, free: tuple = (0, 0), father: classmethod.__class__ = None):
         self.bg = bg
         self.name = name
         self.free = free
 
-        self.father, self.children = None, []
+        self.father = None
         self.grid, self.precession = (0, 0), (0, 0)
         self.grid_id = (0, 0)
 
-        self.x, self.y = self.free[0], self.free[1]
+        self.y, self.x = self.free
         if father is not None:
             self.set_father(father)
 
+        self.absolute = None
+
     def update_pos(self):
         if not self.father:
-            self.x, self.y = self.free
+            self.y, self.x = self.free
         else:
-            self.x = self.father.x + self.grid_id[0] * self.father.precession[0] + self.free[0]
-            self.y = self.father.y + self.grid_id[1] * self.father.precession[1] + self.free[1]
+            self.y = self.father.y + self.grid_id[0] * self.father.precession[0] + self.free[0]
+            self.x = self.father.x + self.grid_id[1] * self.father.precession[1] + self.free[1]
 
     def set_father(self, father: classmethod.__class__):
         self.father = father
-        father.children.append(self)
         self.update_pos()
 
     def creat_grid(self, grid: tuple, precession: tuple):
@@ -256,7 +281,11 @@ class Anchor(object):
         self.update_pos()
 
     def set_absolute(self, absolute: tuple):
-        self.x, self.y = absolute
+        self.absolute = absolute
+
+    def set_free(self, free: tuple):
+        self.free = free
+        self.update_pos()
 
 
 class AnchorImage(Anchor):
@@ -267,13 +296,31 @@ class AnchorImage(Anchor):
 
         self.size_y, self.size_x, self.chn = img.shape
 
-    def plot(self, transparency: float = 1.0, is_cv2: bool = True):
-        if is_cv2:
-            png_superimpose(self.bg, self.img, (self.y, self.x), transparency)
+    def plot(self, transparency: float = 1.0, offset: tuple = (0, 0)):
+        if self.absolute:
+            png_superimpose(self.bg, self.img, self.absolute, transparency)
+            return
+        self.update_pos()
+        png_superimpose(self.bg, self.img, (self.y + offset[0], self.x + offset[1]), transparency)
+
+    def plot_center(self, transparency: float = 1.0, offset: tuple = (0, 0)):
+        bg_y, bg_x, chn = self.bg.shape
+        pos_y, pos_x = abs(bg_y - self.size_y) // 2, abs(bg_x - self.size_x) // 2
+        png_superimpose(self.bg, self.img, (pos_y + offset[0], pos_x + offset[1]), transparency)
 
 
 class AnchorText(Anchor):
-    def __init__(self, bg: np.array, name: str, text: str,
+    def __init__(self, bg: np.array, name: str, text: str, pen: ImageDraw.Draw, font: ImageFont.truetype,
                  free: tuple = (0, 0), father: classmethod.__class__ = None):
         Anchor.__init__(self, bg, name, free, father)
         self.text = text
+        self.pen = pen
+        self.font = font
+
+    def plot(self, color: tuple):
+        color = rgb_2_bgr(color)
+        if self.absolute:
+            self.pen.text((self.absolute[1], self.absolute[0]), self.text, color, font=self.font)
+            return
+        self.update_pos()
+        self.pen.text((self.x, self.y), self.text, color, font=self.font)
