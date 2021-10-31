@@ -289,6 +289,11 @@ class Anchor(object):
         self.free = free
         self.update_pos()
 
+    def show_pos(self, length: int = 10):
+        for index in range(length):
+            self.bg[self.y, self.x + index] = [0, 0, 255, 255]
+            self.bg[self.y + index, self.x] = [0, 0, 255, 255]
+
 
 class AnchorImage(Anchor):
     def __init__(self, bg: np.array, name: str, img: np.array,
@@ -298,12 +303,13 @@ class AnchorImage(Anchor):
 
         self.size_y, self.size_x, self.chn = img.shape
 
-    def plot(self, opacity: float = 1.0, offset: tuple = (0, 0)):
+    def plot(self, opacity: float = 1.0, offset: tuple = (0, 0), y_reverse: bool = False, x_reverse: bool = False):
         if self.absolute:
             png_superimpose(self.bg, self.img, self.absolute, opacity)
             return
         self.update_pos()
-        png_superimpose(self.bg, self.img, (self.y + offset[0], self.x + offset[1]), opacity)
+        plot_y, plot_x = self.y + offset[0] - y_reverse * self.size_y, self.x + offset[1] - x_reverse * self.size_x
+        png_superimpose(self.bg, self.img, (plot_y, plot_x), opacity)
 
     def plot_center(self, opacity: float = 1.0, offset: tuple = (0, 0)):
         bg_y, bg_x, chn = self.bg.shape
@@ -328,10 +334,10 @@ class AnchorText(Anchor):
         """
         if pos == 'c':
             length = self.font.getsize(self.text)[0]
-            offset = (offset[0], offset[1] - length)
+            offset = (offset[0], offset[1] - length // 2)
         elif pos == 'r':
             length = self.font.getsize(self.text)[0]
-            offset = (offset[0], offset[1] - length // 2)
+            offset = (offset[0], offset[1] - length)
         color = rgb_2_bgr(color)
         if self.absolute:
             self.pen.text((self.absolute[1] + offset[1], self.absolute[0] + offset[0]), self.text, color, self.font)
@@ -406,7 +412,7 @@ def generate_line_box(size, color: tuple, width: int, opacity: float, corner: di
     return img
 
 
-def generate_title(gradients: list or tuple, length: int, bg: dict) -> np.array:
+def generate_bar(gradients: list or tuple, length: int, bg: dict) -> np.array:
     left, bar, right = gradients
     img_y, img_x = left.shape[0], length
     left_x, right_x = left.shape[1], right.shape[1]

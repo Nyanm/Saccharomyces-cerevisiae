@@ -220,11 +220,14 @@ def load_frame() -> tuple:
     return [top_left, top_right, btm_left, btm_right], [side_top, side_right, side_bottom, side_left]
 
 
-def load_title() -> list:
-    left = cv2.imread(img_archive + 'title/left.png', cv2.IMREAD_UNCHANGED)
-    bar = cv2.imread(img_archive + 'title/bar.png', cv2.IMREAD_UNCHANGED)
-    right = cv2.imread(img_archive + 'title/right.png', cv2.IMREAD_UNCHANGED)
-    bg = cv2.imread(img_archive + 'title/bg.png', cv2.IMREAD_UNCHANGED)
+def load_bar(name: str, is_bg: bool = False) -> list:
+    left = cv2.imread(img_archive + 'bar/%s_left.png' % name, cv2.IMREAD_UNCHANGED)
+    bar = cv2.imread(img_archive + 'bar/%s_bar.png' % name, cv2.IMREAD_UNCHANGED)
+    right = cv2.imread(img_archive + 'bar/%s_right.png' % name, cv2.IMREAD_UNCHANGED)
+    if is_bg:
+        bg = cv2.imread(img_archive + 'bar/%s_bg.png' % name, cv2.IMREAD_UNCHANGED)
+    else:
+        bg = None
     return [left, bar, right, bg]
 
 
@@ -1209,12 +1212,11 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         if not record[0]:
             continue
         score, clear, grade, lv = int(record[3]), int(record[4]), int(record[5]), int(record[8])
-        if clear == 6:  # Saved = Track Crash
-            level_summary[lv][1] += 1
-        else:
-            level_summary[lv][clear_index[clear]] += 1
+        level_summary[lv][clear_index[clear]] += 1
         level_summary[lv][grade_index[grade]] += 1
         score_list.append([score, grade, str(lv), (score > 9000000), (score > 8000000)])
+    for index in range(21):
+        level_summary[index][0] = level_summary[index][17] - sum(level_summary[index][1:6])
     score_df = pd.DataFrame(score_list, columns=['score', 'grade', 'lv', 'is_hist', 'is_vio'])
 
     # Generate data frame for joint plot
@@ -1231,11 +1233,11 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     Generate background, text layer and load image ingredients
     """
     px_prologue, px_chapters, px_epilogue = 450, 1800, 1500
-    y_px = px_prologue + px_chapters * (21 - lv_base) + px_epilogue
+    y_px, x_px = px_prologue + px_chapters * (21 - lv_base) + px_epilogue, 1080
     y_px = 2250  # FIXME: temp variable
     bg = generate_hex_bg((y_px, 1080))
 
-    blank_layer = np.zeros((y_px, 1080, 3), dtype=bg.dtype)  # generate text layer
+    blank_layer = np.zeros((y_px, x_px, 3), dtype=bg.dtype)  # generate text layer
     text_layer = Image.fromarray(blank_layer)
     text_layer.putalpha(1)
     pen = ImageDraw.Draw(text_layer)
@@ -1245,7 +1247,8 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     grade_list = load_grade(grade_ref)
     clear_list[0] = cv2.resize(clear_list[0], dsize=None, fx=0.7, fy=0.7, interpolation=cv2.INTER_AREA)
     frame_corner, frame_side = load_frame()
-    title = load_title()
+    title_ing = load_bar('title', is_bg=True)
+    score_ing = load_bar('name')
 
     preface = Anchor(bg, 'preface')  # supreme anchor
     prologue = Anchor(bg, 'prologue', free=(0, 0), father=preface)
@@ -1349,29 +1352,29 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     # Initialize Level-title box, pilcrow, set of clear mark and set of grade mark
     frame_margin = 80  # FIXME: temp frame height
     frame_box = generate_frame(frame_corner, frame_side,
-                               (px_chapters - 100, 1080 - frame_margin * 2), (10, 10), color_d_blue, 0.7)
+                               (px_chapters - 100, x_px - frame_margin * 2), (10, 10), color_d_blue, 0.7)
     frame_anc = AnchorImage(bg, 'frame', img=frame_box, free=(0, frame_margin), father=chapters)
     frame_anc.plot()
 
     title_margin = 105
-    title_bg = {'validity': True, 'image': title[3], 'pos': title[0].shape[1]}
-    title_box = generate_title(title[0:3], 1080 - title_margin * 2, title_bg)
+    title_bg = {'validity': True, 'image': title_ing[3], 'pos': title_ing[0].shape[1]}
+    title_box = generate_bar(title_ing[0:3], x_px - title_margin * 2, title_bg)
     title_anc = AnchorImage(bg, 'title box', title_box, (25, title_margin))
 
     subtitle_margin = 125
     subtitle_corner = {'validity': True, 'width': 1, 'length': 10, 'margin': 5, 'color': color_white}
-    subtitle_box = generate_line_box((33, 1080 - subtitle_margin * 2), color_yellow, 1, 0.25, subtitle_corner)
+    subtitle_box = generate_line_box((33, x_px - subtitle_margin * 2), color_yellow, 1, 0.25, subtitle_corner)
     subtitle_anc = AnchorImage(bg, 'subtitle box', subtitle_box,
-                               (45, subtitle_margin - frame_margin - subtitle_corner['margin']))
+                               (0, subtitle_margin - subtitle_corner['margin']))
 
-    data_box_size = (30, 200)
-    data_box = simple_rectangle(data_box_size, color_white, bg.dtype)
-    parabola_gradient(data_box, -0.25, 0.35, 'y-')
+    data_box_length = 207
+    data_box_bar = add_alpha(score_ing[1])
+    data_box = bg_duplicator(data_box_bar, data_box_bar.shape[0], data_box_length)
     data_box_anc = AnchorImage(bg, 'data box', data_box)
 
     subtitle_font = ImageFont.truetype(font_DFHS, 34, encoding='utf-8')
     sta_b_font = ImageFont.truetype(font_unipace, 32, encoding='utf-8')
-    sta_s_font = ImageFont.truetype(font_unipace, 16, encoding='utf-8')
+    sta_s_font = ImageFont.truetype(font_unipace, 15, encoding='utf-8')
 
     icon_bg = cv2.imread(img_archive + 'grade/box_medal.png', cv2.IMREAD_UNCHANGED)
     icon_bg = cv2.resize(icon_bg, dsize=None, fx=box_ref, fy=box_ref, interpolation=cv2.INTER_AREA)
@@ -1380,43 +1383,91 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     glow_anc = AnchorImage(bg, 'icon glow', icon_glow, free=(-glow_radius, -glow_radius))
 
     sqrt_3, hex_y = np.sqrt(3), 36  # arrange icons in hex
-    clear_grid = Anchor(bg, 'clear grid', free=(85, 40))
-    clear_grid.creat_grid((5, 1), (hex_y, int(hex_y * sqrt_3)))
-    clear_text_grid = Anchor(bg, 'clear text grid', free=(85, 40))
-    clear_text_grid.creat_grid((5, 1), (200, hex_y))
-    clear_content = [None, None, None, None, None, None]
-    clear_icon = [None, None, None, None, None, None]
-    clear_text_b = [None, None, None, None, None, None]
-    clear_text_s = [None, None, None, None, None, None]
-    for index in range(6):
-        __clear_bg = icon_bg.copy()
-        clear_content[index] = AnchorImage(bg, 'clear img %d' % index, __clear_bg, father=clear_grid)
-        clear_content[index].set_grid((index % 3 * 2 + index // 3, index // 3))
-        clear_icon[index] = AnchorImage(__clear_bg, 'clear icon %d' % index, clear_list[index])
-        clear_icon[index].plot_center(offset=(1, 1))
-        clear_text_b[index] = AnchorText(bg, 'clear text big %d' % index, '', pen, sta_b_font, (8, -100), clear_grid)
-        clear_text_b[index].set_grid((index % 3 * 2 + index // 3, index // 3))
-        clear_text_s[index] = AnchorText(bg, 'clear text small %d' % index, '', pen, sta_s_font, (44, -100), clear_grid)
-        clear_text_s[index].set_grid((index % 3 * 2 + index // 3, index // 3))
+    icon_x = int(2.5 * hex_y * sqrt_3)
+    text_space = 210
+    text_shift = (icon_x - text_space) // 2
+    hex_margin = 250
 
-    grade_grid = Anchor(bg, 'grade grid', free=(85, 40))
-    grade_grid.creat_grid((5, 1), (hex_y, int(hex_y * sqrt_3)))
-    grade_content = [None, None, None, None, None, None]
-    grade_icon = [None, None, None, None, None, None]
-    grade_text_b = [None, None, None, None, None, None]
-    grade_text_s = [None, None, None, None, None, None]
-    for index in range(6):
-        __grade_bg = icon_bg.copy()
-        grade_content[index] = AnchorImage(bg, 'grade bg %d' % index, __grade_bg, father=grade_grid)
-        grade_content[index].set_grid((index % 3 * 2 + index // 3, (1 - (index // 3))))
-        grade_icon[index] = AnchorImage(__grade_bg, 'grade icon %d' % index, grade_list[index - 6])
-        grade_icon[index].plot_center()
-        grade_text_b[index] = AnchorText(bg, 'grade text big %d' % index, '', pen, sta_b_font, (8, -100), grade_grid)
-        grade_text_b[index].set_grid((index % 3 * 2 + index // 3, (1 - (index // 3))))
-        grade_text_s[index] = AnchorText(bg, 'grade text small %d' % index, '', pen, sta_s_font, (44, -100), grade_grid)
-        grade_text_s[index].set_grid((index % 3 * 2 + index // 3, (1 - (index // 3))))
+    def icon_initialization(icon_list: list, name: str, dire: bool = False) -> tuple:
+        icon_grid = Anchor(bg, '%s icon grid' % name)
+        icon_grid.creat_grid((5, 1), (hex_y, int(hex_y * sqrt_3)))
+        text_grid = Anchor(bg, '%s text grid' % name)
+        text_grid.creat_grid((5, 1), (hex_y, text_space))
+        content = [None, None, None, None, None, None]
+        icon = [None, None, None, None, None, None]
+        text_b = [None, None, None, None, None, None]
+        text_s = [None, None, None, None, None, None]
+        for __index in range(6):
+            if dire:
+                grid_id = (__index % 3 * 2 + __index // 3, __index // 3)
+            else:
+                grid_id = (__index % 3 * 2 + __index // 3, 1 - __index // 3)
+            __bg = icon_bg.copy()
+            content[__index] = AnchorImage(bg, '%s img %d' % (name, __index), __bg, father=icon_grid)
+            content[__index].set_grid(grid_id)
+            icon[__index] = AnchorImage(__bg, '%s icon %d' % (name, __index), icon_list[__index])
+            icon[__index].plot_center(offset=(1, 1))
+            text_b[__index] = \
+                AnchorText(bg, '%s text big %d' % (name, __index), '', pen, sta_b_font, (6, text_shift), text_grid)
+            text_b[__index].set_grid(grid_id)
+            text_s[__index] = \
+                AnchorText(bg, '%s text small %d' % (name, __index), '', pen, sta_s_font, (50, text_shift), text_grid)
+            text_s[__index].set_grid(grid_id)
+        return icon_grid, text_grid, content, text_b, text_s
 
-    # Plot them by level
+    clear_grid, clear_text_grid, clear_content, clear_text_b, clear_text_s = \
+        icon_initialization(clear_list, 'clear', dire=True)
+    grade_grid, grade_text_grid, grade_content, grade_text_b, grade_text_s = \
+        icon_initialization(grade_list[-6:], 'grade', dire=False)
+
+    def plot_hex_icon(field: classmethod.__class__, icon_dict: dict, level: int, lv_data: list, custom: bool = False):
+        icon_grid, text_grid, content, text_b, text_s = \
+            icon_dict['icon'], icon_dict['text'], icon_dict['content'], icon_dict['text_b'], icon_dict['text_s']
+        icon_grid.set_father(field)
+        text_grid.set_father(field)
+        lv_data_small, lv_cnt, lv_color = [], 0, []
+
+        for __data in lv_data[::-1]:
+            lv_cnt += __data
+            lv_data_small.append('(%d)' % lv_cnt)
+            if lv_cnt == lv_sum:
+                lv_color.append(color_gold)
+            else:
+                lv_color.append(color_white)
+        lv_color.reverse()
+        lv_data_small.reverse()
+
+        if custom:
+            lv_data_small[0] = lv_data_small[1] = '-'
+
+            if lv_data[0] or lv_data[1]:
+                lv_color = [color_white] * 6
+            lv_color[0] = lv_color[1] = color_l_gray
+
+        for __index in range(6):
+            content[__index].update_pos()
+            data_box_anc.set_father(content[__index])
+            # data_box_anc.plot(x_reverse=(content[__index].grid_id[1] == 0), offset=(27, int(hex_y * sqrt_3 * 3 / 4)))
+            data_box_anc.plot(x_reverse=(content[__index].grid_id[1] == 0), offset=(0, int(hex_y * sqrt_3 * 3 / 4)))
+            glow_anc.set_father(content[__index])
+            glow_anc.plot()
+        for __index in range(6):
+            content[__index].plot()
+            text_b[__index].text = str(lv_data[__index])
+            text_s[__index].text = lv_data_small[__index]
+            if text_b[__index].grid_id[1] == 0:
+                text_b[__index].plot(lv_color[__index], pos='r')
+                text_s[__index].plot(lv_color[__index], pos='r')
+            else:
+                text_b[__index].plot(lv_color[__index])
+                text_s[__index].plot(lv_color[__index])
+
+    def plot_pie(data_list: list, color_tuple: tuple, legend: tuple, legend_pos: tuple, size: tuple, l_col: int = 1):
+        fig, ax = plt.subplots(figsize=size)
+        return
+
+        # Plot them by level
+
     for lv_index in range(21 - lv_base):
         """
         Chapter 2: Topmost level box
@@ -1430,107 +1481,35 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         title_anc.plot()
 
         """
-        Chapter 3: Clear marks
+        Chapter 3: Marks
         """
-        content_field = Anchor(bg, 'content', father=lv_field, free=(40, frame_margin))
+        content_field = Anchor(bg, 'content', father=lv_field, free=(90, 0))
         subtitle_anc.set_father(content_field)
         subtitle_anc.plot()
-        clear_field = Anchor(bg, 'clear field', father=content_field, free=(50, 120))
 
-        clear_grid.set_father(clear_field)
-        subtitle_anc.plot()
-
-        # Clear data and texts
         clear_data = level_summary[lv_cur][:6]
-        clear_data_small = []
-        clear_cur, clear_color = 0, []
+        clear_field = Anchor(bg, 'clear field', father=content_field, free=(80, hex_margin))
+        clear_dict = {'icon': clear_grid, 'text': clear_text_grid,
+                      'content': clear_content, 'text_b': clear_text_b, 'text_s': clear_text_s}
+        plot_hex_icon(clear_field, clear_dict, lv_cur, clear_data, custom=True)
 
-        for data in clear_data[::-1]:
-            clear_cur += data
-            clear_data_small.append('(%d)' % clear_cur)
-            if clear_cur == lv_sum:
-                clear_color.append(color_gold)
-            else:
-                clear_color.append(color_l_gray)
-        clear_color.reverse()
-        clear_data_small.reverse()
-        clear_data_small[0] = clear_data_small[1] = '-'
-        clear_color[0] = clear_color[1] = color_l_gray
-        if clear_data[0] or clear_data[1]:
-            clear_color = [color_l_gray] * 6
-
-        # clear_title_anc.plot(color_l_gray)
-        for index in range(6):
-            clear_content[index].update_pos()
-            glow_anc.set_father(clear_content[index])
-            glow_anc.plot()
-        for index in range(6):
-            clear_content[index].plot()
-            clear_text_b[index].text = str(clear_data[index])
-            clear_text_s[index].text = clear_data_small[index]
-
-            if clear_text_b[index].grid_id[1] == 0:
-                clear_text_b[index].plot(clear_color[index], offset=(0, 60), pos='r')
-                clear_text_s[index].plot(clear_color[index], offset=(0, 60), pos='r')
-            else:
-                clear_text_b[index].plot(clear_color[index], offset=(0, 220))
-                clear_text_s[index].plot(clear_color[index], offset=(0, 220))
-
-        """
-        Chapter 4: Grade Marks
-        """
-        grade_field = Anchor(bg, 'grade_field', father=content_field, free=(50, 560))
-
-        grade_title_anc = AnchorText(bg, 'grade subtitle', 'Grade Marks', pen, subtitle_font, (0, 20), grade_field)
-        grade_grid.set_father(grade_field)
-
-        # Grade data and texts
         grade_data = level_summary[lv_cur][6:17]
-        grade_data_small = []
-        grade_cur, grade_color = 0, []
-
-        for data in grade_data[::-1]:
-            grade_cur += data
-            grade_data_small.append('(%d)' % grade_cur)
-            if grade_cur == lv_sum:
-                grade_color.append(color_gold)
-            else:
-                grade_color.append(color_l_gray)
-        grade_color.reverse()
-        grade_data_small.reverse()
-        grade_data_small[0] = grade_data_small[1] = '-'
-        if grade_data[0] or grade_data[1]:
-            grade_color = [color_l_gray] * 6
-
-        grade_data = grade_data[-6:]
-        grade_data_small = grade_data_small[-6:]
-        grade_color = grade_color[-6:]
-
-        # grade_title_anc.plot(color_l_gray)
-        for index in range(6):
-            grade_content[index].update_pos()
-            glow_anc.set_father(grade_content[index])
-            glow_anc.plot()
-        for index in range(6):
-            grade_content[index].plot()
-            grade_text_b[index].text = str(grade_data[index])
-            grade_text_s[index].text = grade_data_small[index]
-
-            if grade_text_b[index].grid_id[1] == 0:
-                grade_text_b[index].plot(clear_color[index], offset=(0, 60), pos='r')
-                grade_text_s[index].plot(clear_color[index], offset=(0, 60), pos='r')
-            else:
-                grade_text_b[index].plot(clear_color[index], offset=(0, 220))
-                grade_text_s[index].plot(clear_color[index], offset=(0, 220))
+        grade_hex_data = grade_data[-6:]
+        grade_x = x_px - (hex_margin + icon_x)
+        grade_field = Anchor(bg, 'grade_field', father=content_field, free=(80, grade_x))
+        grade_dict = {'icon': grade_grid, 'text': grade_text_grid,
+                      'content': grade_content, 'text_b': grade_text_b, 'text_s': grade_text_s}
+        plot_hex_icon(grade_field, grade_dict, lv_cur, grade_hex_data)
 
         """
-        Chapter 5: Pie Plot
+        Chapter 4: Pie Plot
         """
-        pie_field = Anchor(bg, 'pie for two', (500, 0), father=lv_field)
+        pie_field = Anchor(bg, 'pie for two', (450, 0), father=lv_field)
+        pie_field.show_pos(100)
         pie_px = (600, 1000)
 
         """
-        Chapter 6: Histogram
+        Chapter 5: Histogram
         """
         hist_anc = Anchor(bg, 'histogram', (1000, 0), father=lv_field)
         break
