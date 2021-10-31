@@ -12,7 +12,7 @@ def quick_show(img: np.array):
 
 def add_alpha(img: np.array) -> np.array:
     img_b, img_g, img_r = cv2.split(img)
-    img_a = np.ones(img_b.shape, dtype=img_b.dtype) * 255
+    img_a = np.ones(img_b.shape, dtype=np.uint8) * 255
     return cv2.merge((img_b, img_g, img_r, img_a))
 
 
@@ -50,7 +50,7 @@ def bg_duplicator(base: np.array, y_px: int, x_px: int) -> np.array:
     return bg
 
 
-def png_superimpose(bg: np.array, img: np.array, pos: list or tuple = (0, 0), transparency: float = 1.0):
+def png_superimpose(bg: np.array, img: np.array, pos: list or tuple = (0, 0), opacity: float = 1.0):
     # pos should be like (y, x), images coded in BGR
     y_max, x_max, chn = bg.shape
     y_pos, x_pos = pos
@@ -64,10 +64,10 @@ def png_superimpose(bg: np.array, img: np.array, pos: list or tuple = (0, 0), tr
     if x_max < x_des:
         x_des = x_max
         x_dis = x_max - x_pos
-    uni_img = (img[:y_dis, :x_dis, 3] / 255.0) * transparency
+    uni_img = (img[:y_dis, :x_dis, 3] / 255.0) * opacity
     uni_bg = 1 - uni_img
 
-    for chn in range(3):
+    for chn in range(4):
         bg[y_pos: y_des, x_pos:x_des, chn] = uni_bg * bg[y_pos: y_des, x_pos:x_des, chn] + \
                                              uni_img * img[:y_dis, :x_dis, chn]
 
@@ -221,16 +221,18 @@ def outer_glow(img: np.array, color: tuple, radius: int):
     :param img:    Image with alpha channel
     :param color:  Color of the glow
     :param radius: Size of the box. Higher the value, wider the glow.
-    :return:       Glow image which 9 times(3 * 3) bigger than the original one
+    :return:       Glow image which add glowed margin (width = radius)
     """
     img_y, img_x, chn = img.shape
-    alpha = np.zeros((3 * img_y, 3 * img_x), dtype=img.dtype)
-    alpha[img_y:2 * img_y, img_x: 2 * img_x] = img[:, :, 3]
+    alpha = np.zeros((img_y + 2 * radius, img_x + 2 * radius), dtype=img.dtype)
+    glow_y, glow_x = alpha.shape
+    alpha[radius:-radius, radius:-radius] = img[:, :, 3]
     alpha = cv2.blur(alpha, (radius, radius))
-    glow_r = np.ones((3 * img_y, 3 * img_x), dtype=img.dtype) * color[0]
-    glow_g = np.ones((3 * img_y, 3 * img_x), dtype=img.dtype) * color[1]
-    glow_b = np.ones((3 * img_y, 3 * img_x), dtype=img.dtype) * color[2]
+    glow_r = np.ones((glow_y, glow_x), dtype=img.dtype) * color[0]
+    glow_g = np.ones((glow_y, glow_x), dtype=img.dtype) * color[1]
+    glow_b = np.ones((glow_y, glow_x), dtype=img.dtype) * color[2]
     glow = cv2.merge((glow_b, glow_g, glow_r, alpha))
+
     return glow
 
 
@@ -296,17 +298,17 @@ class AnchorImage(Anchor):
 
         self.size_y, self.size_x, self.chn = img.shape
 
-    def plot(self, transparency: float = 1.0, offset: tuple = (0, 0)):
+    def plot(self, opacity: float = 1.0, offset: tuple = (0, 0)):
         if self.absolute:
-            png_superimpose(self.bg, self.img, self.absolute, transparency)
+            png_superimpose(self.bg, self.img, self.absolute, opacity)
             return
         self.update_pos()
-        png_superimpose(self.bg, self.img, (self.y + offset[0], self.x + offset[1]), transparency)
+        png_superimpose(self.bg, self.img, (self.y + offset[0], self.x + offset[1]), opacity)
 
-    def plot_center(self, transparency: float = 1.0, offset: tuple = (0, 0)):
+    def plot_center(self, opacity: float = 1.0, offset: tuple = (0, 0)):
         bg_y, bg_x, chn = self.bg.shape
         pos_y, pos_x = abs(bg_y - self.size_y) // 2, abs(bg_x - self.size_x) // 2
-        png_superimpose(self.bg, self.img, (pos_y + offset[0], pos_x + offset[1]), transparency)
+        png_superimpose(self.bg, self.img, (pos_y + offset[0], pos_x + offset[1]), opacity)
 
 
 class AnchorText(Anchor):
@@ -317,10 +319,112 @@ class AnchorText(Anchor):
         self.pen = pen
         self.font = font
 
-    def plot(self, color: tuple):
+    def plot(self, color: tuple, offset: tuple = (0, 0), pos: str = 'l'):
+        """
+        Render text on background.
+        :param color:  Color of the text, (R, G, B)
+        :param offset: Extra offset to set
+        :param pos:    Way to arrange the text. 'l' means flush left, 'c' means center, 'r' means flush right
+        """
+        if pos == 'c':
+            length = self.font.getsize(self.text)[0]
+            offset = (offset[0], offset[1] - length)
+        elif pos == 'r':
+            length = self.font.getsize(self.text)[0]
+            offset = (offset[0], offset[1] - length // 2)
         color = rgb_2_bgr(color)
         if self.absolute:
-            self.pen.text((self.absolute[1], self.absolute[0]), self.text, color, font=self.font)
+            self.pen.text((self.absolute[1] + offset[1], self.absolute[0] + offset[0]), self.text, color, self.font)
             return
         self.update_pos()
-        self.pen.text((self.x, self.y), self.text, color, font=self.font)
+        self.pen.text((self.x + offset[1], self.y + offset[0]), self.text, color, font=self.font)
+
+
+def generate_frame(corner: tuple, side: tuple, size: tuple, width: tuple, color: tuple, opacity: float) -> np.array:
+    top_left, top_right, btm_left, btm_right = corner
+    side_top, side_right, side_btm, side_left = side
+    content_size = (size[0] - 2 * width[0], size[1] - 2 * width[1])
+    img = np.zeros((size[0], size[1], 4), dtype=np.uint8)
+
+    content_r = np.ones(content_size, dtype=np.uint8) * color[0]
+    content_g = np.ones(content_size, dtype=np.uint8) * color[1]
+    content_b = np.ones(content_size, dtype=np.uint8) * color[2]
+    content_a = np.ones(content_size, dtype=np.uint8) * int(opacity * 255)
+    content = cv2.merge((content_b, content_g, content_r, content_a))
+
+    side_top = bg_duplicator(side_top, side_top.shape[0], size[1])
+    side_right = bg_duplicator(side_right, size[0], side_right.shape[1])
+    side_btm = bg_duplicator(side_btm, side_btm.shape[0], size[1])
+    side_left = bg_duplicator(side_left, size[0], side_left.shape[1])
+
+    png_superimpose(img, content, width)
+    png_superimpose(img, side_top, (0, 0))
+    png_superimpose(img, side_right, (0, size[1] - side_right.shape[1]))
+    png_superimpose(img, side_btm, (size[0] - side_btm.shape[0], 0))
+    png_superimpose(img, side_left, (0, 0))
+    png_superimpose(img, top_left, (0, 0))
+    png_superimpose(img, top_right, (0, size[1] - top_right.shape[1]))
+    png_superimpose(img, btm_left, (size[0] - btm_left.shape[0], 0))
+    png_superimpose(img, btm_right, (size[0] - btm_right.shape[0], size[1] - btm_right.shape[1]))
+
+    return img
+
+
+def generate_line_box(size, color: tuple, width: int, opacity: float, corner: dict) -> np.array:
+    box_y, box_x = size
+    l_a = np.ones((box_y, box_x), dtype=np.uint8) * 255
+    line_box = np.ones((box_y, box_x, 3), dtype=np.uint8) * 255
+    cv2.rectangle(line_box, (0, 0), (box_x, box_y), color=rgb_2_bgr(color), thickness=-1)
+    l_r, l_g, l_b = cv2.split(line_box)
+    line_box = cv2.merge((l_r, l_g, l_b, l_a))
+    line_box[width:-width, width:-width, 3] = \
+        np.ones((box_y - 2 * width, box_x - 2 * width), dtype=np.uint8) * int(255 * opacity)
+    if corner['validity']:
+        try:
+            c_width, length, margin, c_color = corner['width'], corner['length'], corner['margin'], corner['color']
+            c_a = np.ones((length, length), dtype=np.uint8) * 255
+            c_a[c_width:, c_width:] = np.zeros((length - c_width, length - c_width), dtype=np.uint8)
+            c_img = np.zeros((length, length, 3), dtype=np.uint8)
+            cv2.rectangle(c_img, (0, 0), (length, length), color=rgb_2_bgr(c_color), thickness=-1)
+            c_r, c_g, c_b = cv2.split(c_img)
+
+            c_img = cv2.merge((c_r, c_g, c_b, c_a))
+            img_y, img_x = box_y + 2 * margin, box_x + 2 * margin
+            img = np.zeros((img_y, img_x, 4), dtype=np.uint8)
+            img[margin:-margin, margin:-margin, :] = line_box
+            png_superimpose(img, c_img, (0, 0))
+            c_img = cv2.flip(c_img, 1)
+            png_superimpose(img, c_img, (0, img_x - length))
+            c_img = cv2.flip(c_img, 0)
+            png_superimpose(img, c_img, (img_y - length, img_x - length))
+            c_img = cv2.flip(c_img, 1)
+            png_superimpose(img, c_img, (img_y - length, 0))
+        except KeyError:
+            raise Warning('Parameter missing, the corner will be omitted.')
+    else:
+        return line_box
+    return img
+
+
+def generate_title(gradients: list or tuple, length: int, bg: dict) -> np.array:
+    left, bar, right = gradients
+    img_y, img_x = left.shape[0], length
+    left_x, right_x = left.shape[1], right.shape[1]
+    if bar.shape[2] == 3:
+        bar = add_alpha(bar)
+    bar = bg_duplicator(bar, img_y, length - (left_x + right_x))
+
+    img = np.zeros((img_y, img_x, 4), dtype=np.uint8)
+    png_superimpose(img, left, (0, 0))
+    png_superimpose(img, right, (0, length - right_x))
+    png_superimpose(img, bar, (0, left_x))
+
+    if bg['validity']:
+        try:
+            bg_img, bg_pos = bg['image'], bg['pos']
+            if bg_img.shape[2] == 3:
+                bg_img = add_alpha(bg_img)
+            png_superimpose(img, bg_img, (0, bg_pos))
+        except KeyError:
+            raise Warning('Parameter missing, the corner will be omitted.')
+    return img
