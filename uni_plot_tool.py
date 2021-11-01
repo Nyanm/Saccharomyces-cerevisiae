@@ -1,8 +1,7 @@
+import matplotlib.pyplot as plt
 import numpy as np
-import cv2
-from PIL import Image, ImageDraw, ImageFont
-from matplotlib import pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+from cfg_read import *
 
 
 def quick_show(img: np.array):
@@ -50,7 +49,8 @@ def bg_duplicator(base: np.array, y_px: int, x_px: int) -> np.array:
     return bg
 
 
-def png_superimpose(bg: np.array, img: np.array, pos: list or tuple = (0, 0), opacity: float = 1.0):
+def png_superimpose(bg: np.array, img: np.array,
+                    pos: list or tuple = (0, 0), opacity: float = 1.0, is_add: bool = False):
     # pos should be like (y, x), images coded in BGR
     y_max, x_max, chn = bg.shape
     y_pos, x_pos = pos
@@ -66,6 +66,8 @@ def png_superimpose(bg: np.array, img: np.array, pos: list or tuple = (0, 0), op
         x_dis = x_max - x_pos
     uni_img = (img[:y_dis, :x_dis, 3] / 255.0) * opacity
     uni_bg = 1 - uni_img
+    if is_add:
+        uni_bg = (bg[y_pos: y_des, x_pos:x_des, 3] / 255.0) * opacity
 
     for chn in range(4):
         bg[y_pos: y_des, x_pos:x_des, chn] = uni_bg * bg[y_pos: y_des, x_pos:x_des, chn] + \
@@ -182,10 +184,18 @@ def plot_matplotlib_legacy(bg: np.array, fig: plt.figure, pos: tuple):
     png_superimpose(bg, img, pos)
 
 
-def plot_matplotlib(bg: np.array, pos: tuple, temp_dir: str):
-    plt.savefig(temp_dir + '/data/matplotlib.png', transparent=True)
-    img = cv2.imread(temp_dir + '/data/matplotlib.png', cv2.IMREAD_UNCHANGED)
+def plot_matplotlib(bg: np.array, pos: tuple):
+    plt.savefig(local_dir + '/data/matplotlib.png', transparent=True)
+    img = cv2.imread(local_dir + '/data/matplotlib.png', cv2.IMREAD_UNCHANGED)
     png_superimpose(bg, img, pos)
+
+
+def get_matplotlib(fig: plt.figure):
+    if not fig:
+        return
+    plt.savefig(local_dir + '/data/matplotlib.png', transparent=True)
+    img = cv2.imread(local_dir + '/data/matplotlib.png', cv2.IMREAD_UNCHANGED)
+    return img
 
 
 def hex_2_rgb(raw_color: str) -> tuple:
@@ -215,19 +225,23 @@ def rgb_2_hex(raw_color: tuple, add_well=True) -> str:
     return color
 
 
-def outer_glow(img: np.array, color: tuple, radius: int):
+def outer_glow(img: np.array, color: tuple, radius: int, is_gaussian: bool = False):
     """
     Using blur(box blur) to create outer glow, it returns only glow, not glowed image
     :param img:    Image with alpha channel
     :param color:  Color of the glow
     :param radius: Size of the box. Higher the value, wider the glow.
+    :param is_gaussian: Using Gaussian blur if validated.
     :return:       Glow image which add glowed margin (width = radius)
     """
     img_y, img_x, chn = img.shape
     alpha = np.zeros((img_y + 2 * radius, img_x + 2 * radius), dtype=img.dtype)
     glow_y, glow_x = alpha.shape
     alpha[radius:-radius, radius:-radius] = img[:, :, 3]
-    alpha = cv2.blur(alpha, (radius, radius))
+    if is_gaussian:
+        alpha = cv2.GaussianBlur(alpha, (radius, radius), 0.8, 0.8)
+    else:
+        alpha = cv2.blur(alpha, (radius, radius))
     glow_r = np.ones((glow_y, glow_x), dtype=img.dtype) * color[0]
     glow_g = np.ones((glow_y, glow_x), dtype=img.dtype) * color[1]
     glow_b = np.ones((glow_y, glow_x), dtype=img.dtype) * color[2]
@@ -345,6 +359,18 @@ class AnchorText(Anchor):
         self.update_pos()
         self.pen.text((self.x + offset[1], self.y + offset[0]), self.text, color, font=self.font)
 
+    def plot_shadow(self, color: tuple, shadow: dict, offset: tuple = (0, 0), pos: str = 'l', width: int = 1):
+        dir_table = {0: (-2, 0), 1: (-1, 1), 2: (0, 2), 3: (1, 1), 4: (2, 0), 5: (1, -1), 6: (0, -2), 7: (-1, -1)}
+        for index in range(8):
+            offset_dir = dir_table[index]
+            offset_cur = (offset_dir[0] * width + offset[0], offset_dir[1] * width + offset[1])
+            self.plot(color, offset_cur, pos)
+        if shadow['validity']:
+            shadow_color, shadow_dir = shadow['color'], shadow['direction']
+            offset_dir = dir_table[shadow_dir]
+            offset_cur = (offset_dir[0] * width + offset[0], offset_dir[1] * width + offset[1])
+            self.plot(shadow_color, offset_cur, pos)
+
 
 def generate_frame(corner: tuple, side: tuple, size: tuple, width: tuple, color: tuple, opacity: float) -> np.array:
     top_left, top_right, btm_left, btm_right = corner
@@ -376,37 +402,64 @@ def generate_frame(corner: tuple, side: tuple, size: tuple, width: tuple, color:
     return img
 
 
-def generate_line_box(size, color: tuple, width: int, opacity: float, corner: dict) -> np.array:
+def generate_line_box(size, color: tuple, inner_color: tuple, width: int, opacity: float,
+                      corner: dict = None, glow: dict = None, bg_img: np.array = None) -> np.array:
     box_y, box_x = size
     l_a = np.ones((box_y, box_x), dtype=np.uint8) * 255
     line_box = np.ones((box_y, box_x, 3), dtype=np.uint8) * 255
     cv2.rectangle(line_box, (0, 0), (box_x, box_y), color=rgb_2_bgr(color), thickness=-1)
-    l_r, l_g, l_b = cv2.split(line_box)
-    line_box = cv2.merge((l_r, l_g, l_b, l_a))
-    line_box[width:-width, width:-width, 3] = \
-        np.ones((box_y - 2 * width, box_x - 2 * width), dtype=np.uint8) * int(255 * opacity)
-    if corner['validity']:
-        try:
-            c_width, length, margin, c_color = corner['width'], corner['length'], corner['margin'], corner['color']
-            c_a = np.ones((length, length), dtype=np.uint8) * 255
-            c_a[c_width:, c_width:] = np.zeros((length - c_width, length - c_width), dtype=np.uint8)
-            c_img = np.zeros((length, length, 3), dtype=np.uint8)
-            cv2.rectangle(c_img, (0, 0), (length, length), color=rgb_2_bgr(c_color), thickness=-1)
-            c_r, c_g, c_b = cv2.split(c_img)
+    l_b, l_g, l_r = cv2.split(line_box)
+    line_box = cv2.merge((l_b, l_g, l_r, l_a))
 
-            c_img = cv2.merge((c_r, c_g, c_b, c_a))
+    inner_y, inner_x = box_y - 2 * width, box_x - 2 * width
+    inner_bgr = np.ones((inner_y, inner_x, 3), dtype=np.uint8)
+    cv2.rectangle(inner_bgr, (0, 0), (inner_x, inner_y), color=rgb_2_bgr(inner_color), thickness=-1)
+    inner_a = np.ones((inner_y, inner_x), dtype=np.uint8) * int(255 * opacity)
+    inner_b, inner_g, inner_r = cv2.split(inner_bgr)
+    inner = cv2.merge((inner_b, inner_g, inner_r, inner_a))
+    line_box[width:-width, width:-width, :] = inner
+
+    if bg_img is not None:
+        bg_fill = bg_duplicator(bg_img, inner_y, inner_x)
+        png_superimpose(line_box, bg_fill, (width, width), is_add=True)
+
+    if glow:
+        expand, g_color, radius, g_opacity = glow['expand'], glow['color'], glow['radius'], glow['opacity']
+        concrete = np.ones((box_y + 2 * expand, box_x + 2 * expand, 4), dtype=np.uint8) * int(255 * opacity)
+        glowed = outer_glow(concrete, g_color, radius, is_gaussian=False)
+        glowed[expand + radius:-(expand + radius), expand + radius:-(expand + radius), :] = \
+            np.zeros((box_y, box_x, 4), dtype=np.uint8)
+        png_superimpose(glowed, line_box, (expand + radius, expand + radius), is_add=True)
+        if not corner:
+            return glowed
+    else:
+        glowed = expand = radius = None
+    if corner:
+        c_width, length, margin, c_color = corner['width'], corner['length'], corner['margin'], corner['color']
+        c_a = np.ones((length, length), dtype=np.uint8) * 255
+        c_a[c_width:, c_width:] = np.zeros((length - c_width, length - c_width), dtype=np.uint8)
+        c_img = np.zeros((length, length, 3), dtype=np.uint8)
+        cv2.rectangle(c_img, (0, 0), (length, length), color=rgb_2_bgr(c_color), thickness=-1)
+        c_r, c_g, c_b = cv2.split(c_img)
+        c_img = cv2.merge((c_r, c_g, c_b, c_a))
+
+        if glow:
+            img = glowed
             img_y, img_x = box_y + 2 * margin, box_x + 2 * margin
+            base_y = base_x = expand + radius - margin
+        else:
+            img_y, img_x = box_y + 2 * margin, box_x + 2 * margin
+            base_y = base_x = 0
             img = np.zeros((img_y, img_x, 4), dtype=np.uint8)
             img[margin:-margin, margin:-margin, :] = line_box
-            png_superimpose(img, c_img, (0, 0))
-            c_img = cv2.flip(c_img, 1)
-            png_superimpose(img, c_img, (0, img_x - length))
-            c_img = cv2.flip(c_img, 0)
-            png_superimpose(img, c_img, (img_y - length, img_x - length))
-            c_img = cv2.flip(c_img, 1)
-            png_superimpose(img, c_img, (img_y - length, 0))
-        except KeyError:
-            raise Warning('Parameter missing, the corner will be omitted.')
+
+        png_superimpose(img, c_img, (base_y, base_x))
+        c_img = cv2.flip(c_img, 1)
+        png_superimpose(img, c_img, (base_y, base_x + img_x - length))
+        c_img = cv2.flip(c_img, 0)
+        png_superimpose(img, c_img, (base_y + img_y - length, base_x + img_x - length))
+        c_img = cv2.flip(c_img, 1)
+        png_superimpose(img, c_img, (base_y + img_y - length, base_x))
     else:
         return line_box
     return img
