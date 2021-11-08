@@ -120,7 +120,8 @@ class SdvxData:
                         .replace("驫", "ā").replace("骭", "ü").replace("驩", "Ø").replace("罇", "ê").replace("曩", "è") \
                         .replace("齷", "é").replace("騫", "á").replace("曦", "à").replace("龕", "€").replace("趁", "Ǣ") \
                         .replace("蹇", "₂").replace("彜", "ū").replace("雋", "Ǜ").replace("隍", "Ü").replace("鬻", "♃") \
-                        .replace("鬥", "Ã").replace("鬆", "Ý").replace("齶", "♡").replace("齲", "❤").replace("躔", "躔")
+                        .replace("鬥", "Ã").replace("鬆", "Ý").replace("齶", "♡").replace("齲", "❤").replace("躔", "★")\
+                        .replace('釁', '🍄').replace('頽', 'ä').replace('黻', '*')
                     artist = root[index][0][3].text
                     bpm_max = int(root[index][0][6].text)
                     bpm_min = int(root[index][0][7].text)
@@ -319,42 +320,6 @@ class SdvxData:
                                    [self.user_name, self.aka, self.ap_card, self.skill])
         return 0
 
-    def get_summary_legacy(self):
-        log_write('start to generate user summary for %s' % self.user_name, file_name)
-        # Dispose summary data
-        level_summary = zeros((21, 8))
-        # Each line of level summary should be
-        # [NC, HC, UC, PUC, AAA, AAA+, S, sum]
-        for single_music in self.level_table:
-            if not single_music[0]:
-                continue
-            nov, adv, exh, inf, mxm = int(single_music[7]), int(single_music[10]), int(single_music[13]), \
-                                      int(single_music[16]), int(single_music[19])
-
-            level_summary[nov][7] += 1
-            level_summary[adv][7] += 1
-            level_summary[exh][7] += 1
-            level_summary[inf][7] += 1
-            level_summary[mxm][7] += 1
-
-        # Due to the "Automation Paradise", there are 2 ghost song in music_db.xml which should be eliminated.
-        level_summary[7][7] -= 2
-        level_summary[13][7] -= 2
-        level_summary[16][7] -= 2
-        level_summary[18][7] -= 2
-
-        for record in self.music_map:
-            if not record[0]:
-                continue
-            clear, grade, lv = int(record[4]), int(record[5]), int(record[8])
-            if clear > 1:
-                level_summary[lv][clear_index[clear]] += 1
-            if grade > 7:
-                level_summary[lv][grade_index[grade]] += 1
-
-        self.plot_skin.plot_summary_legacy(level_summary,
-                                           [self.card_num, self.user_name, self.aka, self.ap_card, self.skill])
-
     def get_summary(self, base_lv: int = 17):
         if type(base_lv) != int:
             base_lv = 17
@@ -385,9 +350,7 @@ class SdvxData:
 if __name__ == '__main__':
     if test_mode:
         base = SdvxData()
-
-        base.get_summary()
-
+        print('*' == '*')
         sys.exit(0)
 
     try:
@@ -440,4 +403,3 @@ if __name__ == '__main__':
 
 # TODO：Rewrite user interface, using dynamic refreshing mode
 # TODO: Plot all songs at specific level
-# TODO: (Ongoing) Rewrite user summary

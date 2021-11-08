@@ -12,7 +12,7 @@ db path=C:\Arcade MUG\asphyxia-core\savedata\sdvx@asphyxia.db
 
 # Directory of sdvx HDD data
 # eg. game path=C:\MUG\SDVX6\KFC-2021051802\contents\data
-game path=C:\Arcade MUG\SDVX6\KFC-2021083100\contents\data
+game path=C:\Arcade MUG\SDVX6\KentuckyFriedChicken\contents\data
 
 # Directory where outputs pictures
 output path=C:\Users\nyanm\PycharmProjects\sdvx_remote\img_archive\gen6\temp

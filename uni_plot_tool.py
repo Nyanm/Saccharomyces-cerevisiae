@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from cfg_read import *
@@ -65,13 +64,17 @@ def png_superimpose(bg: np.array, img: np.array,
         x_des = x_max
         x_dis = x_max - x_pos
     uni_img = (img[:y_dis, :x_dis, 3] / 255.0) * opacity
-    uni_bg = 1 - uni_img
-    if is_add:
-        uni_bg = (bg[y_pos: y_des, x_pos:x_des, 3] / 255.0) * opacity
-
-    for chn in range(4):
-        bg[y_pos: y_des, x_pos:x_des, chn] = uni_bg * bg[y_pos: y_des, x_pos:x_des, chn] + \
-                                             uni_img * img[:y_dis, :x_dis, chn]
+    if is_add:  # two transparent images add together
+        uni_bg = bg[y_pos: y_des, x_pos:x_des, 3] / 255.0
+        for chn in range(3):
+            bg[y_pos: y_des, x_pos:x_des, chn] = uni_bg * bg[y_pos: y_des, x_pos:x_des, chn] + \
+                                                 uni_img * img[:y_dis, :x_dis, chn]
+        bg[y_pos: y_des, x_pos:x_des, 3] = (1 - (1 - uni_bg) * (1 - uni_img)) * 255
+    else:  # a transparent image adds on a concrete background
+        uni_bg = 1 - uni_img
+        for chn in range(4):
+            bg[y_pos: y_des, x_pos:x_des, chn] = uni_bg * bg[y_pos: y_des, x_pos:x_des, chn] + \
+                                                 uni_img * img[:y_dis, :x_dis, chn]
 
 
 def parabola_gradient(bg: np.array, a: float, c: float, axis: str = 'x0'):
@@ -317,18 +320,19 @@ class AnchorImage(Anchor):
 
         self.size_y, self.size_x, self.chn = img.shape
 
-    def plot(self, opacity: float = 1.0, offset: tuple = (0, 0), y_reverse: bool = False, x_reverse: bool = False):
+    def plot(self, opacity: float = 1.0, offset: tuple = (0, 0),
+             y_reverse: bool = False, x_reverse: bool = False, trans_bg: bool = False):
         if self.absolute:
             png_superimpose(self.bg, self.img, self.absolute, opacity)
             return
         self.update_pos()
         plot_y, plot_x = self.y + offset[0] - y_reverse * self.size_y, self.x + offset[1] - x_reverse * self.size_x
-        png_superimpose(self.bg, self.img, (plot_y, plot_x), opacity)
+        png_superimpose(self.bg, self.img, (plot_y, plot_x), opacity, is_add=trans_bg)
 
-    def plot_center(self, opacity: float = 1.0, offset: tuple = (0, 0)):
+    def plot_center(self, opacity: float = 1.0, offset: tuple = (0, 0), trans_bg: bool = False):
         bg_y, bg_x, chn = self.bg.shape
         pos_y, pos_x = abs(bg_y - self.size_y) // 2, abs(bg_x - self.size_x) // 2
-        png_superimpose(self.bg, self.img, (pos_y + offset[0], pos_x + offset[1]), opacity)
+        png_superimpose(self.bg, self.img, (pos_y + offset[0], pos_x + offset[1]), opacity, is_add=trans_bg)
 
 
 class AnchorText(Anchor):
@@ -421,7 +425,7 @@ def generate_line_box(size, color: tuple, inner_color: tuple, width: int, opacit
 
     if bg_img is not None:
         bg_fill = bg_duplicator(bg_img, inner_y, inner_x)
-        png_superimpose(line_box, bg_fill, (width, width), is_add=True)
+        png_superimpose(line_box, bg_fill, (width, width))
 
     if glow:
         expand, g_color, radius, g_opacity = glow['expand'], glow['color'], glow['radius'], glow['opacity']
@@ -429,7 +433,7 @@ def generate_line_box(size, color: tuple, inner_color: tuple, width: int, opacit
         glowed = outer_glow(concrete, g_color, radius, is_gaussian=False)
         glowed[expand + radius:-(expand + radius), expand + radius:-(expand + radius), :] = \
             np.zeros((box_y, box_x, 4), dtype=np.uint8)
-        png_superimpose(glowed, line_box, (expand + radius, expand + radius), is_add=True)
+        png_superimpose(glowed, line_box, (expand + radius, expand + radius))
         if not corner:
             return glowed
     else:

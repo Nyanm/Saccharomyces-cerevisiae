@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 from PIL import Image, ImageDraw, ImageFont
 from matplotlib import pyplot as plt
+from matplotlib import rcParams
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.ticker import MaxNLocator
 from matplotlib.font_manager import FontProperties
