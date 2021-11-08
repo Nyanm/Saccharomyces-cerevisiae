@@ -1,6 +1,6 @@
 import sys
 import re
-from os import path, listdir
+from os import path, listdir, remove
 import time
 import numpy as np
 import cv2

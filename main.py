@@ -350,7 +350,7 @@ class SdvxData:
 if __name__ == '__main__':
     if test_mode:
         base = SdvxData()
-        print('*' == '*')
+        base.get_b50()
         sys.exit(0)
 
     try:

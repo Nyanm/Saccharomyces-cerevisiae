@@ -187,12 +187,6 @@ def plot_matplotlib_legacy(bg: np.array, fig: plt.figure, pos: tuple):
     png_superimpose(bg, img, pos)
 
 
-def plot_matplotlib(bg: np.array, pos: tuple):
-    plt.savefig(local_dir + '/data/matplotlib.png', transparent=True)
-    img = cv2.imread(local_dir + '/data/matplotlib.png', cv2.IMREAD_UNCHANGED)
-    png_superimpose(bg, img, pos)
-
-
 def get_matplotlib(fig: plt.figure):
     if not fig:
         return
