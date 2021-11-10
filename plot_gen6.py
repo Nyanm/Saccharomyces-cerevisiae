@@ -30,6 +30,7 @@ color_white = (245, 245, 245)
 color_black = (61, 61, 61)
 color_gray = (154, 154, 154)
 color_l_gray = (210, 210, 210)
+color_d_gray = (122, 122, 122)
 color_gold = (246, 222, 128)
 color_l_blue = (147, 255, 254)
 color_d_blue = (0, 62, 102)
@@ -387,242 +388,6 @@ def plot_single(record: list, profile: list):
     print('Plot successfully.')
 
 
-def plot_b50_legacy(music_map: list, profile: list):
-    """
-    Plot function for best 50 records
-    :param music_map: a list contains all music records, each line of music_map should be:
-                      [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf]
-                      all of them are strings, except vf is a float
-    :param profile:   a list of [card_num, user_name, aka_name, ap_card, skill], all strings
-    :return:          image stored as numpy array
-    """
-    card_num, user_name, aka_name, ap_card, skill = profile
-    music_map.sort(key=lambda x: x[10], reverse=True)
-    music_b50 = music_map[:50]
-
-    # Get overall volforce
-    vol_force = get_overall_vf(music_b50)
-    log_write('Get overall volforce complete', file_name)
-
-    # Load image files
-    bg = cv2.imread(img_archive + 'bg/B50_bg.png', cv2.IMREAD_UNCHANGED)
-
-    level_nov = cv2.imread(img_archive + 'level/level_small_nov.png', cv2.IMREAD_UNCHANGED)
-    level_adv = cv2.imread(img_archive + 'level/level_small_adv.png', cv2.IMREAD_UNCHANGED)
-    level_exh = cv2.imread(img_archive + 'level/level_small_exh.png', cv2.IMREAD_UNCHANGED)
-    level_inf = cv2.imread(img_archive + 'level/level_small_inf.png', cv2.IMREAD_UNCHANGED)
-    level_grv = cv2.imread(img_archive + 'level/level_small_grv.png', cv2.IMREAD_UNCHANGED)
-    level_hvn = cv2.imread(img_archive + 'level/level_small_hvn.png', cv2.IMREAD_UNCHANGED)
-    level_vvd = cv2.imread(img_archive + 'level/level_small_vvd.png', cv2.IMREAD_UNCHANGED)
-    level_mxm = cv2.imread(img_archive + 'level/level_small_mxm.png', cv2.IMREAD_UNCHANGED)
-    level_list = [level_nov, level_adv, level_exh, '', level_mxm, level_inf, level_grv, level_hvn, level_vvd]
-
-    mark_refactor = 0.58
-    mark_cr = cv2.imread(img_archive + 'mark/bg_mark_crash.png', cv2.IMREAD_UNCHANGED)
-    mark_cr = cv2.resize(mark_cr, dsize=None, fx=mark_refactor, fy=mark_refactor, interpolation=cv2.INTER_AREA)
-    mark_nc = cv2.imread(img_archive + 'mark/bg_mark_comp.png', cv2.IMREAD_UNCHANGED)
-    mark_nc = cv2.resize(mark_nc, dsize=None, fx=mark_refactor, fy=mark_refactor, interpolation=cv2.INTER_AREA)
-    mark_hc = cv2.imread(img_archive + 'mark/bg_mark_comp_ex.png', cv2.IMREAD_UNCHANGED)
-    mark_hc = cv2.resize(mark_hc, dsize=None, fx=mark_refactor, fy=mark_refactor, interpolation=cv2.INTER_AREA)
-    mark_uc = cv2.imread(img_archive + 'mark/bg_mark_uc.png', cv2.IMREAD_UNCHANGED)
-    mark_uc = cv2.resize(mark_uc, dsize=None, fx=mark_refactor, fy=mark_refactor, interpolation=cv2.INTER_AREA)
-    mark_puc = cv2.imread(img_archive + 'mark/bg_mark_puc.png', cv2.IMREAD_UNCHANGED)
-    mark_puc = cv2.resize(mark_puc, dsize=None, fx=mark_refactor, fy=mark_refactor, interpolation=cv2.INTER_AREA)
-    mark_list = ['', mark_cr, mark_nc, mark_hc, mark_uc, mark_puc]
-
-    grade_refactor = 0.42
-    grade_a = cv2.imread(img_archive + 'grade/bg_grade_a.png', cv2.IMREAD_UNCHANGED)
-    grade_a = cv2.resize(grade_a, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_ap = cv2.imread(img_archive + 'grade/bg_grade_a_plus.png', cv2.IMREAD_UNCHANGED)
-    grade_ap = cv2.resize(grade_ap, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_aa = cv2.imread(img_archive + 'grade/bg_grade_aa.png', cv2.IMREAD_UNCHANGED)
-    grade_aa = cv2.resize(grade_aa, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_aap = cv2.imread(img_archive + 'grade/bg_grade_aa_plus.png', cv2.IMREAD_UNCHANGED)
-    grade_aap = cv2.resize(grade_aap, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_aaa = cv2.imread(img_archive + 'grade/bg_grade_aaa.png', cv2.IMREAD_UNCHANGED)
-    grade_aaa = cv2.resize(grade_aaa, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_aaap = cv2.imread(img_archive + 'grade/bg_grade_aaa_plus.png', cv2.IMREAD_UNCHANGED)
-    grade_aaap = cv2.resize(grade_aaap, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_b = cv2.imread(img_archive + 'grade/bg_grade_b.png', cv2.IMREAD_UNCHANGED)
-    grade_b = cv2.resize(grade_b, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_c = cv2.imread(img_archive + 'grade/bg_grade_c.png', cv2.IMREAD_UNCHANGED)
-    grade_c = cv2.resize(grade_c, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_d = cv2.imread(img_archive + 'grade/bg_grade_d.png', cv2.IMREAD_UNCHANGED)
-    grade_d = cv2.resize(grade_d, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_s = cv2.imread(img_archive + 'grade/bg_grade_s.png', cv2.IMREAD_UNCHANGED)
-    grade_s = cv2.resize(grade_s, dsize=None, fx=grade_refactor, fy=grade_refactor, interpolation=cv2.INTER_AREA)
-    grade_list = ['', grade_d, grade_c, grade_b, grade_a, grade_ap, grade_aa, grade_aap, grade_aaa, grade_aaap, grade_s]
-
-    log_write('# Load image files complete', file_name)
-
-    # Plot images about user profile
-    ap_card_path = get_ap_card(ap_card)
-    card_img = cv2.imread(ap_card_path, cv2.IMREAD_UNCHANGED)
-    card_img = cv2.resize(card_img, dsize=None, fx=0.82, fy=0.82, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, card_img, [44, 827])
-
-    skill_img = cv2.imread(img_archive + 'skill/skill_' + skill.zfill(2) + '.png', cv2.IMREAD_UNCHANGED)
-    skill_img = cv2.resize(skill_img, dsize=None, fx=0.42, fy=0.42, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, skill_img, [233, 827])
-
-    vf_level = get_vf_property(vol_force, is_level=True)
-    force_img = cv2.imread(img_archive + 'vf/em6_' + str(vf_level).zfill(2) + '_i_eab.png', cv2.IMREAD_UNCHANGED)
-    force_img = cv2.resize(force_img, dsize=None, fx=0.34, fy=0.34, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, force_img, [123, 1000])
-
-    # Stipulate relative distance of each elements, due to the OpenCV, the correlate system is (y, x)
-    absolute, y_pace, x_pace = (323, 40), 136, 770
-    pos_jk, pos_level, pos_mark, pos_grade = (8, 17), (14, 144), (61, 147), (61, 202)
-
-    # Plot image parts
-    for index in range(50):
-        is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf = music_b50[index]
-        if not is_recorded:
-            break
-        else:
-            pass
-        base_pos = [absolute[0] + (y_pace * (index // 2)), absolute[1] + (x_pace * (index % 2))]
-
-        # Plot jacket
-        jk_path = get_jacket(mid, m_type, 's')
-        jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
-        jk = add_alpha(jk)
-        simple_plot(bg, jk, base_pos, relative=pos_jk)
-
-        # Plot level box
-        if m_type == '3':
-            level_box = level_list[int(m_type) + int(inf_ver)]
-        else:
-            level_box = level_list[int(m_type)]
-        simple_plot(bg, level_box, base_pos, relative=pos_level)
-
-        # Plot small icons
-        mark_icon = mark_list[int(clear)]
-        simple_plot(bg, mark_icon, base_pos, relative=pos_mark)
-
-        grade_icon = grade_list[int(grade)]
-        simple_plot(bg, grade_icon, base_pos, relative=pos_grade)
-
-    log_write('Image plot complete', file_name)
-
-    # Initialize fonts
-    user_font = ImageFont.truetype(font_DFHS, 40, encoding='utf-8', index=0)
-    id_font = ImageFont.truetype(font_DFHS, 24, encoding='utf-8', index=0)
-    vol_font = ImageFont.truetype(font_DFHS, 30, encoding='utf-8', index=0)
-    vol_num_font = ImageFont.truetype(font_unipace, 28, encoding='utf-8')
-    ceil_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
-    ceil_num_font = ImageFont.truetype(font_unipace, 18, encoding='utf-8')
-
-    level_font = ImageFont.truetype(font_unipace, 15, encoding='utf-8')
-    name_font = ImageFont.truetype(font_DFHS, 26, encoding='utf-8', index=0)
-    score_h_font = ImageFont.truetype(font_DFHS, 44, encoding='utf-8', index=0)
-    score_l_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
-    vf_str_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
-    vf_num_font = ImageFont.truetype(font_unipace, 26, encoding='utf-8')
-    rank_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
-
-    h_size, l_size = score_h_font.getsize('0')[0], score_l_font.getsize('0')[0]
-    log_write('Fonts initialization complete', file_name)
-
-    # Plot all character strings
-    bg = cv2.cvtColor(bg, cv2.COLOR_BGR2RGB)
-    pil_img = Image.fromarray(bg)
-    pen = ImageDraw.Draw(pil_img)
-
-    # Plot strings of user profile, due to the PIL, the correlate system is (x, y)
-    abs_user, abs_id, abs_vol, abs_vol_num, abs_ceil, abs_floor, abs_ceil_num, abs_floor_num = \
-        (1020, 55), (1020, 100), (1135, 160), (1344, 161), (1260, 212), (1234, 237), (1344, 214), (1344, 239)
-    pos_level_num, pos_name, pos_h_score, pos_vf, pos_vf_num, pos_rank = \
-        (221, 19), (271, 14), (271, 63), (510, 73), (570, 75), (700, 93)
-
-    # Check validity of ceil and floor
-    if music_b50[0][0]:
-        ceil_num = music_b50[0][-1] / 2
-    else:
-        ceil_num = 0.0
-    if music_b50[-1][0]:
-        floor_num = music_b50[-1][-1] / 2
-    else:
-        floor_num = 0.0
-
-    pen.text(abs_user, user_name, color_white, font=user_font)
-    pen.text(abs_id, 'ID  ' + card_num, color_white, font=id_font)
-    pen.text(abs_vol, 'VOLFORCE', color_white, font=vol_font)
-    pen.text(abs_vol_num, ('%.3f' % vol_force), get_vf_property(vol_force), font=vol_num_font)
-    pen.text(abs_ceil, 'CEIL', color_white, font=ceil_font)
-    pen.text(abs_floor, 'FLOOR', color_white, font=ceil_font)
-    pen.text(abs_ceil_num, ('%.3f' % ceil_num), get_vf_property(ceil_num), font=ceil_num_font)
-    pen.text(abs_floor_num, ('%.3f' % floor_num), get_vf_property(floor_num), font=ceil_num_font)
-
-    # Plot strings of music records
-    def str_plot(text: str, str_font, pos: tuple, color: tuple, length: int = 0, relative: tuple = (0, 0)):
-        x, y = pos[0] + relative[0], pos[1] + relative[1]
-        if length:
-            text = length_uni(str_font, text, length)
-        pen.text((x, y), text, color, font=str_font)
-
-    for index in range(50):
-        is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf = music_b50[index]
-        if not is_recorded:
-            break
-        base_pos = (absolute[1] + (x_pace * (index % 2)), absolute[0] + (y_pace * (index // 2)))
-
-        # Plot level
-        str_plot(lv, level_font, base_pos, color_white, relative=pos_level_num)
-
-        # Plot name
-        str_plot(name, name_font, base_pos, color_black, length=450, relative=pos_name)
-
-        # Plot score(both higher bit and lower bit)
-        score = score.zfill(8)
-        h_score, l_score = score[:4], score[4:8]
-        zero_flag = 1
-        num_color = color_gray
-        x_score = pos_h_score[0]
-        for num in h_score:
-            if num != '0' and zero_flag:
-                num_color = color_black
-                zero_flag = 0
-            str_plot(num, score_h_font, base_pos, num_color, relative=(x_score, pos_h_score[1]))
-            x_score += h_size
-
-        y_l_score = pos_h_score[1] + 10
-        for num in l_score:
-            if num != '0' and zero_flag:
-                num_color = color_black
-                zero_flag = 0
-            str_plot(num, score_l_font, base_pos, num_color, relative=(x_score, y_l_score))
-            x_score += l_size
-
-        # Plot VF("VF" and the vf value)
-        str_plot('VF', vf_str_font, base_pos, color_black, relative=pos_vf)
-        str_plot(('%.3f' % (vf / 2)), vf_num_font, base_pos, get_vf_property(vf / 2, is_darker=True),
-                 relative=pos_vf_num)
-
-        # Plot rank
-        str_plot('#%d' % (index + 1), rank_font, base_pos, color_black, relative=pos_rank)
-    log_write('Characters plot complete', file_name)
-
-    bg = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-
-    # Get b50 message
-    msg = ''
-    msg += ('----------------VOLFORCE %.3f----------------\n' % vol_force)
-    msg += 'No.  VF      DIFF   SCORE    RANK  LHT  NAME\n'
-    for index in range(50):
-        diff = get_diff(music_b50[index][2], music_b50[index][9])
-        msg += ('#%-4d%.3f  %s%-2s  %-9s%-6s%-5s%s\n' % ((index + 1), music_b50[index][10], diff,
-                                                         music_b50[index][8], music_b50[index][3],
-                                                         clear_table[music_b50[index][4]],
-                                                         grade_table[music_b50[index][5]], music_b50[index][7]))
-    print(msg)
-    log_write('Text message generate complete.\n%s' % msg, file_name)
-
-    cv2.imwrite('%s/%s_B50.png' % (output, user_name), bg, params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
-    log_write('Plot at %s/%s_B50.png' % (output, user_name), file_name)
-    print('Plot successfully.')
-
-
 def plot_b50(music_map: list, profile: list):
     """
     Plot function for best 50 records
@@ -656,12 +421,12 @@ def plot_b50(music_map: list, profile: list):
     Generate background, text layer and load image ingredients
     """
     # Stipulate the size of the background & generate
-    px_prologue, px_chapters, px_epilogue = 350, 144, 50
+    px_prologue, px_chapters, px_epilogue = 350, 144, 70
     y_px, x_px = px_prologue + px_chapters * 25 + px_epilogue, 1280
     bg = generate_hex_bg((y_px, x_px))
 
     # Init text layer
-    blank_layer = np.zeros((y_px, x_px, 3), dtype=bg.dtype)
+    blank_layer = np.ones((y_px, x_px, 3), dtype=np.uint8) * 154  # Makeshift
     text_layer = Image.fromarray(blank_layer)
     text_layer.putalpha(1)
     pen = ImageDraw.Draw(text_layer)
@@ -689,8 +454,8 @@ def plot_b50(music_map: list, profile: list):
     """
     # Logo, relatively independent
     logo = cv2.imread(img_archive + '/version/logo.png', cv2.IMREAD_UNCHANGED)
-    logo = cv2.resize(logo, dsize=None, fx=0.35, fy=0.35, interpolation=cv2.INTER_AREA)
-    logo_anc = AnchorImage(bg, 'logo', logo, free=(110, 86), father=prologue)
+    logo = cv2.resize(logo, dsize=None, fx=0.4, fy=0.4, interpolation=cv2.INTER_AREA)
+    logo_anc = AnchorImage(bg, 'logo', logo, free=(100, 80), father=prologue)
     logo_anc.plot()
 
     # Profile field contains card field and data field
@@ -769,9 +534,10 @@ def plot_b50(music_map: list, profile: list):
     title_font = ImageFont.truetype(font_DFHS, 26, encoding='utf-8', index=0)
     score_h_font = ImageFont.truetype(font_DFHS, 44, encoding='utf-8', index=0)
     score_l_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
-    vf_str_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
+    vf_str_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
     vf_num_font = ImageFont.truetype(font_unipace, 26, encoding='utf-8')
-    rank_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
+
+    h_size, l_size = score_h_font.getsize('0')[0], score_l_font.getsize('0')[0]
 
     for index in range(50):
         # Unpack data & validity check
@@ -800,7 +566,7 @@ def plot_b50(music_map: list, profile: list):
 
         level_num_anc = AnchorText(bg, 'level text', lv, pen, level_font, free=(4, 76), father=level_box_anc)
         level_num_anc.plot(color_white)
-        
+
         # Clear mark & grade mark
         clear_icon = clear_list[int(clear)]
         clear_anc = AnchorImage(bg, 'clear', clear_icon, free=(61, 147), father=box_anc)
@@ -811,27 +577,68 @@ def plot_b50(music_map: list, profile: list):
         grade_anc.plot()
 
         # Title
-        title = length_uni(title_font, name, length=300)
+        title = length_uni(title_font, name, length=box_x - 300)
         title_anc = AnchorText(bg, 'title', title, pen, title_font, free=(14, 271), father=box_anc)
         title_anc.plot(color_black)
 
         # Score contains two parts
+        score_field = Anchor(bg, 'score field', free=(63, 271), father=box_anc)
         score = score.zfill(8)
-        h_score, l_score = score[:4], score[4:8]
-        zero_flag = 1
-        num_color = color_gray
+
+        score_color = [color_black for _ in range(8)]  # Let foremost '0's be gray
+        for __index in range(8):
+            if score[__index] != '0':
+                break
+            score_color[__index] = color_gray
+
+        high_grid = Anchor(bg, 'high num grid', free=(0, 0), father=score_field)
+        high_grid.creat_grid((0, 3), (0, h_size))
+        high_num_anc = AnchorText(bg, 'high num', '', pen, score_h_font, father=high_grid)
+        for __index in range(0, 4):
+            high_num_anc.text = score[__index]
+            high_num_anc.set_grid((0, __index))
+            high_num_anc.plot(score_color[__index])
+
+        low_grid = Anchor(bg, 'low num grid', free=(10, h_size * 4), father=score_field)
+        low_grid.creat_grid((0, 3), (0, l_size))
+        low_num_anc = AnchorText(bg, 'low num', '', pen, score_l_font, father=low_grid)
+        for __index in range(0, 4):
+            low_num_anc.text = score[__index + 4]
+            low_num_anc.set_grid((0, __index))
+            low_num_anc.plot(score_color[__index + 4])
 
         # 'VF' and its value
+        res_vf_field = Anchor(bg, 'respective vf field', free=(53, 485), father=box_anc)  # res = respective
+        res_vf_text_anc = AnchorText(bg, 'res vf text', 'VF    #%02d' % (index + 1),
+                                     pen, vf_str_font, (0, 1), res_vf_field)
+        res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % (vf / 2), pen, vf_num_font, (22, 0), res_vf_field)
 
-        # Index
+        res_vf_text_anc.plot(color_black)
+        res_vf_num_anc.plot(get_vf_property(vf / 2, is_darker=True))
 
     """
     Epilogue: Special thanks to myself
     """
+    finale_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8')
+    yeast_anc = AnchorText(bg, 'yeast', 'Generated by Saccharomyces cerevisiae',
+                           pen, finale_font, (20, x_px // 2), epilogue)
+    yeast_anc.plot(color_gray, pos='c')
 
     text_layer = np.array(text_layer)
     png_superimpose(bg, text_layer)
     cv2.imwrite('%s/%s_b50_temp.png' % (output, user_name), bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
+
+    msg = ''
+    msg += ('----------------VOLFORCE %.3f----------------\n' % vol_force)
+    msg += 'No.  VF      DIFF   SCORE    RANK  LHT  NAME\n'
+    for index in range(50):
+        diff = get_diff(music_b50[index][2], music_b50[index][9])
+        msg += ('#%-4d%.3f  %s%-2s  %-9s%-6s%-5s%s\n' % ((index + 1), music_b50[index][10], diff,
+                                                         music_b50[index][8], music_b50[index][3],
+                                                         clear_table[music_b50[index][4]],
+                                                         grade_table[music_b50[index][5]], music_b50[index][7]))
+    print(msg)
+    log_write('Text message generate complete.\n%s' % msg, file_name)
 
 
 def plot_summary(music_map: list, profile: list, lv_base: int):
@@ -1410,6 +1217,12 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     yeast_anc.plot(color_gray, pos='c')
     author_anc.plot(color_gray, pos='c')
 
+    text_layer = np.array(text_layer)
+    png_superimpose(bg, text_layer)
+    cv2.imwrite('%s/%s_summary_beta.png' % (output, user_name), bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
+    log_write('Plot at %s/%s_summary_beta.png' % (output, user_name), file_name)
+    print('Plot successfully.')
+
     msg = '----------------Level Summary----------------\n' \
           'Level    NC      HC      UC      PUC     ||    AAA     AAA+    S     ||      SUM\n'
     for index in range(lv_base, 21):
@@ -1420,12 +1233,6 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
 
     print(msg)
     log_write('Text message generate complete.\n%s' % msg, file_name)
-
-    text_layer = np.array(text_layer)
-    png_superimpose(bg, text_layer)
-    cv2.imwrite('%s/%s_summary_beta.png' % (output, user_name), bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
-    log_write('Plot at %s/%s_summary_beta.png' % (output, user_name), file_name)
-    print('Plot successfully.')
 
     try:
         remove(local_dir + '/data/matplotlib.png')

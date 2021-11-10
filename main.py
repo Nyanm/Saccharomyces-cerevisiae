@@ -1,9 +1,7 @@
-import time
-
 from cfg_read import *
 from os import path
 from xml.etree.cElementTree import parse
-from numpy import array, save, load, zeros
+from numpy import array, save, load
 from csv import reader
 from copy import deepcopy
 from traceback import format_exc
