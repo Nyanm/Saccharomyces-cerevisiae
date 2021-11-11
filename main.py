@@ -7,7 +7,6 @@ from copy import deepcopy
 from traceback import format_exc
 
 import plot_gen6
-import plot_gen5
 
 file_name = 'main.py'
 
@@ -58,8 +57,6 @@ def error_handler(msg: str):
 def get_skin_type():
     if skin_name == 'gen6':
         return plot_gen6
-    if skin_name == 'gen5':
-        return plot_gen5
     else:
         error_handler('Invalid skin name, please recheck your configurations.')
 
