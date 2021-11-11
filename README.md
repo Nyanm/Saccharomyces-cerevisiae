@@ -2,6 +2,8 @@
 
 A OpenCV &amp; PIL based sdvx@asphyxia score checker
 
+## !!! RECONSTRUCTION WIP !!!
+
 ## Introduction
 
 Simple python application to draw data from  Asphyxia  Core database, plot images to help you analyze your scores. It can be built into an exe, theoretically, and I will release it in group now and then. 
@@ -51,6 +53,4 @@ I use matplotlib and seaborn to generate graphs, which make the summary more lik
 用英语写README感觉自己像个文盲，麻了。
 
 用SHIFT-JIS的人有难了，死后会下编码地狱，满目所见都是乱码。
-
-QQ居然不能发送长度超过10000px的图片，脏话。
 

@@ -55,7 +55,7 @@ def error_handler(msg: str):
     sys.exit(0)
 
 
-def get_skin_type(skin_name: str):
+def get_skin_type():
     if skin_name == 'gen6':
         return plot_gen6
     if skin_name == 'gen5':
@@ -70,8 +70,9 @@ class SdvxData:
 
         # Read config.txt
         self.map_size, self.card_num, self.local_dir, self.db_dir, \
-        self.game_dir, self.output, self.skin_name, self.is_init = get_cfg()
-        self.plot_skin = get_skin_type(self.skin_name)
+        self.game_dir, self.output, self.skin_name, self.is_init = \
+            map_size, card_num, local_dir, db_dir, game_dir, output, skin_name, is_init
+        self.plot_skin = get_skin_type()
         self.data_dir = self.local_dir + '/data'
 
         # Validity check
@@ -101,8 +102,8 @@ class SdvxData:
             utf_xml = open(self.data_dir + r'/music_db_utf8.xml', 'w', encoding='utf-8')
             utf_xml.write('<?xml version="1.0" encoding="utf-8"?>\n')
             jis_xml.pop(0)
-            for line in jis_xml:
-                utf_xml.write(line)
+            for __line in jis_xml:
+                utf_xml.write(__line)
             utf_xml.close()
 
             # Get level information from xml, then saved as npy file
@@ -187,9 +188,9 @@ class SdvxData:
             save(self.data_dir + '/aka_db.npy', aka_map)
 
             # Add flag to config.txt
-            raw_file = open(self.local_dir + '/config.txt', 'a')
-            raw_file.write('is initialized=True\n')
-            raw_file.close()
+            __raw_file = open(self.local_dir + '/config.txt', 'a')
+            __raw_file.write('is initialized=True\n')
+            __raw_file.close()
 
             print('Initialization complete.')
             log_write('Initialization complete', file_name)
@@ -275,7 +276,7 @@ class SdvxData:
     def get_b50(self):
         log_write('start to generate best 50 record for %s' % self.user_name, file_name)
         self.plot_skin.plot_b50(deepcopy(self.music_map),
-                                [self.card_num, self.user_name, self.aka, self.ap_card, self.skill])
+                                [self.user_name, self.aka, self.ap_card, self.skill])
 
     def get_recent(self):
         log_write('start to generate recent record for %s' % self.user_name, file_name)
@@ -325,7 +326,7 @@ class SdvxData:
             base_lv = 17
         log_write('start to generate user summary in new version for %s' % self.user_name, file_name)
         self.plot_skin.plot_summary(deepcopy(self.music_map),
-                                    [self.card_num, self.user_name, self.aka, self.ap_card, self.skill], base_lv)
+                                    [self.user_name, self.aka, self.ap_card, self.skill], base_lv)
 
     def search_mid(self, name_str):
         aka_db = load(self.data_dir + '/aka_db.npy')

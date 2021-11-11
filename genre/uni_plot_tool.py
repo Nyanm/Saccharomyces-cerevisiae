@@ -87,7 +87,6 @@ def parabola_gradient(bg: np.array, a: float, c: float, axis: str = 'x0'):
     :param a:    parameter of quadratic function
     :param c:    parameter of quadratic function
     :param axis: available axes 'x0', 'x+', 'x-', 'y0', 'y+', 'y-'
-    :return:
     """
     y_dis, x_dis, chn = bg.shape
 

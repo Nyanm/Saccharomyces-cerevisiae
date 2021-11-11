@@ -1,18 +1,4 @@
-from genre.uni_plot_tool import *
-
-# Reading config
-file_name = 'plot_gen6.py'
-song_folders = game_dir + '/music'
-try:
-    npy_path = local_dir + '/data/level_table.npy'
-    level_table = np.load(npy_path)
-except FileNotFoundError:
-    log_write('level_table.npy not found, please check your file directory, '
-              'unless this is the first time you have started the application.', file_name)
-    input('level_table.npy not found, please check your file directory, '
-          'unless this is the first time you have started the application.\n'
-          'Press enter to continue.')
-    pass
+from .tools_plot_gen6 import *
 
 img_archive = local_dir + '/img_archive/gen6/'
 if not path.exists(img_archive):
@@ -643,7 +629,6 @@ def plot_b50(music_map: list, profile: list):
                                                          clear_table[music_b50[index][4]],
                                                          grade_table[music_b50[index][5]], music_b50[index][7]))
     print(msg)
-    log_write('Text message generate complete.\n%s' % msg, file_name)
 
 
 def plot_summary(music_map: list, profile: list, lv_base: int):
@@ -1225,7 +1210,6 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     text_layer = np.array(text_layer)
     png_superimpose(bg, text_layer)
     cv2.imwrite('%s/%s_summary_beta.png' % (output, user_name), bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
-    log_write('Plot at %s/%s_summary_beta.png' % (output, user_name), file_name)
     print('Plot successfully.')
 
     msg = '----------------Level Summary----------------\n' \
@@ -1237,7 +1221,6 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         msg += ('%-8d%-8d%-8d%-8d||    %-8d%-8d%-8d||    %-8d\n' % (nc, hc, uc, puc, aaa, aaa_plus, s, __sum))
 
     print(msg)
-    log_write('Text message generate complete.\n%s' % msg, file_name)
 
     try:
         remove(local_dir + '/data/matplotlib.png')
