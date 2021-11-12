@@ -38,7 +38,7 @@ else:
 
 # Clean timber.log up
 timber_path = local_dir + '/timber.log'
-f = open(timber_path, 'w')
+f = open(timber_path, 'w', encoding='utf-8')
 f.close()
 
 
@@ -55,6 +55,11 @@ class Timber:
 
     @staticmethod
     def info(msg: str):
+        logging.info(msg)
+
+    @staticmethod
+    def info_clog(msg: str):
+        input('\33[32m[Info] %s\33[0m' % msg)
         logging.info(msg)
 
     @staticmethod
@@ -98,7 +103,7 @@ skin_name = get_skin.search(cfg_data).group()[10:]
 is_init = get_init_stat.search(cfg_data)
 
 timber.info('config.txt load complete.\n\n'
-            'map size :%d\ncard num :%s\ndb dir   :%s\ngame dir :%s\noutput   :%s\nskin name:%s\nis init  :%s\n'
+            'map size  :%d\ncard num  :%s\ndb dir    :%s\ngame dir  :%s\noutput    :%s\nskin name :%s\nis init   :%s\n'
             % (map_size, card_num, db_dir, game_dir, output, skin_name, is_init is not None))
 
 # Validity check

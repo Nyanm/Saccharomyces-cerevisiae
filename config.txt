@@ -24,3 +24,4 @@ skin name=gen6
 
 [Init]
 # If you have updated your game, delete the following line
+is initialized=True

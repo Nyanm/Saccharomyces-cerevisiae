@@ -82,11 +82,11 @@ def update_db():
     np.save(local_dir + '/data/level_table.npy', music_map)
 
     # Decompress csv data from update_db_data.py
-    csv_path = local_dir + '/data/raw_aka_db.csv'
+    csv_path = local_dir + '/data/raw_search_db.csv'
     decode_b64(csv_data, csv_path)
 
     temp_list = []
-    search_csv = csv.reader(open(local_dir + '/data/raw_aka_db.csv', encoding='utf-8'))
+    search_csv = csv.reader(open(local_dir + '/data/raw_search_db.csv', encoding='utf-8'))
     __index = 0
     for csv_record in search_csv:
         temp_list.append(' '.join(csv_record))

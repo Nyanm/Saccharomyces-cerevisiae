@@ -1,6 +1,8 @@
 from cfg import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
 from cfg import Timber
-from os import path, makedirs
+from os import path, makedirs, system
+from time import sleep
+
 
 from .update_db import update_db
 from .update_aka import update_aka
@@ -10,6 +12,10 @@ timber = Timber()
 
 
 def update():
+
+    timber.warning('Since you have updated your game (or simply the maiden run of the program), '
+                   'the program is going to generate some relative data.\n'
+                   'It may take some time to finish, press enter to continue.')
 
     if not path.exists(local_dir + '/data/'):
         makedirs(local_dir + '/data/')
@@ -32,3 +38,16 @@ def update():
         timber.error('Fail to generate aka_db.npy.')
 
     update_img()
+    if path.exists(local_dir + '/img_archive/%s' % skin_name):
+        timber.info('(maybe) generate image archive successfully.')
+    else:
+        timber.error('Fail to generate image archive.')
+
+    # add initialized sign
+    __raw_file = open(local_dir + '/config.txt', 'a')
+    __raw_file.write('is initialized=True\n')
+    __raw_file.close()
+
+    sleep(0.2)
+    timber.info_clog('\nUpdate complete. Press enter to continue.')
+    system('clc')

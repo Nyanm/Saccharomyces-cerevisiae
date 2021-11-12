@@ -3,12 +3,12 @@ from cfg import decode_b64
 from os import path, makedirs
 from genre.gen6 import dependency_plot_gen6
 import ifstools
+import shutil
 
 depend_list = {'gen6': dependency_plot_gen6}
 
 
 def update_img():
-
     def update_ifs(ifs_list: list, __version: str):
         ver_path = '%s/graphics/ver0%s/' % (game_dir, __version)
 
@@ -31,8 +31,13 @@ def update_img():
             b64_path = '%s/%s' % (b64_dst, b64_name)
             decode_b64(b64_file, b64_path)
 
-    def update_transport(src: str, dst: str):
-        pass
+    def update_transport(trans_loc: list):
+        trans_src = game_dir + trans_loc[0]
+        trans_path = genre_path + '/%s' % trans_loc[1]
+        if not path.exists(trans_path):
+            makedirs(trans_path)
+        trans_dst = trans_path + '/%s' % trans_src.split('/')[-1]
+        shutil.copy(trans_src, trans_dst)
 
     archive_path = local_dir + '/img_archive'
     if not path.exists(archive_path):
@@ -52,3 +57,8 @@ def update_img():
     if dependency['is_b64']:
         for b64_index in dependency['b64']:
             update_b64(dependency['b64_%s' % b64_index], b64_index)
+
+    # Ad hoc process for some specific files
+    if dependency['is_transport']:
+        for trans_index in dependency['transport']:
+            update_transport(dependency['transport_%s' % trans_index])
