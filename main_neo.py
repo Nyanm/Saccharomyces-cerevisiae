@@ -1,10 +1,8 @@
-import random
 import sys
 import os
 import re
 import json
 from copy import deepcopy
-
 import numpy as np
 
 from cfg import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
@@ -56,11 +54,12 @@ class SDVX:
                 m_time = json_dict['updatedAt']['$$date']
                 break
             elif line_type == 'profile':
-                pass
+                last_profile = json_dict
             elif line_type == 'skill':
-                pass
+                last_skill = json_dict
             elif line_type == 'param':
-                pass
+                if json_dict['type'] == 2 and json_dict['id'] == 1:
+                    last_param = json_dict
 
 
 if __name__ == '__main__':

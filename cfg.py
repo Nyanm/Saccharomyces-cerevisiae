@@ -36,7 +36,7 @@ if test_mode:
 else:
     local_dir = path.dirname(path.abspath(sys.executable)).replace('\\', '/')
 
-# Clean up timber.log
+# Clean timber.log up
 timber_path = local_dir + '/timber.log'
 f = open(timber_path, 'w')
 f.close()
@@ -77,6 +77,7 @@ try:
     cfg_path = local_dir + '/config.txt'
     __raw_file = open(cfg_path, 'r')
 except FileNotFoundError:
+    # TODO: Generate raw config.txt
     logging.critical('config.txt not found, please check your file directory.')
     sys.exit(1)
 

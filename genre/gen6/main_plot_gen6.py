@@ -1,6 +1,6 @@
 from .tools_plot_gen6 import *
 
-img_archive = local_dir + '/img_archive/gen6/'
+img_archive = local_dir + '/__img_archive/gen6/'
 if not path.exists(img_archive):
     input(r'Image archive is missing, please check your file directory.')
     sys.exit(1)
