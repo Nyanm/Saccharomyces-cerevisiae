@@ -1,6 +1,5 @@
 from .data_plot_gen6 import *
 
-
 dependency = {
     "version": ['6'],
 
@@ -15,7 +14,6 @@ dependency = {
         'ms_sel',
         'force',
         'cmn_window',
-        'card_entry',
         'ap_floor'
     ],
 
@@ -25,6 +23,7 @@ dependency = {
         'bg',
         'font',
         'frame',
+        'skill'
     ],
     'b64_bar': [
         [name_bar, 'name_bar.png'],
@@ -51,7 +50,23 @@ dependency = {
         [btm_right, 'btm_right.png'],
         [top_left, 'top_left.png'],
         [top_orange, 'top_orange.png'],
-        [top_right, 'top_right.png']],
+        [top_right, 'top_right.png']
+    ],
+    'b64_skill': [
+        [skill_00, 'skill_00.png'],
+        [skill_01, 'skill_01.png'],
+        [skill_02, 'skill_02.png'],
+        [skill_03, 'skill_03.png'],
+        [skill_04, 'skill_04.png'],
+        [skill_05, 'skill_05.png'],
+        [skill_06, 'skill_06.png'],
+        [skill_07, 'skill_07.png'],
+        [skill_08, 'skill_08.png'],
+        [skill_09, 'skill_09.png'],
+        [skill_10, 'skill_10.png'],
+        [skill_11, 'skill_11.png'],
+        [skill_12, 'skill_12.png']
+    ],
 
     'is_transport': True,
     'transport': ['commaexr.ttf'],

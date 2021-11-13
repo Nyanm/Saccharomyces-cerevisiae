@@ -1,385 +1,36 @@
 from .tools_plot_gen6 import *
-
-img_archive = local_dir + '/__img_archive/gen6/'
-if not path.exists(img_archive):
-    input(r'Image archive is missing, please check your file directory.')
-    sys.exit(1)
-
-# Fonts
-font_DFHS = img_archive + 'font/DFHSMaruGothic-W4-reform.ttc'
-font_unipace = img_archive + 'font/unispace bd.ttf'
-font_round = img_archive + 'font/RoundedMplus1c-Black.ttf'
-
-# Quick color table
-color_white = (245, 245, 245)
-color_black = (61, 61, 61)
-color_gray = (154, 154, 154)
-color_l_gray = (210, 210, 210)
-color_d_gray = (122, 122, 122)
-color_gold = (246, 222, 128)
-color_l_blue = (147, 255, 254)
-color_d_blue = (0, 62, 102)
-color_yellow = (239, 176, 74)
-
-# Definitive field for some dictionary(or they work as tuple)
-clear_img = {'1': 'crash', '2': 'comp', '3': 'comp_ex', '4': 'uc', '5': 'puc'}
-clear_table = {'1': 'FAILED', '2': 'NC', '3': 'HC', '4': 'UC', '5': 'PUC'}
-clear_palette = ('#FFFFFF', '#32936F', '#69A297', '#A5668B', '#E83F6F', '#FFBF00')
-clear_legend = ('N/A', 'CRASH', 'NC', 'HC', 'UC', 'PUC')
-
-grade_img = {'1': 'd', '2': 'c', '3': 'b', '4': 'a', '5': 'a_plus', '6': 'aa', '7': 'aa_plus', '8': 'aaa',
-             '9': 'aaa_plus', '10': 's'}
-grade_table = {'1': 'D', '2': 'C', '3': 'B', '4': 'A', '5': 'A+',
-               '6': 'AA', '7': 'AA+', '8': 'AAA', '9': 'AAA+', '10': 'S'}
-grade_palette = ('#FFFFFF', '#CFD2CD', '#A6A2A2', '#847577',
-                 '#66C9A3', '#32936F', '#D296B9', '#A5668B', '#E36E94', '#E83F6F', '#FFBF00',)
-grade_legend = ('N/A', 'D', 'C', 'B', 'A', 'A+', 'AA', 'AA+', 'AAA', 'AAA+', 'S')
-
-level_palette = ('#F7FFF7', '#073B4C', '#118AB2', '#06D6A0', '#FFD166', '#EF476F')
-
-# Set up img_archive guidance
-gen6_archive = {'version': '6',
-
-                'ifs_list': (),
-                'grade':''}
+import pandas as pd
+import seaborn as sns
+import time
+from os import remove
+from traceback import format_exc
+from matplotlib.ticker import MaxNLocator
+from matplotlib.font_manager import FontProperties
 
 
-def get_vf_property(vf: float, is_darker: bool = False, is_level: bool = False) -> tuple or int:
-    if vf < 0:
-        level = 0
-        color = color_white
-    elif vf < 10:
-        level = 1
-        color = (193, 139, 73)
-    elif vf < 12:
-        level = 2
-        color = (48, 73, 157)
-    elif vf < 14:
-        level = 3
-        color = (245, 189, 26)
-    elif vf < 15:
-        level = 4
-        color = (83, 189, 181)
-    elif vf < 16:
-        level = 5
-        color = (200, 22, 30)
-    elif vf < 17:
-        level = 6
-        color = (237, 179, 202)
-    elif vf < 18:
-        level = 7
-        color = (234, 234, 233)
-    elif vf < 19:
-        level = 8
-        color = (248, 227, 165)
-    elif vf < 20:
-        level = 9
-        color = (198, 59, 55)
-    else:
-        level = 10
-        color = (108, 76, 148)
-    if is_darker:
-        return tuple(np.array(color) * 2 // 3)
-    if is_level:
-        return level
-    return color
-
-
-def get_jacket(mid: str, m_type: str, size: str = False) -> str:
-    mid = mid.zfill(4)
-    for song_folder in listdir(song_folders):
-        if song_folder.startswith(mid):
-            song_path = ('%s/%s/' % (song_folders, song_folder))
-            m_index = int(m_type) + 1
-            while m_index:
-                if path.exists('%sjk_%s_%d.png' % (song_path, mid, m_index)):
-                    if size:
-                        return '%sjk_%s_%d_%s.png' % (song_path, mid, m_index, size)
-                    return '%sjk_%s_%d.png' % (song_path, mid, m_index)
-                m_index -= 1
-            if size:
-                return game_dir + '/data/graphics/jk_dummy_%s.png' % size
-            else:
-                return game_dir + '/data/graphics/jk_dummy_s.png'
-
-
-def get_diff(m_type: str, inf_ver: str) -> str:
-    diff_table = [['NOV', 'ADV', 'EXH', '', 'MXM'] for _ in range(4)]
-    diff_table[0][3], diff_table[1][3], diff_table[2][3], diff_table[3][3] = 'INF', 'GRV', 'HVN', 'VVD'
-    try:
-        return diff_table[int(inf_ver) - 2][int(m_type)]
-    except IndexError:
-        return 'UNK'
-
-
-def get_ap_card(ap_card: str) -> str:
-    card_file = 'ap_'
-    card_ver, is_r, is_s = int(ap_card[0]) + 1, (ap_card[1] == '5'), (ap_card[1] == '9')
-    if card_ver == 1:
-        pass
-    else:
-        card_file += ('0%s_' % card_ver)
-    if is_r:
-        card_file += ('R%s' % ap_card[1:].zfill(4))
-    elif is_s:
-        card_file += ('S%s' % ap_card[1:].zfill(4))
-    else:
-        card_file += ap_card[1:].zfill(4)
-    return game_dir + '/graphics/ap_card/%s.png' % card_file
-
-
-def get_overall_vf(music_b50: list) -> float:
-    vol_force = 0.0
-    for record in music_b50:
-        if record[0]:
-            vol_force += int(record[-1] * 10) / 1000
-        else:
-            break
-    return vol_force
-
-
-def load_clear(refactor: float or int) -> list:
-    clear_no = cv2.imread(img_archive + 'mark/mark_no.png', cv2.IMREAD_UNCHANGED)
-    clear_cr = cv2.imread(img_archive + 'mark/mark_crash.png', cv2.IMREAD_UNCHANGED)
-    clear_nc = cv2.imread(img_archive + 'mark/mark_comp.png', cv2.IMREAD_UNCHANGED)
-    clear_hc = cv2.imread(img_archive + 'mark/mark_comp_ex.png', cv2.IMREAD_UNCHANGED)
-    clear_uc = cv2.imread(img_archive + 'mark/mark_uc.png', cv2.IMREAD_UNCHANGED)
-    clear_puc = cv2.imread(img_archive + 'mark/mark_puc.png', cv2.IMREAD_UNCHANGED)
-
-    clear_list = [clear_no, clear_cr, clear_nc, clear_hc, clear_uc, clear_puc]
-    if refactor:
-        for index in range(6):
-            if clear_list[index] is not None:
-                clear_list[index] = \
-                    cv2.resize(clear_list[index], dsize=None, fx=refactor, fy=refactor, interpolation=cv2.INTER_AREA)
-    return clear_list
-
-
-def load_grade(refactor: float or int) -> list:
-    grade_a = cv2.imread(img_archive + 'grade/grade_a.png', cv2.IMREAD_UNCHANGED)
-    grade_ap = cv2.imread(img_archive + 'grade/grade_a_plus.png', cv2.IMREAD_UNCHANGED)
-    grade_aa = cv2.imread(img_archive + 'grade/grade_aa.png', cv2.IMREAD_UNCHANGED)
-    grade_aap = cv2.imread(img_archive + 'grade/grade_aa_plus.png', cv2.IMREAD_UNCHANGED)
-    grade_aaa = cv2.imread(img_archive + 'grade/grade_aaa.png', cv2.IMREAD_UNCHANGED)
-    grade_aaap = cv2.imread(img_archive + 'grade/grade_aaa_plus.png', cv2.IMREAD_UNCHANGED)
-    grade_b = cv2.imread(img_archive + 'grade/grade_b.png', cv2.IMREAD_UNCHANGED)
-    grade_c = cv2.imread(img_archive + 'grade/grade_c.png', cv2.IMREAD_UNCHANGED)
-    grade_d = cv2.imread(img_archive + 'grade/grade_d.png', cv2.IMREAD_UNCHANGED)
-    grade_s = cv2.imread(img_archive + 'grade/grade_s.png', cv2.IMREAD_UNCHANGED)
-
-    grade_list = [None, grade_d, grade_c, grade_b, grade_a, grade_ap,
-                  grade_aa, grade_aap, grade_aaa, grade_aaap, grade_s]
-    if refactor:
-        for index in range(11):
-            if grade_list[index] is not None:
-                grade_list[index] = \
-                    cv2.resize(grade_list[index], dsize=None, fx=refactor, fy=refactor, interpolation=cv2.INTER_AREA)
-    return grade_list
-
-
-def load_level(refactor: float or int) -> list:
-    level_nov = cv2.imread(img_archive + 'level/level_small_nov.png', cv2.IMREAD_UNCHANGED)
-    level_adv = cv2.imread(img_archive + 'level/level_small_adv.png', cv2.IMREAD_UNCHANGED)
-    level_exh = cv2.imread(img_archive + 'level/level_small_exh.png', cv2.IMREAD_UNCHANGED)
-    level_inf = cv2.imread(img_archive + 'level/level_small_inf.png', cv2.IMREAD_UNCHANGED)
-    level_grv = cv2.imread(img_archive + 'level/level_small_grv.png', cv2.IMREAD_UNCHANGED)
-    level_hvn = cv2.imread(img_archive + 'level/level_small_hvn.png', cv2.IMREAD_UNCHANGED)
-    level_vvd = cv2.imread(img_archive + 'level/level_small_vvd.png', cv2.IMREAD_UNCHANGED)
-    level_mxm = cv2.imread(img_archive + 'level/level_small_mxm.png', cv2.IMREAD_UNCHANGED)
-
-    level_list = [level_nov, level_adv, level_exh, None, level_mxm, level_inf, level_grv, level_hvn, level_vvd]
-    if refactor:
-        for level in level_list:
-            if level:
-                cv2.resize(level, dsize=None, fx=refactor, fy=refactor, interpolation=cv2.INTER_AREA)
-    return level_list
-
-
-def load_skill(card_img: np.array, skill: str) -> np.array:
-    skill_img = cv2.imread(img_archive + 'skill/skill_' + skill.zfill(2) + '.png', cv2.IMREAD_UNCHANGED)
-    skill_ratio = card_img.shape[1] / skill_img.shape[1]
-    skill_img = cv2.resize(skill_img, dsize=None, fx=skill_ratio, fy=skill_ratio, interpolation=cv2.INTER_AREA)
-    return skill_img
-
-
-def load_frame() -> tuple:
-    top_left = cv2.imread(img_archive + 'frame/top_left.png', cv2.IMREAD_UNCHANGED)
-    top_right = cv2.imread(img_archive + 'frame/top_right.png', cv2.IMREAD_UNCHANGED)
-    btm_left = cv2.imread(img_archive + 'frame/btm_left.png', cv2.IMREAD_UNCHANGED)
-    btm_right = cv2.imread(img_archive + 'frame/btm_right.png', cv2.IMREAD_UNCHANGED)
-
-    side_top = cv2.imread(img_archive + 'frame/top_orange.png', cv2.IMREAD_UNCHANGED)
-    side_right = side_left = cv2.imread(img_archive + 'frame/bar.png', cv2.IMREAD_UNCHANGED)
-    side_bottom = cv2.imread(img_archive + 'frame/btm_orange.png', cv2.IMREAD_UNCHANGED)
-    return [top_left, top_right, btm_left, btm_right], [side_top, side_right, side_bottom, side_left]
-
-
-def load_bar(name: str, is_bg: bool = False) -> list:
-    left = cv2.imread(img_archive + 'bar/%s_left.png' % name, cv2.IMREAD_UNCHANGED)
-    bar = cv2.imread(img_archive + 'bar/%s_bar.png' % name, cv2.IMREAD_UNCHANGED)
-    right = cv2.imread(img_archive + 'bar/%s_right.png' % name, cv2.IMREAD_UNCHANGED)
-    if is_bg:
-        bg = cv2.imread(img_archive + 'bar/%s_bg.png' % name, cv2.IMREAD_UNCHANGED)
-    else:
-        bg = None
-    return [left, bar, right, bg]
-
-
-def generate_hex_bg(size: tuple, par_a: float = -0.55, par_c: float = 1.1):
-    bg_hex = cv2.imread(img_archive + 'bg/hex.png', cv2.IMREAD_UNCHANGED)
-    bg_element = np.zeros(bg_hex.shape, dtype=bg_hex.dtype)
-    png_superimpose(bg_element, bg_hex)
-    bg = bg_duplicator(bg_element, size[0], size[1])
-    parabola_gradient(bg, a=par_a, c=par_c)
-    return bg
-
-
-def plot_single(record: list, profile: list):
+def plot_single(record: list, profile: list) -> str:
     """
     Plot function for single record
-    :param record:  a list of [mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf]
-                    all of them are strings, except vf is a float
-    :param profile: a list of [user_name, aka_name, ap_card, skill], all strings
+    Now Plot function is ongoing, again.
+    :param record:  a list of [is_record, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf]
+                    Please check music_map for explicit definition.
+    :param profile: a list of [user_name, ap_card, aka_index, skill, crew_id]
     :return:        image stored as numpy array
     """
-    mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf = record
-    user_name, aka_name, ap_card, skill = profile
+    id_recorded, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf = record
+    user_name, ap_card, aka_index, skill, crew_id = profile
     diff = get_diff(m_type, inf_ver)
-    real_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(m_time) / 1000))
-
-    bg = cv2.imread(img_archive + 'bg/bg_template.png')
-    bg = add_alpha(bg)
-
-    # Plot appeal card
-    ap_card_path = get_ap_card(ap_card)
-    card_img = cv2.imread(ap_card_path, cv2.IMREAD_UNCHANGED)
-    card_img = cv2.resize(card_img, dsize=None, fx=0.48, fy=0.48, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, card_img, [22, 111])
-
-    # Plot skill
-    skill_img = cv2.imread(img_archive + 'skill/skill_' + skill.zfill(2) + '.png', cv2.IMREAD_UNCHANGED)
-    skill_img = cv2.resize(skill_img, dsize=None, fx=0.38, fy=0.38, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, skill_img, [79, 203])
-
-    # Plot jacket
-    jk_path = get_jacket(mid, m_type)
-    jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
-    jk = add_alpha(jk)
-    bg[155:455, 126:426] = jk
-
-    # Get bpm string
-    bpm_h, bpm_l = level_table[int(mid)][3], level_table[int(mid)][4]
-    if bpm_h[-2:] == '00':
-        bpm_h = int(int(bpm_h) / 100)
-    else:
-        bpm_h = int(bpm_h) / 100
-    if bpm_l[-2:] == '00':
-        bpm_l = int(int(bpm_l) / 100)
-    else:
-        bpm_l = int(bpm_l) / 100
-    if bpm_h == bpm_l:
-        bpm = str(bpm_h)
-    else:
-        bpm = str(bpm_l) + "~" + str(bpm_h)
-
-    # Plot level box
-    level_box = cv2.imread(img_archive + 'level/level_small_' + diff.lower() + '.png', cv2.IMREAD_UNCHANGED)
-    level_box = cv2.resize(level_box, dsize=None, fx=0.824, fy=0.824, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, level_box, [474, 352])
-
-    # Get artist string
-    artist = level_table[int(mid)][2]
-
-    # Plot clear mark
-    mark = cv2.imread(img_archive + 'mark/mark_' + clear_img[clear] + '.png', cv2.IMREAD_UNCHANGED)
-    mark = cv2.resize(mark, dsize=None, fx=0.941, fy=0.941, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, mark, [517, 418])
-
-    # Get effector and illustrator string
-    ill, eff = level_table[int(mid)][int(m_type) * 3 + 8], level_table[int(mid)][int(m_type) * 3 + 9]
-
-    # Plot score
-    score_x, is_zero = 2, True
-    score = score.zfill(8)
-    h_score, l_score = score[:4], score[4:8]
-
-    for num in h_score:
-        score_x += (58 + 1)
-        if num != '0':
-            is_zero = False
-        num_img = cv2.imread(img_archive + 'number/num_score_' + num + '.png', cv2.IMREAD_UNCHANGED)
-        png_superimpose(bg, num_img, [690, score_x], is_zero)
-
-    score_x += 56
-    for num in l_score:
-        if num != '0':
-            is_zero = False
-        num_img = cv2.imread(img_archive + 'number/num_mmscore_' + num + '.png', cv2.IMREAD_UNCHANGED)
-        png_superimpose(bg, num_img, [698, score_x], is_zero)
-        score_x += 50
-
-    # Plot grade
-    grade_bg = cv2.imread(img_archive + 'grade/box_medal.png', cv2.IMREAD_UNCHANGED)
-    grade_bg = cv2.resize(grade_bg, dsize=None, fx=0.9, fy=0.9, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, grade_bg, [775, 94])
-
-    grade_png = cv2.imread(img_archive + 'grade/grade_' + grade_img[grade] + '.png', cv2.IMREAD_UNCHANGED)
-    grade_png = cv2.resize(grade_png, dsize=None, fx=0.41, fy=0.41, interpolation=cv2.INTER_AREA)
-    png_superimpose(bg, grade_png, [783, 104])
-
-    # Plot all characters
-    bg = cv2.cvtColor(bg, cv2.COLOR_BGR2RGB)
-    pil_img = Image.fromarray(bg)
-    pen = ImageDraw.Draw(pil_img)
-
-    name_font = ImageFont.truetype(font_DFHS, 34, encoding='utf-8', index=0)
-    pen.text((202, 30), user_name, color_white, font=name_font)
-
-    bpm_font = ImageFont.truetype(font_unipace, 16, encoding='utf-8')
-    pen.text((166, 473), bpm, color_white, font=bpm_font)
-
-    name_font = ImageFont.truetype(font_DFHS, 22, encoding='utf-8', index=0)
-    name_uni = length_uni(name_font, name, 335)
-    artist_uni = length_uni(name_font, artist, 335)
-    pen.text((69, 517), name_uni, color_white, font=name_font)
-    pen.text((69, 560), artist_uni, color_white, font=name_font)
-
-    eff_font = ImageFont.truetype(font_DFHS, 15, encoding='utf-8', index=0)
-    eff_uni = length_uni(eff_font, eff, 250)
-    ill_uni = length_uni(eff_font, ill, 250)
-    pen.text((222, 612), eff_uni, color_white, font=eff_font)
-    pen.text((222, 648), ill_uni, color_white, font=eff_font)
-
-    lv_font = ImageFont.truetype(font_unipace, 12, encoding='utf-8')
-    pen.text((418, 478), lv, color_white, font=lv_font)
-
-    time_font = ImageFont.truetype(font_DFHS, 22, encoding='utf-8', index=0)
-    pen.text((216, 777), 'VOLFORCE', color_white, font=time_font)
-    pen.text((216, 815), real_time, color_white, font=time_font)
-
-    vf_font = ImageFont.truetype(font_unipace, 20, encoding='utf-8')
-    pen.text((369, 776), '%.3f' % (vf / 2), get_vf_property(vf / 2), font=vf_font)
-
-    bg = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-
-    # cv2.imshow('test', bg)
-    # cv2.waitKey(0)
+    real_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(m_time / 1000))
 
     # Get recent text message
-    msg = ''
-    msg += ('Played at %s\n' % real_time)
-    msg += ('%s%-2s  %s\n' % (diff, lv, name))
-    msg += ('%-9s%-6s%-5s\n' % (score, grade_table[grade], clear_table[clear]))
-    msg += ('VF:%.3f\n' % vf)
+    msg = '|Date                 |Diff  |Score    |Grade |Clear |VF     |Name\n|%-21s|%-6s|%-9s|%-6s|%-6s|%.3f |%s\n' \
+          % (real_time, (diff + lv), score, grade_table[grade], clear_table[clear], vf / 2, name)
 
-    print(msg)
-
-    cv2.imwrite('%s/%s_Recent.png' % (output, user_name), bg, params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
-
-    print('Plot successfully.')
+    timber.info('Generate single data complete.\n\n%s\n' % msg)
+    return msg
 
 
-def plot_b50(music_map: list, profile: list):
+def plot_b50(music_map: list, profile: list) -> str:
     """
     Plot function for best 50 records
     :param music_map: a list contains all music records, each line of music_map should be:
@@ -393,242 +44,178 @@ def plot_b50(music_map: list, profile: list):
     Read and initialize data
     """
     # Unpack profile data & sort music records
-    user_name, aka_name, ap_card, skill = profile
+    user_name, ap_card, aka_name, skill, crew_id = profile
     music_map.sort(key=lambda x: x[10], reverse=True)
     music_b50 = music_map[:50]
     vol_force = get_overall_vf(music_b50)  # Get overall volforce
 
-    # validity check for floor and ceil
-    if music_b50[0][0]:
-        ceil_num = music_b50[0][-1] / 2
-    else:
-        ceil_num = 0.0
-    if music_b50[49][0]:
-        floor_num = music_b50[49][-1] / 2
-    else:
-        floor_num = 0.0
-
     """
-    Generate background, text layer and load image ingredients
+    Generate text message before any wrong would happen
     """
-    # Stipulate the size of the background & generate
-    px_prologue, px_chapters, px_epilogue = 350, 144, 70
-    y_px, x_px = px_prologue + px_chapters * 25 + px_epilogue, 1280
-    bg = generate_hex_bg((y_px, x_px))
-
-    # Init text layer
-    blank_layer = np.ones((y_px, x_px, 3), dtype=np.uint8) * 154  # Makeshift
-    text_layer = Image.fromarray(blank_layer)
-    text_layer.putalpha(1)
-    pen = ImageDraw.Draw(text_layer)
-
-    # Load image ingredients
-    level_ref, clear_ref, grade_ref = 0, 0.58, 0.42
-    level_list, clear_list, grade_list = load_level(level_ref), load_clear(clear_ref), load_grade(grade_ref)
-    box = cv2.imread(img_archive + 'bg/box_semi.png', cv2.IMREAD_UNCHANGED)
-    box_y, box_x, chn = box.shape
-
-    # Genesis
-    preface = Anchor(bg, 'preface')  # supreme anchor
-    prologue = Anchor(bg, 'prologue', free=(0, 0), father=preface)
-    chapters = Anchor(bg, 'chapter', free=(px_prologue, 0), father=preface)
-
-    cell_gap = 20  # Cell gap defines who far between two adjacent boxes, both x axis and y axis
-    cell_margin = (x_px - 2 * (box_x + cell_gap)) // 2
-    cells = Anchor(bg, 'cells', free=(0, cell_margin), father=chapters)
-    cells.creat_grid((24, 1), (px_chapters, box_x + cell_gap))
-
-    epilogue = Anchor(bg, 'epilogue', free=(y_px - px_epilogue, 0), father=preface)
-
-    """
-    Prologue: Use profile
-    """
-    # Logo, relatively independent
-    logo = cv2.imread(img_archive + '/version/logo.png', cv2.IMREAD_UNCHANGED)
-    logo = cv2.resize(logo, dsize=None, fx=0.4, fy=0.4, interpolation=cv2.INTER_AREA)
-    logo_anc = AnchorImage(bg, 'logo', logo, free=(100, 80), father=prologue)
-    logo_anc.plot()
-
-    # Profile field contains card field and data field
-    profile_field = Anchor(bg, 'profile field', free=(60, 500), father=prologue)
-    # Card field contains appeal card and skill image
-    card_field = Anchor(bg, 'card field', free=(0, 0), father=profile_field)
-
-    ap_card_path = get_ap_card(ap_card)
-    card_img = cv2.imread(ap_card_path, cv2.IMREAD_UNCHANGED)
-    card_img = cv2.resize(card_img, dsize=None, fx=0.82, fy=0.82, interpolation=cv2.INTER_AREA)
-    card_anc = AnchorImage(bg, 'ap card', card_img, (0, 0), father=card_field)
-
-    skill_img = load_skill(card_img, skill)
-    skill_anc = AnchorImage(bg, 'skill', skill_img, (189, 0), father=card_field)
-
-    card_anc.plot()
-    skill_anc.plot()
-
-    # Data field contains name field and vf field
-    data_field = Anchor(bg, 'profile data field', free=(0, 180), father=profile_field)
-
-    name_bar_size = (4, 480)
-    name_bar = simple_rectangle(name_bar_size, color_gray, bg.dtype)
-    name_bar_anc = AnchorImage(bg, 'name bar', name_bar, free=(100, 0), father=data_field)
-    parabola_gradient(name_bar, -0.65, 1.14)
-    name_bar_anc.plot()
-
-    name_field = Anchor(bg, 'name field', free=(6, 10), father=data_field)
-
-    user_font = ImageFont.truetype(font_DFHS, 40, encoding='utf-8', index=0)
-    user_anc = AnchorText(bg, 'user name', user_name, pen, user_font, free=(0, 0), father=name_field)
-    id_font = ImageFont.truetype(font_DFHS, 24, encoding='utf-8', index=0)
-    id_anc = AnchorText(bg, 'user id', 'ID  ' + card_num, pen, id_font, free=(50, 0), father=name_field)
-
-    user_anc.plot(color_white)
-    id_anc.plot(color_white)
-
-    # VF field contains a vf logo and vf related texts
-    vf_field = Anchor(bg, 'vf field', free=(110, 10), father=data_field)
-
-    vf_level = get_vf_property(vol_force, is_level=True)
-    force_img = cv2.imread(img_archive + 'vf/em6_' + str(vf_level).zfill(2) + '_i_eab.png', cv2.IMREAD_UNCHANGED)
-    force_img = cv2.resize(force_img, dsize=None, fx=0.32, fy=0.32, interpolation=cv2.INTER_AREA)
-    force_anc = AnchorImage(bg, 'volforce', force_img, free=(-20, -10), father=vf_field)
-
-    force_anc.plot()
-
-    # VF text field contains vf, ceil vf and floor vf
-    vf_text_field = Anchor(bg, 'vf text field', free=(10, 130), father=vf_field)
-
-    vol_font = ImageFont.truetype(font_DFHS, 30, encoding='utf-8', index=0)
-    vol_anc = AnchorText(bg, 'vf text', 'VOLFORCE', pen, vol_font, free=(0, 0), father=vf_text_field)
-    vol_num_font = ImageFont.truetype(font_unipace, 28, encoding='utf-8')
-    vol_num_anc = AnchorText(bg, 'vf num', ('%.3f' % vol_force), pen, vol_num_font, (-1, 210), vf_text_field)
-    ceil_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
-    ceil_anc = AnchorText(bg, 'ceil text', 'CEIL', pen, ceil_font, free=(50, 119), father=vf_text_field)
-    floor_anc = AnchorText(bg, 'floor text', 'FLOOR', pen, ceil_font, free=(80, 89), father=vf_text_field)
-    ceil_num_font = ImageFont.truetype(font_unipace, 18, encoding='utf-8')
-    ceil_num_anc = AnchorText(bg, 'ceil num', ('%.3f' % ceil_num), pen, ceil_num_font, (50, 210), vf_text_field)
-    floor_num_anc = AnchorText(bg, 'floor num', ('%.3f' % floor_num), pen, ceil_num_font, (80, 210), vf_text_field)
-
-    vol_anc.plot(color_white)
-    vol_num_anc.plot(get_vf_property(vol_force))
-    ceil_anc.plot(color_white)
-    floor_anc.plot(color_white)
-    ceil_num_anc.plot(get_vf_property(ceil_num))
-    floor_num_anc.plot(get_vf_property(floor_num))
-
-    """
-    Chapter 1-50: Best 50 songs
-    """
-    # Set data box and fonts
-    box_anc = AnchorImage(bg, 'data box', box, free=(cell_gap // 2, cell_gap // 2), father=cells)
-
-    level_font = ImageFont.truetype(font_unipace, 16, encoding='utf-8')
-    title_font = ImageFont.truetype(font_DFHS, 26, encoding='utf-8', index=0)
-    score_h_font = ImageFont.truetype(font_DFHS, 44, encoding='utf-8', index=0)
-    score_l_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
-    vf_str_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
-    vf_num_font = ImageFont.truetype(font_unipace, 26, encoding='utf-8')
-
-    h_size, l_size = score_h_font.getsize('0')[0], score_l_font.getsize('0')[0]
-
-    for index in range(50):
-        # Unpack data & validity check
-        is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf = music_b50[index]
-        if not is_recorded:
-            break
-
-        # Box as mini background for each songs
-        box_anc.set_grid((index // 2, index % 2))
-        box_anc.plot()
-
-        # Load and superimpose jacket
-        jk_path = get_jacket(mid, m_type, 's')
-        jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
-        jk = add_alpha(jk)
-        jk_anc = AnchorImage(bg, 'jacket', jk, free=(8, 17), father=box_anc)
-        jk_anc.plot()
-
-        # Level box
-        if m_type == '3':
-            level_box = level_list[int(m_type) + int(inf_ver)]
-        else:
-            level_box = level_list[int(m_type)]
-        level_box_anc = AnchorImage(bg, 'level box', level_box, free=(14, 144), father=box_anc)
-        level_box_anc.plot()
-
-        level_num_anc = AnchorText(bg, 'level text', lv, pen, level_font, free=(4, 76), father=level_box_anc)
-        level_num_anc.plot(color_white)
-
-        # Clear mark & grade mark
-        clear_icon = clear_list[int(clear)]
-        clear_anc = AnchorImage(bg, 'clear', clear_icon, free=(61, 147), father=box_anc)
-        clear_anc.plot()
-
-        grade_icon = grade_list[int(grade)]
-        grade_anc = AnchorImage(bg, 'grade', grade_icon, free=(61, 202), father=box_anc)
-        grade_anc.plot()
-
-        # Title
-        title = length_uni(title_font, name, length=box_x - 300)
-        title_anc = AnchorText(bg, 'title', title, pen, title_font, free=(14, 271), father=box_anc)
-        title_anc.plot(color_black)
-
-        # Score contains two parts
-        score_field = Anchor(bg, 'score field', free=(63, 271), father=box_anc)
-        score = score.zfill(8)
-
-        score_color = [color_black for _ in range(8)]  # Let foremost '0's be gray
-        for __index in range(8):
-            if score[__index] != '0':
-                break
-            score_color[__index] = color_gray
-
-        high_grid = Anchor(bg, 'high num grid', free=(0, 0), father=score_field)
-        high_grid.creat_grid((0, 3), (0, h_size))
-        high_num_anc = AnchorText(bg, 'high num', '', pen, score_h_font, father=high_grid)
-        for __index in range(0, 4):
-            high_num_anc.text = score[__index]
-            high_num_anc.set_grid((0, __index))
-            high_num_anc.plot(score_color[__index])
-
-        low_grid = Anchor(bg, 'low num grid', free=(10, h_size * 4), father=score_field)
-        low_grid.creat_grid((0, 3), (0, l_size))
-        low_num_anc = AnchorText(bg, 'low num', '', pen, score_l_font, father=low_grid)
-        for __index in range(0, 4):
-            low_num_anc.text = score[__index + 4]
-            low_num_anc.set_grid((0, __index))
-            low_num_anc.plot(score_color[__index + 4])
-
-        # 'VF' and its value
-        res_vf_field = Anchor(bg, 'respective vf field', free=(53, 485), father=box_anc)  # res = respective
-        res_vf_text_anc = AnchorText(bg, 'res vf text', 'VF    #%02d' % (index + 1),
-                                     pen, vf_str_font, (0, 1), res_vf_field)
-        res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % (vf / 2), pen, vf_num_font, (22, 0), res_vf_field)
-
-        res_vf_text_anc.plot(color_black)
-        res_vf_num_anc.plot(get_vf_property(vf / 2, is_darker=True))
-
-    """
-    Epilogue: Special thanks to myself
-    """
-    finale_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8')
-    yeast_anc = AnchorText(bg, 'yeast', 'Generated by Saccharomyces cerevisiae',
-                           pen, finale_font, (20, x_px // 2), epilogue)
-    yeast_anc.plot(color_gray, pos='c')
-
-    text_layer = np.array(text_layer)
-    png_superimpose(bg, text_layer)
-    cv2.imwrite('%s/%s_b50_temp.png' % (output, user_name), bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
-
     msg = ''
     msg += ('----------------VOLFORCE %.3f----------------\n' % vol_force)
     msg += 'No.  VF      DIFF   SCORE    RANK  LHT  NAME\n'
     for index in range(50):
         diff = get_diff(music_b50[index][2], music_b50[index][9])
-        msg += ('#%-4d%.3f  %s%-2s  %-9s%-6s%-5s%s\n' % ((index + 1), music_b50[index][10], diff,
+        msg += ('#%-4d%.3f  %s%-2s  %-9s%-6s%-5s%s\n' % ((index + 1), music_b50[index][10] / 2, diff,
                                                          music_b50[index][8], music_b50[index][3],
                                                          clear_table[music_b50[index][4]],
                                                          grade_table[music_b50[index][5]], music_b50[index][7]))
-    print(msg)
+    timber.info('Generate B50 data complete.\n\n%s\n' % msg)
+
+    try:  # If the plot module breaks down somehow, the function will try to return the pure text data.
+        """
+        Generate background, text layer and load image ingredients
+        """
+        # Stipulate the size of the background & generate
+        px_prologue, px_chapters, px_epilogue = 430, 144, 70
+        y_px, x_px = px_prologue + px_chapters * 25 + px_epilogue, 1280
+        bg = generate_hex_bg((y_px, x_px))
+
+        # Init text layer
+        blank_layer = np.ones((y_px, x_px, 3), dtype=np.uint8) * 154  # Makeshift
+        text_layer = Image.fromarray(blank_layer)
+        text_layer.putalpha(1)
+        pen = ImageDraw.Draw(text_layer)
+
+        # Load image ingredients
+        level_ref, clear_ref, grade_ref = 0, 0.58, 0.42
+        level_list, clear_list, grade_list = load_level(level_ref), load_clear(clear_ref), load_grade(grade_ref)
+        box = cv2.imread(img_archive + '/bg/box_semi.png', cv2.IMREAD_UNCHANGED)
+        box_y, box_x, chn = box.shape
+
+        # Genesis
+        preface = Anchor(bg, 'preface')  # supreme anchor
+        prologue = Anchor(bg, 'prologue', free=(0, 0), father=preface)
+        chapters = Anchor(bg, 'chapter', free=(px_prologue, 0), father=preface)
+
+        cell_gap = 20  # Cell gap defines who far between two adjacent boxes, both x axis and y axis
+        cell_margin = (x_px - 2 * (box_x + cell_gap)) // 2
+        cells = Anchor(bg, 'cells', free=(0, cell_margin), father=chapters)
+        cells.creat_grid((24, 1), (px_chapters, box_x + cell_gap))
+
+        epilogue = Anchor(bg, 'epilogue', free=(y_px - px_epilogue, 0), father=preface)
+
+        """
+        Prologue: User profile
+        """
+
+        std_profile = generate_std_profile(profile, vol_force)
+        profile_anc = AnchorImage(bg, 'profile', std_profile, (30, (x_px - std_profile.shape[1]) // 2), father=prologue)
+        profile_anc.plot()
+
+        """
+        Chapter 1-50: Best 50 songs
+        """
+        # Set data box and fonts
+        box_anc = AnchorImage(bg, 'data box', box, free=(cell_gap // 2, cell_gap // 2), father=cells)
+
+        level_font = ImageFont.truetype(font_unipace, 16, encoding='utf-8')
+        title_font = ImageFont.truetype(font_DFHS, 26, encoding='utf-8', index=0)
+        score_h_font = ImageFont.truetype(font_DFHS, 44, encoding='utf-8', index=0)
+        score_l_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
+        vf_str_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
+        vf_num_font = ImageFont.truetype(font_unipace, 26, encoding='utf-8')
+
+        h_size, l_size = score_h_font.getsize('0')[0], score_l_font.getsize('0')[0]
+
+        for index in range(50):
+            # Unpack data & validity check
+            is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf = music_b50[index]
+            if not is_recorded:
+                break
+
+            # Box as mini background for each songs
+            box_anc.set_grid((index // 2, index % 2))
+            box_anc.plot()
+
+            # Load and superimpose jacket
+            jk_path = get_jacket(mid, m_type, 's')
+            jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
+            jk = add_alpha(jk)
+            jk_anc = AnchorImage(bg, 'jacket', jk, free=(8, 17), father=box_anc)
+            jk_anc.plot()
+
+            # Level box
+            if m_type == 3:
+                level_box = level_list[m_type + int(inf_ver)]
+            else:
+                level_box = level_list[m_type]
+            level_box_anc = AnchorImage(bg, 'level box', level_box, free=(14, 144), father=box_anc)
+            level_box_anc.plot()
+
+            level_num_anc = AnchorText(bg, 'level text', lv, pen, level_font, free=(4, 76), father=level_box_anc)
+            level_num_anc.plot(color_white)
+
+            # Clear mark & grade mark
+            clear_icon = clear_list[clear]
+            clear_anc = AnchorImage(bg, 'clear', clear_icon, free=(61, 147), father=box_anc)
+            clear_anc.plot()
+
+            grade_icon = grade_list[grade]
+            grade_anc = AnchorImage(bg, 'grade', grade_icon, free=(61, 202), father=box_anc)
+            grade_anc.plot()
+
+            # Title
+            title = length_uni(title_font, name, length=box_x - 300)
+            title_anc = AnchorText(bg, 'title', title, pen, title_font, free=(14, 271), father=box_anc)
+            title_anc.plot(color_black)
+
+            # Score contains two parts
+            score_field = Anchor(bg, 'score field', free=(63, 271), father=box_anc)
+            score = str(score).zfill(8)
+
+            score_color = [color_black for _ in range(8)]  # Let foremost '0's be gray
+            for __index in range(8):
+                if score[__index] != '0':
+                    break
+                score_color[__index] = color_gray
+
+            high_grid = Anchor(bg, 'high num grid', free=(0, 0), father=score_field)
+            high_grid.creat_grid((0, 3), (0, h_size))
+            high_num_anc = AnchorText(bg, 'high num', '', pen, score_h_font, father=high_grid)
+            for __index in range(0, 4):
+                high_num_anc.text = score[__index]
+                high_num_anc.set_grid((0, __index))
+                high_num_anc.plot(score_color[__index])
+
+            low_grid = Anchor(bg, 'low num grid', free=(10, h_size * 4), father=score_field)
+            low_grid.creat_grid((0, 3), (0, l_size))
+            low_num_anc = AnchorText(bg, 'low num', '', pen, score_l_font, father=low_grid)
+            for __index in range(0, 4):
+                low_num_anc.text = score[__index + 4]
+                low_num_anc.set_grid((0, __index))
+                low_num_anc.plot(score_color[__index + 4])
+
+            # 'VF' and its value
+            res_vf_field = Anchor(bg, 'respective vf field', free=(53, 485), father=box_anc)  # res = respective
+            res_vf_text_anc = AnchorText(bg, 'res vf text', 'VF    #%02d' % (index + 1),
+                                         pen, vf_str_font, (0, 1), res_vf_field)
+            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % (vf / 2), pen, vf_num_font, (22, 0), res_vf_field)
+
+            res_vf_text_anc.plot(color_black)
+            res_vf_num_anc.plot(get_vf_level(vf / 2, is_darker=True, is_color=True))
+
+        """
+        Epilogue: Special thanks to myself
+        """
+        finale_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8')
+        yeast_anc = AnchorText(bg, 'yeast', 'Generated by Saccharomyces cerevisiae',
+                               pen, finale_font, (20, x_px // 2), epilogue)
+        yeast_anc.plot(color_gray, pos='c')
+
+        text_layer = np.array(text_layer)
+        png_superimpose(bg, text_layer)
+        output_path = '%s/%s_b50_temp.png' % (output, user_name)
+        cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
+
+        timber.info_show('Plot saved at [%s] successfully.' % output_path)
+        return msg
+
+    except Exception:
+        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n\n%s\n'
+                       % format_exc())
+        return msg
 
 
 def plot_summary(music_map: list, profile: list, lv_base: int):
@@ -666,7 +253,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     #         [NO, CR, NC, HC, UC, PUC]
     # 6-16 |  [NO, D, C, B, A, A+, AA, AA+, AAA, AAA+, S]
     # 17   |  [sum]
-    for single_music in level_table:  # Calculating the sum of eachlevel
+    for single_music in level_table:  # Calculating the sum of each level
         if not single_music[0]:
             continue
         nov, adv, exh, inf, mxm = \
@@ -690,7 +277,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     for record in music_map:
         if not record[0]:
             continue
-        score, clear, grade, lv = int(record[3]), int(record[4]), int(record[5]), int(record[8])
+        score, clear, grade, lv = record[3], record[4], record[5], int(record[8])
         level_summary[lv][clear_index[clear]] += 1
         level_summary[lv][grade_index[grade]] += 1
         hist_list[lv][int(grade_index[grade] - 11)].append(score // 10000)
@@ -704,7 +291,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     vf_list, vf_size, low_score = [], 100, 10000000  # Just [score: int, vf: float, lv: str]
     for record in music_map_sort[:vf_size]:
         if record[0]:
-            score, lv, vf = int(record[3]), str(record[8]), record[10]
+            score, lv, vf = record[3], str(record[8]), record[10]
             vf_list.append((score, vf / 2, lv))
             low_score = min(low_score, score)
     high_vf, low_vf = vf_list[0][1], vf_list[-1][1]
@@ -864,7 +451,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     data_box = bg_duplicator(data_box_bar, data_box_bar.shape[0], data_box_length)
     data_box_anc = AnchorImage(bg, 'data box', data_box)
 
-    title_font = ImageFont.truetype(font_round, 26, encoding='utf-8')
+    title_font = ImageFont.truetype(font_DFHS, 26, encoding='utf-8')
     title_text_anc = AnchorText(bg, 'title level', '', pen, title_font, (4, 50), title_anc)
     sub_font = ImageFont.truetype(font_DFHS, 22, encoding='utf-8', index=0)
     subtitle_text_anc = AnchorText(bg, 'subtitle', '', pen, sub_font, (14, 16), subtitle_anc)
@@ -1220,9 +807,9 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         msg += ('lv.%d    ' % index)
         msg += ('%-8d%-8d%-8d%-8d||    %-8d%-8d%-8d||    %-8d\n' % (nc, hc, uc, puc, aaa, aaa_plus, s, __sum))
 
-    print(msg)
-
     try:
         remove(local_dir + '/data/matplotlib.png')
     except FileNotFoundError:
         pass
+
+    print(msg)

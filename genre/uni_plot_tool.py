@@ -1,6 +1,9 @@
+from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
 import numpy as np
-
-from cfg_read import *
+import cv2
+from PIL import Image, ImageDraw, ImageFont
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 def quick_show(img: np.array):

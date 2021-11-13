@@ -1,8 +1,9 @@
-from cfg import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
 import base64
 import ifstools
 from os import path, listdir, makedirs
-from cfg import local_dir
+from hashlib import sha256
+from cfg_read import local_dir
 
 
 def file_2_b64(src: str, dst: str, name: str, write: str = 'w'):
@@ -49,6 +50,8 @@ def convert_all(version: str, dst: str, abs_path: str = False, omit_folder: bool
 
 
 if __name__ == '__main__':
-    """files_2_b64('C:/Users/nyanm/PycharmProjects/sdvx_remote/img_archive/gen6/font',
-                local_dir + '/genre/gen6/dependency_plot_gen6.py')"""
-    pass
+    """files_2_b64('C:/Users/nyanm/PycharmProjects/sdvx_remote/__img_archive/gen6/skill',
+                local_dir + '/genre/gen6/data_plot_gen6.py')
+    pass"""
+    sh = sha256('C:\Arcade MUG\SDVX6\KentuckyFriedChicken\contents\data'.encode('utf-8'))
+    print(sh.hexdigest())

@@ -1,14 +1,15 @@
-import sys
 import os
 import re
 import json
-from copy import deepcopy
+import sys
+import time
+import pyfiglet
 import numpy as np
 
-from cfg import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
-from cfg import Timber
+from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import Timber
 from update.update_init import update
-from genre.gen6 import main_plot_gen6
+from genre.gen6 import main_plot_gen6, tools_plot_gen6
 from genre.gen5 import main_plot_gen5
 
 # Dictionary for vf calculation
@@ -20,8 +21,21 @@ crew_id = {116: '0001', 95: '0002', 96: '0003', 100: '0004', 101: '0005', 102: '
            105: '0009', 106: '0010', 107: '0011', 109: '0012', 112: '0013', 113: '0014', 117: '0015', 118: '0016',
            119: '0017', 120: '0018', 121: '0019'}
 
-timber = Timber()
+timber = Timber('main_neo.py')
 skin_dict = {'gen6': main_plot_gen6, 'gen5': main_plot_gen5}
+
+title = pyfiglet.Figlet(width=1000)
+title_text = title.renderText('Saccharomyces\n              cerevisiae')
+title_text += '                    Simple SDVX@Asphyxia Score Checker                    \n' \
+              '                             Version 2.0 beta\n' \
+              '                       Powered by Nyanm & Achernar\n\n' \
+              '查分器功能  Score checker function field\n' \
+              '[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n' \
+              '[3] 最近游玩记录  Recent play record     [4] 特定歌曲记录  Specific song record\n\n' \
+              '通常功能    Common function field\n' \
+              '[8] 搜索歌曲mid  Search mid              [9] 可用皮肤列表  Available skin list\n' \
+              '[0] 退出  Exit\n\n' \
+              '输入相应数字后回车以继续  Enter corresponding number to continue:'
 
 
 class SDVX:
@@ -58,7 +72,7 @@ class SDVX:
             timber.error('Critical npy files not found, please delete the last line of config.txt and restart.')
 
         # Get raw data from db
-        last_record = []
+        self.last_record = []
         for line in self.raw_data:
             json_dict = json.loads(line)
 
@@ -86,8 +100,8 @@ class SDVX:
                     vf = 0.0
 
                 music_index = int(mid) * 5 + int(m_type)
-                last_record = [True, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf]
-                self.music_map[music_index] = last_record
+                self.last_record = [True, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf]
+                self.music_map[music_index] = self.last_record
 
             elif line_type == 'profile':
                 self.user_name, self.ap_card, self.aka_index = \
@@ -101,7 +115,7 @@ class SDVX:
         # Unpack last record, profile, skill and param data
         timber.info('Draw data from sdvx@asphyxia.db successfully.')
         try:
-            self.akaname = 'よろしくお願いします'
+            self.akaname = 'よろしくお願いします'  # If you have modified your aka name
             for akaname in self.aka_db:
                 if akaname[0] == self.aka_index:
                     self.akaname = akaname[1]
@@ -113,10 +127,13 @@ class SDVX:
 
             timber.info('Profile data load successfully.\n\n'
                         'user name   :%s\nappeal card :%d\nakaname     :%s\nskill       :%d\ncrew        :%s\n' %
-                        (self.user_name, self.ap_card, self.aka_index, self.skill, self.crew_id))
+                        (self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id))
         except AttributeError:
             timber.error('Profile/Skill/Crew data not found, '
                          'make sure you have at least played once (and saved successfully).')
+
+        self.profile = [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
+        timber.info('Initialization complete.')
 
     def search_mid(self, search_str: str):
         result_list = []
@@ -126,20 +143,93 @@ class SDVX:
                 result_list.append(index)
 
         if not result_list:
-            print('未能搜索到结果  No search result found')
+            print('\n未能搜索到结果  No search result found')
             timber.info('Search failed.')
             return
 
         search_res = ('%d result(s) found:\n\n|No  |MID   |[Name]  [Artist]\n' % len(result_list))
         for index in range(len(result_list)):
             __mid = result_list[index]
-            search_res += '|%-4d|%-4d  |[%s]  [%s]\n' %\
+            search_res += '|%-4d|%-4d  |[%s]  [%s]\n' % \
                           (index + 1, __mid, self.level_table[__mid][1], self.level_table[__mid][2])
 
         timber.info(search_res)
-        print('共搜索到%d个结果  %s' % (len(result_list), search_res))
+        print('\n共搜索到%d个结果  %s' % (len(result_list), search_res))
+
+    def get_b50(self):
+        b50_text = self.plot_skin.plot_b50(self.music_map.copy(), self.profile)
+        input('%s\nPress enter to continue.' % b50_text)
+
+    def get_summary(self):
+        print('summary')
+
+    def get_recent(self):
+        sg_text = self.plot_skin.plot_single(self.last_record, self.profile)
+        input('Recent play record:\n%s\nPress enter to continue.' % sg_text)
+
+    def get_specific(self):
+        print('specific')
+
+    def __1_get_b50(self):
+        os.system('cls')
+        self.get_b50()
+
+    def __2_get_summary(self):
+        os.system('cls')
+        self.get_summary()
+
+    def __3_get_recent(self):
+        self.get_recent()
+
+    def __4_get_specific(self):
+        self.get_specific()
+
+    def __8_search(self):
+        os.system('cls')
+        __msg = '输入想要查询的歌曲的相关信息(曲名、作者或者梗)后回车，不区分大小写\n' \
+                'Enter relative message(Name, Artist, Memes) about the song you want to search, not case-sensitive:'
+        search_arg = input(__msg)
+        if search_arg:
+            self.search_mid(search_arg)
+
+        input('Press enter to continue.')
+
+    def __9_skin_list(self):
+        timber.info('Damn I have no spare skins to show.')
+        input('\nApparently the only skin we have is the primary skin for Saccharomyces cerevisiae:[gen6] :(\n'
+              'But you, %s, you can join us and help us to develop new skins!\n' % self.user_name)
+
+    def __0_see_you_next_time(self):
+        timber.info('Exit by op num 0.')
+        print('\nSee you next time, %s!' % self.user_name)
+        time.sleep(1)
+        sys.exit(0)
+
+    def input_handler(self):
+        key_dict = {
+            '1': self.__1_get_b50,
+            '2': self.__2_get_summary,
+            '3': self.__3_get_recent,
+            '4': self.__4_get_specific,
+            '8': self.__8_search,
+            '9': self.__9_skin_list,
+            '0': self.__0_see_you_next_time
+        }
+
+        os.system('cls')
+        time.sleep(0.1)
+        print(title_text, end='')
+        while True:
+            base_arg = input()
+            timber.info('Get user operator %s' % base_arg)
+            try:
+                key_dict[base_arg]()
+                break
+            except KeyError:
+                pass
 
 
 if __name__ == '__main__':
     sdvx = SDVX()
-    sdvx.search_mid('FAITHFUL')
+    while True:
+        sdvx.input_handler()

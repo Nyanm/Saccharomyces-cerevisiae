@@ -6,7 +6,6 @@ from csv import reader
 from copy import deepcopy
 from traceback import format_exc
 
-import plot_gen6
 
 file_name = 'main.py'
 

@@ -1,5 +1,5 @@
-from cfg import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
-from cfg import decode_b64
+from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import decode_b64
 from os import path, makedirs
 from genre.gen6 import dependency_plot_gen6
 import ifstools

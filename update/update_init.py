@@ -1,5 +1,5 @@
-from cfg import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
-from cfg import Timber
+from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import Timber
 from os import path, makedirs, system
 from time import sleep
 
@@ -8,7 +8,7 @@ from .update_db import update_db
 from .update_aka import update_aka
 from .update_img import update_img
 
-timber = Timber()
+timber = Timber('update_init.py')
 
 
 def update():
@@ -50,4 +50,4 @@ def update():
 
     sleep(0.2)
     timber.info_clog('\nUpdate complete. Press enter to continue.')
-    system('clc')
+    system('cls')
