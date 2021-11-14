@@ -135,17 +135,14 @@ class SDVX:
         self.profile = [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
         timber.info('Initialization complete.')
 
-    def search_mid(self, search_str: str):
+    def search_mid(self, search_str: str) -> tuple:
         result_list = []
-        timber.info('Searching "%s"' % search_str)
         for index in range(1, map_size):
             if re.search(search_str, self.search_db[index], re.I):
                 result_list.append(index)
 
-        if not result_list:
-            print('\n未能搜索到结果  No search result found')
-            timber.info('Search failed.')
-            return
+        if not result_list:  # Find nothing
+            return '', 0
 
         search_res = ('%d result(s) found:\n\n|No  |MID   |[Name]  [Artist]\n' % len(result_list))
         for index in range(len(result_list)):
@@ -153,8 +150,7 @@ class SDVX:
             search_res += '|%-4d|%-4d  |[%s]  [%s]\n' % \
                           (index + 1, __mid, self.level_table[__mid][1], self.level_table[__mid][2])
 
-        timber.info(search_res)
-        print('\n共搜索到%d个结果  %s' % (len(result_list), search_res))
+        return search_res, len(result_list)
 
     def get_b50(self):
         b50_text = self.plot_skin.plot_b50(self.music_map.copy(), self.profile)
@@ -163,12 +159,9 @@ class SDVX:
     def get_summary(self):
         print('summary')
 
-    def get_recent(self):
-        sg_text = self.plot_skin.plot_single(self.last_record, self.profile)
-        input('Recent play record:\n%s\nPress enter to continue.' % sg_text)
-
-    def get_specific(self):
-        print('specific')
+    def get_single(self, record: list):
+        sg_text = self.plot_skin.plot_single(record, self.profile)
+        input('%s\nPress enter to continue.' % sg_text)
 
     def __1_get_b50(self):
         os.system('cls')
@@ -179,19 +172,46 @@ class SDVX:
         self.get_summary()
 
     def __3_get_recent(self):
-        self.get_recent()
+        print('Recent play record:')
+        self.get_single(self.last_record)
 
     def __4_get_specific(self):
-        self.get_specific()
+        __msg = '\nNOV->1   ADV->2   EXH->3   INF/GRV/HVN/VVD/MXM->4\n' \
+                '输入指令形如[歌曲mid] [难度(可选)]，默认搜索最高难度，例如: 天极圈 -> 927 4 (或者 927)\n' \
+                'Enter operators like "[mid] [diff(optional)], Search highest difficulty as default, \n' \
+                'for example: Kyokuken -> 927 4 (or 927)"\n'
+        timber.info()
+        spe_arg = input(__msg).split()
+
+        if len(spe_arg) == 1:
+            try:
+                mid = int(spe_arg[0])
+            except ValueError:
+                input('Invalid character was found, please try again and enter only number(s).\n'
+                      'Press enter to continue.')
+                return
+
+            for lv_index in range(4, -1, -1):
+                index = mid * 5 + lv_index
+
+        self.get_single(self.last_record)
 
     def __8_search(self):
         os.system('cls')
         __msg = '输入想要查询的歌曲的相关信息(曲名、作者或者梗)后回车，不区分大小写\n' \
                 'Enter relative message(Name, Artist, Memes) about the song you want to search, not case-sensitive:'
         search_arg = input(__msg)
+        timber.info('Searching "%s"' % __msg)
         if search_arg:
-            self.search_mid(search_arg)
-
+            search_res, res_num = self.search_mid(search_arg)
+            if res_num:
+                timber.info(search_res)
+                print('\n共搜索到%d个结果  %s' % (res_num, search_res))
+            else:
+                print('\n未能搜索到结果  No search result found')
+                timber.info('Search failed.')
+        else:
+            print('Empty input. Please try again and at least enter something.')
         input('Press enter to continue.')
 
     def __9_skin_list(self):

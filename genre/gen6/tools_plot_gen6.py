@@ -286,6 +286,7 @@ def generate_std_profile(profile: list, vf: float) -> np.array:
     png_superimpose(bg, data_box, (box_margin + 47, 207))
     png_superimpose(bg, appeal_card, (box_margin + 60, 52))
     """
+    # It's just so ugly that I have no choice but withdraw this tiny privilege of developer :(
     if sha256(game_dir.encode('utf-8')).hexdigest() == staff_hash:
         staff = cv2.imread(img_archive + '/ap_floor/sdvx_staff_s.png', cv2.IMREAD_UNCHANGED)
         png_superimpose(bg, staff, (box_margin + 60, 43))

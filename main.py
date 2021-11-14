@@ -79,15 +79,6 @@ class SdvxData:
         if not path.exists(self.output):
             error_handler(r'Output folder not found, please check your file directory.')
 
-        log_write('Set up complete.', file_name)
-        log_write('map size=%s' % self.map_size, file_name)
-        log_write('card num=%s' % self.card_num, file_name)
-        log_write('local dir=%s' % self.local_dir, file_name)
-        log_write('db dir=%s' % self.db_dir, file_name)
-        log_write('game dir=%s' % self.game_dir, file_name)
-        log_write('output=%s' % self.output, file_name)
-        log_write('skin name=%s' % self.skin_name, file_name)
-
         # Initialize check
         if not self.is_init:
             print('Initializing.')
@@ -227,11 +218,6 @@ class SdvxData:
         self.aka = get_aka.search(self.raw_profile).group()[10:]
         self.ap_card = get_ap_card.search(self.raw_profile).group()[9:]
         self.skill = get_base.search(self.raw_skill).group()[7:]
-
-        log_write('Profile read from sdvx@asphyxia.db', file_name)
-        log_write('user name=%s' % self.user_name, file_name)
-        log_write('ap card=%s' % self.ap_card, file_name)
-        log_write('skill=%s' % self.skill, file_name)
 
         # Specify music data
         self.raw_music.reverse()
