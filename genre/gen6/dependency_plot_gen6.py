@@ -69,6 +69,6 @@ dependency = {
     ],
 
     'is_transport': True,
-    'transport': ['commaexr.ttf'],
-    'transport_commaexr.ttf': ['/graphics/font/commaexr.ttf', 'font']
+    'transport': ['continuum_medium.ttf'],
+    'transport_continuum_medium.ttf': ['/graphics/font/0001', '/font/continuum_medium.ttf']
 }

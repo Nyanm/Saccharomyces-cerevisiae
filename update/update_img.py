@@ -9,6 +9,7 @@ depend_list = {'gen6': dependency_plot_gen6}
 
 
 def update_img():
+
     def update_ifs(ifs_list: list, __version: str):
         ver_path = '%s/graphics/ver0%s/' % (game_dir, __version)
 
@@ -33,10 +34,10 @@ def update_img():
 
     def update_transport(trans_loc: list):
         trans_src = game_dir + trans_loc[0]
-        trans_path = genre_path + '/%s' % trans_loc[1]
+        trans_dst = genre_path + trans_loc[1]
+        trans_path = ''.join(trans_dst.split('/').pop())
         if not path.exists(trans_path):
             makedirs(trans_path)
-        trans_dst = trans_path + '/%s' % trans_src.split('/')[-1]
         shutil.copy(trans_src, trans_dst)
 
     archive_path = local_dir + '/img_archive'

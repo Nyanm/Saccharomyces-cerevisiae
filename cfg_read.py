@@ -1,5 +1,4 @@
 import re
-import logging
 import sys
 from os import path
 from time import localtime, strftime
@@ -39,41 +38,70 @@ f.close()
 class Timber:
     def __init__(self, filename):
         self.filename = filename
-        self.logger = open(timber_path, 'a', encoding='utf-8')
         self.fmt = '[%s][%s][%s]:%s\n'
 
+    def write(self, msg: str, level: str):
+        logger = open(timber_path, 'a', encoding='utf-8')
+        logger.write(self.fmt % (strftime("%H:%M:%S", localtime()), self.filename, level, msg))
+        logger.close()
+
     def info(self, msg: str):
-        self.logger.write(self.fmt % (strftime("%H:%M:%S", localtime()), self.filename, 'Info', msg))
+        self.write(msg, 'Info')
 
     def info_show(self, msg: str):
         print('\33[32m[Info] %s\33[0m' % msg)
-        self.logger.write(self.fmt % (strftime("%H:%M:%S", localtime()), self.filename, 'Info', msg))
+        self.write(msg, 'Info')
 
     def info_clog(self, msg: str):
         input('\33[32m[Info] %s\33[0m' % msg)
-        self.logger.write(self.fmt % (strftime("%H:%M:%S", localtime()), self.filename, 'Info', msg))
+        self.write(msg, 'Info')
 
     def warning(self, msg: str):
         input('\33[33m[Warning] %s\33[0m' % msg)
-        self.logger.write(self.fmt % (strftime("%H:%M:%S", localtime()), self.filename, 'Warning', msg))
+        self.write(msg, 'Warning')
 
     def error(self, msg: str):
         input('\33[31m[Error] %s\33[0m' % msg)
-        self.logger.write(self.fmt % (strftime("%H:%M:%S", localtime()), self.filename, 'Error', msg))
+        self.write(msg, 'Error')
         sys.exit(1)
 
 
 timber = Timber('cfg_read.py')
 timber.info('test mode=%s' % test_mode)  # Initial logging
 
-
 # Read config.txt
+cfg_path = local_dir + '/config.txt'
 try:
-    cfg_path = local_dir + '/config.txt'
     __raw_file = open(cfg_path, 'r')
 except FileNotFoundError:
-    # TODO: Generate raw config.txt
-    logging.critical('config.txt not found, please check your file directory.')
+    timber.warning('config.txt not found, the program will try to generate a new one.\nPress enter to continue.')
+    cfg = open(cfg_path, 'w', encoding='utf-8')
+    cfg.write(
+        '[Search]\n'
+        '# Range of mid, default as 2000\n'
+        'map size=2000\n'
+        '# User\'s card number in asphyxia\'s website (or database), a 16 bit long hex number sequence\n'
+        'card num=\n'
+        '\n'
+        '[Directory]\n'
+        '# Directory of sdvx@asphyxia\'s database\n'        
+        '# eg. db path=C:\\MUG\\asphyxia-core\\savedata\\sdvx@asphyxia.db\n'
+        'db path=\n'
+        '\n'
+        '# Directory of sdvx HDD data\n'
+        '# eg. game path=C:\\MUG\\SDVX6\\KFC-2021051802\\contents\\data\n'
+        'game path=\n'
+        '\n'
+        '# Directory where outputs pictures\n'
+        'output path=\n'
+        '[Plot]\n'
+        '# name of skin, default as "gen6"\n'
+        'skin name=gen6\n'
+        '\n'
+        '[Init]\n'
+        '# If you have updated your game, delete the following line\n'
+    )
+    cfg.close()
     sys.exit(1)
 
 cfg_data = ''
@@ -82,7 +110,6 @@ for __line in __raw_file.readlines():
         continue
     cfg_data += __line
 __raw_file.close()
-
 
 # Data cleaning
 get_map_size = re.compile(r'map size+[^\n]*')

@@ -339,30 +339,6 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     """
     # Profile field includes card field and name field
     profile_field = Anchor(bg, 'profile field', free=(60, 100), father=prologue)
-    """
-    profile_size = (340, 800)
-    
-    # Profile background
-    pbg_frame = simple_rectangle(profile_size, color_white, bg.dtype, 6)  # pbg = profile background
-    parabola_gradient(pbg_frame, -1, 1, 'x+')
-    pbg_frame_anc = AnchorImage(bg, 'profile bg frame', pbg_frame, father=profile_field)
-
-    pbg_belt = simple_rectangle((800, 40), color_white, bg.dtype)
-    parabola_gradient(pbg_belt, -1, 1, 'x+')
-    pbg_belt1_anc = AnchorImage(bg, 'profile bg belt upper', pbg_belt, father=profile_field)
-    pbg_belt2_anc = AnchorImage(bg, 'profile bg belt lower', pbg_belt, father=profile_field,
-                                free=(0, profile_size[1] - pbg_belt.shape[0]))
-
-    pbg_neon = simple_rectangle((80, profile_size[1]), (109,46,186), bg.dtype)
-    parabola_gradient(pbg_neon, -2, 1, 'x+')
-    pbg_neon_anc = AnchorImage(bg, 'profile skill neon', pbg_neon, father=profile_field)
-
-    pbg_neon_anc.plot(transparency=0.7)
-    pbg_belt1_anc.plot(transparency=0.5)
-    pbg_belt2_anc.plot(transparency=0.5)
-
-    pbg_frame_anc.plot()
-    """
 
     # Card field contains two images, namely appeal card and skill
     card_field = Anchor(bg, 'card field', free=(40, 80), father=profile_field)
@@ -812,4 +788,4 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     except FileNotFoundError:
         pass
 
-    print(msg)
+    return msg
