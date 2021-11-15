@@ -44,7 +44,7 @@ def update():
         timber.error('Fail to generate image archive.')
 
     # add initialized sign
-    __raw_file = open(local_dir + '/config.txt', 'a')
+    __raw_file = open(local_dir + '/config.cfg', 'a')
     __raw_file.write('is initialized=True\n')
     __raw_file.close()
 

@@ -69,7 +69,7 @@ class SDVX:
             self.search_db = np.load(local_dir + '/data/search_db.npy')
             self.aka_db = np.load(local_dir + '/data/aka_db.npy', allow_pickle=True)
         except FileNotFoundError:
-            timber.error('Critical npy files not found, please delete the last line of config.txt and restart.')
+            timber.error('Critical npy files not found, please delete the last line of config.cfg and restart.')
 
         # Get raw data from db
         self.last_record = []

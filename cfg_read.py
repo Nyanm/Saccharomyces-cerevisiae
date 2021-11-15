@@ -69,12 +69,12 @@ class Timber:
 timber = Timber('cfg_read.py')
 timber.info('test mode=%s' % test_mode)  # Initial logging
 
-# Read config.txt
-cfg_path = local_dir + '/config.txt'
+# Read config.cfg
+cfg_path = local_dir + '/config.cfg'
 try:
     __raw_file = open(cfg_path, 'r')
 except FileNotFoundError:
-    timber.warning('config.txt not found, the program will try to generate a new one.\nPress enter to continue.')
+    timber.warning('config.cfg not found, the program will try to generate a new one.\nPress enter to continue.')
     cfg = open(cfg_path, 'w', encoding='utf-8')
     cfg.write(
         '[Search]\n'
@@ -128,7 +128,7 @@ output = get_output.search(cfg_data).group()[12:].replace('\\', '/')
 skin_name = get_skin.search(cfg_data).group()[10:]
 is_init = get_init_stat.search(cfg_data)
 
-timber.info('config.txt load complete.\n\n'
+timber.info('config.cfg load complete.\n\n'
             'map size  :%d\ncard num  :%s\ndb dir    :%s\ngame dir  :%s\noutput    :%s\nskin name :%s\nis init   :%s\n'
             % (map_size, card_num, db_dir, game_dir, output, skin_name, is_init is not None))
 
