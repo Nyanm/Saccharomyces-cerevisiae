@@ -1,4 +1,4 @@
-from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import local_dir
 import numpy as np
 import cv2
 from PIL import Image, ImageDraw, ImageFont

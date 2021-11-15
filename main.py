@@ -6,10 +6,10 @@ import time
 import pyfiglet
 import numpy as np
 
-from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import local_dir, cfg
 from cfg_read import Timber
 from update.update_init import update
-from genre.gen6 import main_plot_gen6, tools_plot_gen6
+from genre.gen6 import main_plot_gen6
 from genre.gen5 import main_plot_gen5
 
 # Dictionary for vf calculation
@@ -44,22 +44,23 @@ class SDVX:
 
         # Load skin
         try:
-            self.plot_skin = skin_dict[skin_name]
+            self.plot_skin = skin_dict[cfg.skin_name]
         except KeyError:
             timber.error('Invalid skin name, please check your configurations.')
 
-        if is_init is None:
+        if not cfg.is_init:
             update()
+            cfg.add_init_sign()
 
         # Read sdvx@asphyxia.db
-        self.raw_data = open(db_dir, 'r')
-        self.music_map = [[False, '', '', '', '', '', '', '', '', '', 0.0] for _ in range(map_size * 5 + 1)]
+        self.raw_data = open(cfg.db_dir, 'r')
+        self.music_map = [[False, '', '', '', '', '', '', '', '', '', 0.0] for _ in range(cfg.map_size * 5 + 1)]
         """
         music_map is a comprehensive map to store player's play record
         It contains 5-time of map_size lines, each 5 lines define the 5 difficulties of a single song
         Each line of music map should be:
-        [is_recorded: bool, mid: int, type: int, score: int, clear: int, grade: int, 
-         timestamp: int, name: str, lv: str, inf_ver: str, vf: float]
+        [is_recorded: bool, mid: int, type: int, score: int, clear: int, grade: int, timestamp: int, 
+         name: str, lv: str, inf_ver: str, vf: float]
         """
         timber.info('Load data from sdvx@asphyxia.db')
 
@@ -81,7 +82,7 @@ class SDVX:
             except KeyError:
                 continue
 
-            if json_dict['__refid'] != card_num:  # Specify user
+            if json_dict['__refid'] != cfg.card_num:  # Specify user
                 continue
 
             if line_type == 'music':
@@ -137,7 +138,7 @@ class SDVX:
 
     def search_mid(self, search_str: str) -> tuple:
         result_list = []
-        for index in range(1, map_size):
+        for index in range(1, cfg.map_size):
             if re.search(search_str, self.search_db[index], re.I):
                 result_list.append(index)
 
@@ -172,7 +173,7 @@ class SDVX:
         os.system('cls')
         base_lv = input('This function will generate summaries form lv.base to lv.20. \n'
                         'Please enter the lv.base you want, default as 17:')
-        timber.info('Get summary level "%s"' % base_lv)
+        timber.info('Get summary from level "%s"' % base_lv)
 
         if not base_lv:
             self.get_summary(17)
@@ -210,7 +211,7 @@ class SDVX:
         if len(sep_arg) == 1:  # Default highest difficulty
             try:
                 mid = int(sep_arg[0])
-                if mid > map_size:
+                if mid > cfg.map_size:
                     not_found_handler()
                     return
             except ValueError:
@@ -226,7 +227,7 @@ class SDVX:
         elif len(sep_arg) == 2:  # Stipulated difficulty
             try:
                 mid, m_type = int(sep_arg[0]), int(sep_arg[1])
-                if mid > map_size:
+                if mid > cfg.map_size:
                     not_found_handler()
                     return
             except ValueError:
@@ -262,7 +263,7 @@ class SDVX:
         __msg = '输入想要查询的歌曲的相关信息(曲名、作者或者梗)后回车，不区分大小写\n' \
                 'Enter relative message(Name, Artist, Memes) about the song you want to search, not case-sensitive:'
         search_arg = input(__msg)
-        timber.info('Searching "%s"' % __msg)
+        timber.info('Searching "%s"' % search_arg)
         if search_arg:
             search_res, res_num = self.search_mid(search_arg)
             if res_num:
@@ -281,7 +282,7 @@ class SDVX:
               'But you, %s, you can join us and help us to develop new skins!\n' % self.user_name)
 
     def __0_see_you_next_time(self):
-        timber.info('Exit by op num 0.')
+        timber.info('Exit by operator number 0.')
         print('\nSee you next time, %s' % self.user_name)
         time.sleep(1)
         sys.exit(0)

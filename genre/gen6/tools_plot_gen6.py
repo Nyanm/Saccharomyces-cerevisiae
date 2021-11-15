@@ -1,10 +1,9 @@
-import numpy as np
-
-from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import local_dir, cfg
 from cfg_read import Timber
 from hashlib import sha256
 from os import path, listdir
 from ..uni_plot_tool import *
+import time
 
 """
 Initialization
@@ -12,7 +11,7 @@ Initialization
 timber = Timber('tools_plot_gen6.py')
 
 # Reading config
-song_folders = game_dir + '/music'
+song_folders = cfg.game_dir + '/music'
 try:
     npy_path = local_dir + '/data/level_table.npy'
     level_table = np.load(npy_path)
@@ -64,7 +63,7 @@ vf_color = (color_white, (193, 139, 73), (48, 73, 157), (245, 189, 26), (83, 189
 # Fonts
 font_DFHS = img_archive + '/font/DFHSMaruGothic_W4_reform.ttf'
 font_unipace = img_archive + '/font/unispace_bd.ttf'
-font_commaexr = img_archive + '/font/commaexr.ttf'
+font_continuum = img_archive + '/font/continuum_medium.ttf'
 
 # Little privilege for developers
 staff_hash = 'b3e46c3a84f6e042ef5f3d934b746ded23a3961d0774293ec2fbe3b42e0ada47'
@@ -107,9 +106,9 @@ def get_jacket(mid: int, m_type: int, size: str = False) -> str:
                     return '%sjk_%s_%d.png' % (song_path, mid, m_index)
                 m_index -= 1
             if size:
-                return game_dir + '/data/graphics/jk_dummy_%s.png' % size
+                return cfg.game_dir + '/data/graphics/jk_dummy_%s.png' % size
             else:
-                return game_dir + '/data/graphics/jk_dummy_s.png'
+                return cfg.game_dir + '/data/graphics/jk_dummy_s.png'
 
 
 def get_diff(m_type: int, inf_ver: str) -> str:
@@ -133,7 +132,7 @@ def get_ap_card(ap_card: int) -> str:
         card_file += ('S%s' % ap_card[1:].zfill(4))
     else:
         card_file += ap_card[1:].zfill(4)
-    return game_dir + '/graphics/ap_card/%s.png' % card_file
+    return cfg.game_dir + '/graphics/ap_card/%s.png' % card_file
 
 
 def get_overall_vf(music_b50: list) -> float:
@@ -261,7 +260,8 @@ def generate_std_profile(profile: list, vf: float) -> np.array:
 
     profile_box = cv2.imread(img_archive + '/play_data/box_playdata.png', cv2.IMREAD_UNCHANGED)
     data_box = cv2.imread(img_archive + '/play_data/box_playdata2.png', cv2.IMREAD_UNCHANGED)
-    bl_pass = cv2.imread(img_archive + '/play_data/blpass_bg.png', cv2.IMREAD_UNCHANGED)
+    bl_line = cv2.imread(img_archive + '/play_data/blpass_bg.png', cv2.IMREAD_UNCHANGED)
+    bl_pass = cv2.imread(img_archive + '/play_data/blpass_on.png', cv2.IMREAD_UNCHANGED)
     crew = cv2.imread(img_archive + '/psd_crew/psd_crew_%s.png' % crew_id, cv2.IMREAD_UNCHANGED)
     appeal_card = cv2.imread(get_ap_card(ap_card), cv2.IMREAD_UNCHANGED)
     skill_img = load_skill(appeal_card, 12, dis_resize=True)
@@ -281,8 +281,9 @@ def generate_std_profile(profile: list, vf: float) -> np.array:
     box_margin = crew_y - profile_y + 10
 
     png_superimpose(bg, profile_box, (box_margin, 0))
-    png_superimpose(bg, bl_pass, (box_margin + 73, 479))
+    png_superimpose(bg, bl_line, (box_margin + 73, 479))
     png_superimpose(bg, crew, (2, profile_x - crew_x - 9))
+    png_superimpose(bg, bl_pass, (box_margin + 152, 554))
     png_superimpose(bg, data_box, (box_margin + 47, 207))
     png_superimpose(bg, appeal_card, (box_margin + 60, 52))
     """
@@ -314,12 +315,14 @@ def generate_std_profile(profile: list, vf: float) -> np.array:
     pen = ImageDraw.Draw(text_layer)
 
     aka_font = ImageFont.truetype(font_DFHS, 18, encoding='utf-8', index=0)
-    name_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
-    vf_font = ImageFont.truetype(font_unipace, 18, encoding='utf-8', index=0)
-    pen.text((218, 145), aka_name, color_white, aka_font)
-    pen.text((218, 179), user_name, color_white, name_font)
+    name_font = ImageFont.truetype(font_continuum, 34, encoding='utf-8', index=0)
+    vf_font = ImageFont.truetype(font_continuum, 21, encoding='utf-8', index=0)
+    time_font = ImageFont.truetype(font_DFHS, 14, encoding='utf-8', index=0)
+    pen.text((218, 146), aka_name, color_white, aka_font)
+    pen.text((218, 174), user_name, color_white, name_font)
     pen.text((218, 227), 'Asphyxia CORE', color_white, aka_font)
-    pen.text((438, 298), '%.3f' % vf, color_white, vf_font)
+    pen.text((436, 295), '%.3f' % vf, color_white, vf_font)
+    pen.text((602, 291), time.strftime('%a %Y/%m/%d %H: %M', time.localtime()), color_white, time_font)
 
     text_layer = np.array(text_layer)
     png_superimpose(bg, text_layer)

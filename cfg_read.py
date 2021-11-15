@@ -1,7 +1,7 @@
-import re
 import sys
 from os import path
 from time import localtime, strftime
+from configparser import ConfigParser
 import base64
 
 
@@ -12,11 +12,14 @@ def decode_b64(msg: str, dst: str):
 
 
 def jis_2_utf(jis: str, utf: str):
-    jis_xml = open(jis, 'r', encoding='cp932').readlines()
+    jis_xml = open(jis, 'r', encoding='cp932')
+    jis_data = jis_xml.readlines()
+    jis_xml.close()
+
     utf_xml = open(utf, 'w', encoding='utf-8')
     utf_xml.write('<?xml version="1.0" encoding="utf-8"?>\n')
-    jis_xml.pop(0)
-    for line in jis_xml:
+    jis_data.pop(0)
+    for line in jis_data:
         utf_xml.write(line)
     utf_xml.close()
 
@@ -69,76 +72,82 @@ class Timber:
 timber = Timber('cfg_read.py')
 timber.info('test mode=%s' % test_mode)  # Initial logging
 
+
 # Read config.cfg
-cfg_path = local_dir + '/config.cfg'
-try:
-    __raw_file = open(cfg_path, 'r')
-except FileNotFoundError:
-    timber.warning('config.cfg not found, the program will try to generate a new one.\nPress enter to continue.')
-    cfg = open(cfg_path, 'w', encoding='utf-8')
-    cfg.write(
-        '[Search]\n'
-        '# Range of mid, default as 2000\n'
-        'map size=2000\n'
-        '# User\'s card number in asphyxia\'s website (or database), a 16 bit long hex number sequence\n'
-        'card num=\n'
-        '\n'
-        '[Directory]\n'
-        '# Directory of sdvx@asphyxia\'s database\n'        
-        '# eg. db path=C:\\MUG\\asphyxia-core\\savedata\\sdvx@asphyxia.db\n'
-        'db path=\n'
-        '\n'
-        '# Directory of sdvx HDD data\n'
-        '# eg. game path=C:\\MUG\\SDVX6\\KFC-2021051802\\contents\\data\n'
-        'game path=\n'
-        '\n'
-        '# Directory where outputs pictures\n'
-        'output path=\n'
-        '[Plot]\n'
-        '# name of skin, default as "gen6"\n'
-        'skin name=gen6\n'
-        '\n'
-        '[Init]\n'
-        '# If you have updated your game, delete the following line\n'
-    )
-    cfg.close()
-    sys.exit(1)
+class Config:
 
-cfg_data = ''
-for __line in __raw_file.readlines():
-    if __line[0] == '#':
-        continue
-    cfg_data += __line
-__raw_file.close()
+    def __init__(self):
+        self.cfg = ConfigParser()
+        self.path = local_dir + '/config.cfg'
+        if not path.exists(self.path):
+            timber.warning('config.cfg not found, the program will try to generate a new one.\n'
+                           'Press enter to continue.')
+            self.create()
+            sys.exit(1)
 
-# Data cleaning
-get_map_size = re.compile(r'map size+[^\n]*')
-get_card_cfg = re.compile(r'card num+[^\n]*')
-get_db_dir = re.compile(r'db path+[^\n]*')
-get_game_dir = re.compile(r'game path+[^\n]*')
-get_output = re.compile(r'output path+[^\n]*')
-get_skin = re.compile(r'skin name+[^\n]*')
-get_init_stat = re.compile(r'is initialized+[^\n]*')
+        self.map_size, self.card_num, self.db_dir, self.game_dir, self.output, self.skin_name, self.is_init = \
+            self.read()
 
-map_size = int(get_map_size.search(cfg_data).group()[9:])
-card_num = get_card_cfg.search(cfg_data).group()[9:]
-db_dir = get_db_dir.search(cfg_data).group()[8:].replace('\\', '/')
-game_dir = get_game_dir.search(cfg_data).group()[10:].replace('\\', '/')
-output = get_output.search(cfg_data).group()[12:].replace('\\', '/')
-skin_name = get_skin.search(cfg_data).group()[10:]
-is_init = get_init_stat.search(cfg_data)
+        self.validity_check()
 
-timber.info('config.cfg load complete.\n\n'
-            'map size  :%d\ncard num  :%s\ndb dir    :%s\ngame dir  :%s\noutput    :%s\nskin name :%s\nis init   :%s\n'
-            % (map_size, card_num, db_dir, game_dir, output, skin_name, is_init is not None))
+    def create(self):
+        __cfg = open(self.path, 'w', encoding='utf-8')
+        __cfg.write(
+            '[Search]\n'
+            '# Range of mid, default as 2000\n'
+            'map size=2000\n'
+            '# User\'s card number in asphyxia\'s website (or database), a 16 bit long hex number sequence\n'
+            'card num=\n'
+            '\n'
+            '[Directory]\n'
+            '# Directory of sdvx@asphyxia\'s database\n'
+            '# eg. db path=C:\\MUG\\asphyxia-core\\savedata\\sdvx@asphyxia.db\n'
+            'db path=\n'
+            '\n'
+            '# Directory of sdvx HDD data\n'
+            '# eg. game path=C:\\MUG\\SDVX6\\KFC-2021051802\\contents\\data\n'
+            'game path=\n'
+            '\n'
+            '# Directory where outputs pictures\n'
+            'output path=\n'
+            '[Plot]\n'
+            '# name of skin, default as "gen6" (actually there is no other choice)\n'
+            'skin name=gen6\n'
+            '\n'
+            '[Init]\n'
+            '# If you have updated your game, set the value to "False" or "0"\n'
+            'is initialized=False\n'
+        )
+        __cfg.close()
 
-# Validity check
-if not path.exists(db_dir):
-    timber.error('sdvx@asphyxia.db not found, please check your file directory.')
-    sys.exit(1)
-if not path.exists(game_dir):
-    timber.error(r'KFC-**********\contents\data not found, please check your file directory.')
-    sys.exit(1)
-if not path.exists(output):
-    timber.error('Output folder not found, please check your file directory.')
-    sys.exit(1)
+    def read(self):
+        self.cfg.read(self.path, encoding='utf-8')
+
+        map_size = self.cfg.getint('Search', 'map size')
+        card_num = self.cfg.get('Search', 'card num')
+        db_dir = self.cfg.get('Directory', 'db path').replace('\\', '/')
+        game_dir = self.cfg.get('Directory', 'game path').replace('\\', '/')
+        output = self.cfg.get('Directory', 'output path').replace('\\', '/')
+        skin_name = self.cfg.get('Plot', 'skin name')
+        is_init = self.cfg.getboolean('Init', 'is initialized')
+
+        timber.info('config.cfg load complete.\n\n'
+                    'map size  :%d\ncard num  :%s\ndb dir    :%s\ngame dir  :%s\noutput    :%s\n'
+                    'skin name :%s\nis init   :%s\n'
+                    % (map_size, card_num, db_dir, game_dir, output, skin_name, is_init is not None))
+
+        return map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+
+    def validity_check(self):
+        path_list = self.cfg.items('Directory')
+        for data_path in path_list:
+            __key, __value = data_path
+            if not path.exists(__value):
+                timber.error('%s not found, please check your file directory.' % __key)
+
+    def add_init_sign(self):
+        self.cfg.set('Init', 'is initialized', 'True')
+        self.cfg.write(open(self.path, 'w'))
+
+
+cfg = Config()

@@ -1,4 +1,4 @@
-from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import local_dir, cfg
 from cfg_read import decode_b64, jis_2_utf
 from xml.etree.cElementTree import parse
 import numpy as np
@@ -9,7 +9,7 @@ from .update_db_data import csv_data
 
 # WHY USING SHIFT-JIS???!!!
 def update_db():
-    jis_path = game_dir + '/others/music_db.xml'
+    jis_path = cfg.game_dir + '/others/music_db.xml'
     utf_path = local_dir + '/data/music_db.xml'
 
     # Set up music_db encoded with UTF-8
@@ -18,10 +18,10 @@ def update_db():
     # Get level information from xml, then saved as npy file
     tree = parse(utf_path)
     root = tree.getroot()
-    music_map = [[''] * 22 for _ in range(map_size)]
-    search_map = [[''] * 3 for _ in range(map_size)]
+    music_map = [[''] * 22 for _ in range(cfg.map_size)]
+    search_map = [[''] * 3 for _ in range(cfg.map_size)]
 
-    for index in range(map_size):
+    for index in range(cfg.map_size):
         try:
             # Fill up each line of level_table.npy
             mid = int(root[index].attrib['id'])
@@ -92,9 +92,9 @@ def update_db():
         temp_list.append(' '.join(csv_record))
 
     # Set up search database
-    search_list = [' ' for _ in range(map_size)]
+    search_list = [' ' for _ in range(cfg.map_size)]
     search_list[:len(temp_list)] = temp_list
-    for index in range(map_size):
+    for index in range(cfg.map_size):
         if search_list[index][0] is ' ':
             search_list[index] = ' '.join(search_map[index])
 

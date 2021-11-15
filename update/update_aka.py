@@ -1,4 +1,4 @@
-from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import local_dir, cfg
 from cfg_read import jis_2_utf
 from xml.etree.cElementTree import parse
 import numpy as np
@@ -9,7 +9,7 @@ aka_range = 500
 
 
 def update_aka():
-    jis_path = game_dir + '/others/akaname_parts.xml'
+    jis_path = cfg.game_dir + '/others/akaname_parts.xml'
     utf_path = local_dir + '/data/akaname_parts.xml'
 
     # Set up akaname_parts encoded with UTF-8

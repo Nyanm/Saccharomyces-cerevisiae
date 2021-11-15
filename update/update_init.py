@@ -1,8 +1,7 @@
-from cfg_read import local_dir, map_size, card_num, db_dir, game_dir, output, skin_name, is_init
+from cfg_read import local_dir, cfg
 from cfg_read import Timber
 from os import path, makedirs, system
 from time import sleep
-
 
 from .update_db import update_db
 from .update_aka import update_aka
@@ -38,16 +37,11 @@ def update():
         timber.error('Fail to generate aka_db.npy.')
 
     update_img()
-    if path.exists(local_dir + '/img_archive/%s' % skin_name):
+    if path.exists(local_dir + '/img_archive/%s' % cfg.skin_name):
         timber.info('(maybe) generate image archive successfully.')
     else:
         timber.error('Fail to generate image archive.')
 
-    # add initialized sign
-    __raw_file = open(local_dir + '/config.cfg', 'a')
-    __raw_file.write('is initialized=True\n')
-    __raw_file.close()
-
-    sleep(0.2)
+    sleep(0.1)
     timber.info_clog('\nUpdate complete. Press enter to continue.')
     system('cls')
