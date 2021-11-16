@@ -2,6 +2,7 @@ import sys
 from os import path
 from time import localtime, strftime
 from configparser import ConfigParser
+from colorama import init
 import base64
 
 
@@ -35,6 +36,7 @@ else:
 timber_path = local_dir + '/timber.log'
 f = open(timber_path, 'w', encoding='utf-8')
 f.close()
+init(autoreset=True)
 
 
 # Initialize logger

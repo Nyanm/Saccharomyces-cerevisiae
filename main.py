@@ -5,6 +5,8 @@ import sys
 import time
 import pyfiglet
 import numpy as np
+import qrcode
+import base64
 
 from cfg_read import local_dir, cfg
 from cfg_read import Timber
@@ -136,7 +138,7 @@ class SDVX:
         self.profile = [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
         timber.info('Initialization complete.')
 
-    def search_mid(self, search_str: str) -> tuple:
+    def __search_mid(self, search_str: str) -> tuple:
         result_list = []
         for index in range(1, cfg.map_size):
             if re.search(search_str, self.search_db[index], re.I):
@@ -153,21 +155,21 @@ class SDVX:
 
         return search_res, len(result_list)
 
-    def get_b50(self):
+    def __get_b50(self):
         b50_text = self.plot_skin.plot_b50(self.music_map.copy(), self.profile)
         input('%s\nPress enter to continue.' % b50_text)
 
-    def get_summary(self, base_lv: int):
+    def __get_summary(self, base_lv: int):
         summary_text = self.plot_skin.plot_summary(self.music_map, self.profile, base_lv)
         input('%s\nPress enter to continue.' % summary_text)
 
-    def get_single(self, record: list):
+    def __get_single(self, record: list):
         sg_text = self.plot_skin.plot_single(record, self.profile)
         input('%s\nPress enter to continue.' % sg_text)
 
     def __1_get_b50(self):
         os.system('cls')
-        self.get_b50()
+        self.__get_b50()
 
     def __2_get_summary(self):
         os.system('cls')
@@ -176,7 +178,7 @@ class SDVX:
         timber.info('Get summary from level "%s"' % base_lv)
 
         if not base_lv:
-            self.get_summary(17)
+            self.__get_summary(17)
             return
 
         try:
@@ -188,11 +190,11 @@ class SDVX:
             timber.warning('Invalid level number.')
             return
 
-        self.get_summary(base_lv)
+        self.__get_summary(base_lv)
 
     def __3_get_recent(self):
         print('\nRecent play record:')
-        self.get_single(self.last_record)
+        self.__get_single(self.last_record)
 
     def __4_get_specific(self):
 
@@ -256,7 +258,7 @@ class SDVX:
             return
 
         print('\nPlay record for "%s":' % ''.join(sep_arg))
-        self.get_single(__record)
+        self.__get_single(__record)
 
     def __8_search(self):
         os.system('cls')
@@ -265,7 +267,7 @@ class SDVX:
         search_arg = input(__msg)
         timber.info('Searching "%s"' % search_arg)
         if search_arg:
-            search_res, res_num = self.search_mid(search_arg)
+            search_res, res_num = self.__search_mid(search_arg)
             if res_num:
                 timber.info(search_res)
                 print('\n共搜索到%d个结果  %s' % (res_num, search_res))
@@ -287,6 +289,33 @@ class SDVX:
         time.sleep(1)
         sys.exit(0)
 
+    @staticmethod
+    def __10_donate():
+        os.system('cls')
+        timber.info('Never gonna give you up~')
+        print('恭喜你发现了月之暗面！这里是一个赞助页面，可以请开发者喝一杯咖啡~\n'
+              'Congratulations! You\'ve found the dark side of the moon!\n'
+              'Here is a donate page, which you can buy the developer a cup of coffee if you like this application.\n'
+              '↓↓↓ 微信二维码    Wechat QrCode ↓↓↓\n')
+
+        __msg = ''
+        qr = qrcode.QRCode()
+        qr.add_data(
+            base64.b64decode('aHR0cHM6Ly92ZHNlLmJkc3RhdGljLmNvbS8vMTkyZDlhOThkNzgyZDljNzRjOTZmMDlkYjkzNzhkOTMubXA0')
+        )
+        __mat = qr.get_matrix()
+
+        for line in __mat:
+            for column in line:
+                if column:
+                    __msg += '  '
+                else:
+                    __msg += '██'
+            __msg += '\n'
+
+        print(__msg)
+        input('Press enter to return light side.')
+
     def input_handler(self):
         key_dict = {
             '1': self.__1_get_b50,
@@ -295,7 +324,8 @@ class SDVX:
             '4': self.__4_get_specific,
             '8': self.__8_search,
             '9': self.__9_skin_list,
-            '0': self.__0_see_you_next_time
+            '0': self.__0_see_you_next_time,
+            '10': self.__10_donate
         }
 
         os.system('cls')
@@ -315,3 +345,11 @@ if __name__ == '__main__':
     sdvx = SDVX()
     while True:
         sdvx.input_handler()
+
+"""qr = qrcode.QRCode()
+    qr.add_data('https://vdse.bdstatic.com//192d9a98d782d9c74c96f09db9378d93.mp4')
+    qr.print_ascii()
+    print('▞▞▞▞▞\n▞▞▞▞▞')
+    input()"""
+
+# pyinstaller -F main.py
