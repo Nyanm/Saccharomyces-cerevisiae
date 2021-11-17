@@ -11,6 +11,7 @@ dependency = {
         'psd_level',
         'psd_crew',
         'play_data',
+        'play_data_small',
         'ms_sel',
         'force',
         'cmn_window',

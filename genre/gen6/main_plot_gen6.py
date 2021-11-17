@@ -7,16 +7,23 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib.font_manager import FontProperties
 
 
-def plot_single(record: list, profile: list) -> str:
+def plot_single(music_map: list, profile: list, sg_index: int) -> str:
     """
     Plot function for single record
     Now Plot function is ongoing, again.
-    :param record:  a list of [is_record, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf]
-                    Please check music_map for explicit definition.
-    :param profile: a list of [user_name, ap_card, aka_index, skill, crew_id]
-    :return:        image stored as numpy array
+    :param music_map: a list contains all music records, each line of music_map should be:
+                      [is_record, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf, exscore]
+                      Please check music_map for explicit definition.
+    :param profile:   a list of [user_name, ap_card, aka_index, skill, crew_id]
+    :param sg_index:  the index of THE record in music_map
+    :return:          text data of single record
     """
-    id_recorded, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf = record
+
+    """
+    Unfold data and generate text message
+    """
+    record = music_map[sg_index]
+    id_recorded, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf, exscore = record
     user_name, ap_card, aka_index, skill, crew_id = profile
     diff = get_diff(m_type, inf_ver)
     real_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(m_time / 1000))
@@ -24,19 +31,70 @@ def plot_single(record: list, profile: list) -> str:
     # Get recent text message
     msg = '|Date                 |Diff  |Score    |Grade |Clear |VF     |Name\n|%-21s|%-6s|%-9s|%-6s|%-6s|%.3f |%s\n' \
           % (real_time, (diff + lv), score, grade_table[grade], clear_table[clear], vf / 2, name)
-
     timber.info('Generate single data complete.\n\n%s\n' % msg)
-    return msg
+
+    try:
+        """
+        Preparation for b50 data
+        """
+
+        """
+        Initialize background
+        """
+        y_px, x_px = 1920, 1080
+        bg = np.zeros((y_px, x_px, 3), dtype=np.uint8)
+        bg = add_alpha(bg)
+
+        game_bg = cv2.imread(img_archive + '/shutter/bg.png', cv2.IMREAD_UNCHANGED)
+        bg_y, bg_x, chn = game_bg.shape
+        bg_ratio = y_px / bg_y
+        game_bg = cv2.resize(game_bg, dsize=None, fx=bg_ratio, fy=bg_ratio, interpolation=cv2.INTER_AREA)
+        png_superimpose(bg, game_bg, (0, 0))
+
+        bg_anc = Anchor(bg, 'THE bg')
+
+        """
+        Get jacket (as background), side bar, glow, and everything about a raw template
+        """
+        jk = get_jacket(mid, m_type, size='b')
+
+        side_bar = cv2.imread(img_archive + '/ms_sel/bg_sel_i_feb.png', cv2.IMREAD_UNCHANGED)
+        side_bar_y, side_bar_x, chn = side_bar.shape
+        side_anc = AnchorImage(bg, 'side bar', side_bar, (y_px - side_bar_y, 0), father=bg_anc)
+        side_anc.plot()
+
+        side_glow = cv2.imread(img_archive + '/ms_sel/glow_blue3.png', cv2.IMREAD_UNCHANGED)
+
+
+
+        """
+        Set up user profile
+        """
+
+        """
+        Draw record data
+        """
+
+        output_path = '%s/%s_%s%s.png' % (cfg.output, user_name, mid, diff)
+        cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
+
+        timber.info_show('Plot saved at [%s] successfully.' % output_path)
+        return msg
+
+    except Exception:
+        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n\n%s\n'
+                       % format_exc())
+        return msg
 
 
 def plot_b50(music_map: list, profile: list) -> str:
     """
     Plot function for best 50 records
     :param music_map: a list contains all music records, each line of music_map should be:
-                      [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf]
-                      all of them are strings, except vf is a float
+                      [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf, exscore]
+                      Please check music_map for explicit definition.
     :param profile:   a list of [user_name, aka_name, ap_card, skill], all strings
-    :return:          image stored as numpy array
+    :return:          text data of best 50
     """
 
     """
@@ -219,12 +277,13 @@ def plot_b50(music_map: list, profile: list) -> str:
 
 def plot_summary(music_map: list, profile: list, lv_base: int):
     """
-         Plot function to analyze user's record.
-         :param music_map: a list of all available music records, each line of music_map should be like:
-                           [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf]
-                           all of them are strings, except vf is a float
-         :param profile:   a list of [user_name, aka_name, ap_card, skill], all strings
-         :param lv_base:   lowest level to analysis
+    Plot function to analyze user's record.
+    :param music_map: a list of all available music records, each line of music_map should be like:
+                      [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf, exscore]
+                      Please check music_map for explicit definition.
+    :param profile:   a list of [user_name, aka_name, ap_card, skill], all strings
+    :param lv_base:   lowest level to analysis
+    :return:          text data of summary
     """
 
     """
