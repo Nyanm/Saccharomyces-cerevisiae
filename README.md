@@ -19,6 +19,8 @@ Codes here are only for exhibiting case, however you can still pull request.
    2. One file solution: The application can do all the things with only one file initially. Thanks to ifstools, it can draw images from HDD game data. 
 
    3. ~~Interactive user interface~~: Failed. As a redemption, a better interface was made to exalt user experience.
+   
+   4. Automatic upgrade (through game version): Once you received your newest and hottest game, application will check "ext" number in ea3-config and upgrade itself.
 
 2. ### Score checker function
 

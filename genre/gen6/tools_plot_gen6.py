@@ -1,6 +1,6 @@
-from cfg_read import local_dir, cfg
+from cfg_read import cfg
 from cfg_read import Timber
-from hashlib import sha256
+# from hashlib import sha256
 from os import path, listdir
 from ..uni_plot_tool import *
 import time
@@ -39,13 +39,12 @@ color_d_blue = (0, 62, 102)
 color_yellow = (239, 176, 74)
 
 # Definitive field for some dictionary(or they work as tuple)
-clear_img = {'1': 'crash', '2': 'comp', '3': 'comp_ex', '4': 'uc', '5': 'puc'}
+clear_img = {1: 'crash', 2: 'comp', 3: 'comp_ex', 4: 'uc', 5: 'puc'}
 clear_table = {1: 'FAILED', 2: 'NC', 3: 'HC', 4: 'UC', 5: 'PUC'}
 clear_palette = ('#FFFFFF', '#32936F', '#69A297', '#A5668B', '#E83F6F', '#FFBF00')
 clear_legend = ('N/A', 'CRASH', 'NC', 'HC', 'UC', 'PUC')
 
-grade_img = {'1': 'd', '2': 'c', '3': 'b', '4': 'a', '5': 'a_plus', '6': 'aa', '7': 'aa_plus', '8': 'aaa',
-             '9': 'aaa_plus', '10': 's'}
+grade_img = {1: 'd', 2: 'c', 3: 'b', 4: 'a', 5: 'a_plus', 6: 'aa', 7: 'aa_plus', 8: 'aaa', 9: 'aaa_plus', 10: 's'}
 grade_table = {1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'A+', 6: 'AA', 7: 'AA+', 8: 'AAA', 9: 'AAA+', 10: 'S'}
 grade_palette = ('#FFFFFF', '#CFD2CD', '#A6A2A2', '#847577',
                  '#66C9A3', '#32936F', '#D296B9', '#A5668B', '#E36E94', '#E83F6F', '#FFBF00',)
@@ -55,6 +54,7 @@ level_palette = ('#F7FFF7', '#073B4C', '#118AB2', '#06D6A0', '#FFD166', '#EF476F
 
 diff_table = [['NOV', 'ADV', 'EXH', '', 'MXM'] for _ in range(4)]
 diff_table[0][3], diff_table[1][3], diff_table[2][3], diff_table[3][3] = 'INF', 'GRV', 'HVN', 'VVD'
+diff_text_table = {1: 'nov', 2: 'adv', 3: 'exh', 4: 'inf', 5: 'grv', 6: 'hvn', 7: 'vvd', 8: 'mxm'}
 
 vf_level = (0.0, 10.0, 12.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 24.0)
 vf_color = (color_white, (193, 139, 73), (48, 73, 157), (245, 189, 26), (83, 189, 181), (200, 22, 30), (237, 179, 202),
@@ -139,10 +139,26 @@ def get_overall_vf(music_b50: list) -> float:
     vol_force = 0.0
     for record in music_b50:
         if record[0]:
-            vol_force += int(record[-1] * 10) / 1000
+            vol_force += int(record[10] * 10) / 1000
         else:
             break
     return vol_force
+
+
+def get_bpm_str(bpm_max: np.str, bpm_min: np.str) -> str:
+    if bpm_max[-2:] == '00':
+        bpm_max = bpm_max[:-2]
+    else:
+        bpm_max = str(int(bpm_max) / 100)
+    if bpm_min[-2:] == '00':
+        bpm_min = bpm_min[:-2]
+    else:
+        bpm_min = str(int(bpm_min) / 100)
+
+    if bpm_max == bpm_min:
+        return bpm_max
+    else:
+        return '%s-%s' % (bpm_min, bpm_max)
 
 
 def load_clear(refactor: float or int) -> list:

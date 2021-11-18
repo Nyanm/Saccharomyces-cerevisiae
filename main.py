@@ -7,6 +7,7 @@ import pyfiglet
 import numpy as np
 import qrcode
 import base64
+from xml.etree.cElementTree import parse
 
 from cfg_read import local_dir, cfg
 from cfg_read import Timber
@@ -50,9 +51,19 @@ class SDVX:
         except KeyError:
             timber.error('Invalid skin name, please check your configurations.')
 
+        # Update check
+        ea3_path = '/'.join(cfg.game_dir.split('/')[:-1]) + '/prop/ea3-config.xml'
+        tree = parse(ea3_path)
+        root = tree.getroot()
+        cur_ver = int(root[1][4].text)
+
         if not cfg.is_init:
             update()
-            cfg.add_init_sign()
+            cfg.set_init_sign()
+            cfg.set_version(cur_ver)
+        elif cur_ver > cfg.version:
+            update(game_only=True)
+            cfg.set_version(cur_ver)
 
         # Read sdvx@asphyxia.db
         self.raw_data = open(cfg.db_dir, 'r')
@@ -93,13 +104,20 @@ class SDVX:
                 clear, grade = json_dict['clear'], json_dict['grade']
                 m_time = json_dict['updatedAt']['$$date']
 
-                lv = self.level_table[int(mid)][int(m_type) * 3 + 7]
-                inf_ver, name = self.level_table[int(mid)][6], self.level_table[int(mid)][1]
+                try:
+                    lv = self.level_table[mid][m_type * 3 + 7]
+                except IndexError:
+                    lv = 9961
+                    timber.error('The value "map size" in config.cfg may be too small, '
+                                 'try to set a bigger one and restart the application.')
+                    cfg.set_init_sign(False)
+
+                inf_ver, name = self.level_table[mid][6], self.level_table[mid][1]
                 if not lv:
                     lv, inf_ver = '0', '0'
 
                 try:
-                    vf = int(lv) * (int(score) / 10000000) * clear_factor[clear] * grade_factor[grade] * 2
+                    vf = int(lv) * (score / 10000000) * clear_factor[clear] * grade_factor[grade] * 2
                 except ValueError:
                     vf = 0.0
                 try:
@@ -107,7 +125,7 @@ class SDVX:
                 except KeyError:
                     exscore = 0
 
-                self.last_index = int(mid) * 5 + int(m_type)
+                self.last_index = mid * 5 + m_type
                 self.music_map[self.last_index] = \
                     [True, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf, exscore]
 
@@ -288,11 +306,9 @@ class SDVX:
         os.system('cls')
         timber.info('FAQ')
         print('[1] 为什么新歌不显示？  Why some of the newest songs don\'t appear?\n'
-              'zh. 将config.cfg中的"is initialized"项置为"False"或"0"，重启软件，软件将对数据库进行更新。\n'
-              '    同时，每次更新游戏版本后，都应该手动升级查分器。\n'
+              'zh. 将config.cfg中的"is initialized"项置为"False"或"0"，重启软件，软件将强制对数据库进行更新。\n'
               'en. Try to set the "is initialized" in config.cfg to "False" or "0" and restart the application. '
-              'This will update databases adept to newest version.\n'
-              '    By the way, application should be updated manually ever since you\'ve updated your game.\n')
+              'This will force the application to update the databases.\n')
         print('[2] 还有其他皮肤吗？  Is there any other skin?\n'
               'zh. 显然这软件只有gen6一个默认皮肤:(\n'
               '    但是%s，你可以加入我们来开发新的皮肤！\n'
@@ -365,6 +381,6 @@ class SDVX:
 
 if __name__ == '__main__':
     sdvx = SDVX()
-    sdvx._3_get_recent()
+    sdvx.plot_skin.plot_single(sdvx.music_map.copy(), sdvx.profile, 1283 * 5 - 2)
 
 # pyinstaller -F main.py

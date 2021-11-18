@@ -10,9 +10,8 @@ from .update_img import update_img
 timber = Timber('update_init.py')
 
 
-def update():
-
-    timber.warning('Since you have updated your game (or simply the maiden run of the program), '
+def update(game_only: bool = False):
+    timber.warning('Since you have updated your game (or simply the maiden run of this application), '
                    'the program is going to generate some relative data.\n'
                    'It may take some time to finish, press enter to continue.')
 
@@ -36,7 +35,8 @@ def update():
     else:
         timber.error('Fail to generate aka_db.npy.')
 
-    update_img()
+    if not game_only:
+        update_img()
     if path.exists(local_dir + '/img_archive/%s' % cfg.skin_name):
         timber.info('(maybe) generate image archive successfully.')
     else:

@@ -35,48 +35,277 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
     try:
         """
-        Preparation for b50 data
+        Preparation for b50 and single record data
         """
+        __level_table = np.load(local_dir + '/data/level_table.npy')
+        single_data = __level_table[mid]
+
+        music_map.sort(key=lambda x: x[10], reverse=True)
+        vf_floor = music_map[49][10]
 
         """
         Initialize background
         """
+        # The very background which is pure black
         y_px, x_px = 1920, 1080
         bg = np.zeros((y_px, x_px, 3), dtype=np.uint8)
         bg = add_alpha(bg)
 
+        # Init text layer
+        blank_layer = np.zeros((y_px, x_px, 3), dtype=bg.dtype)
+        text_layer = Image.fromarray(blank_layer)
+        text_layer.putalpha(1)
+        pen = ImageDraw.Draw(text_layer)
+
+        # The gen6 background
         game_bg = cv2.imread(img_archive + '/shutter/bg.png', cv2.IMREAD_UNCHANGED)
         bg_y, bg_x, chn = game_bg.shape
         bg_ratio = y_px / bg_y
         game_bg = cv2.resize(game_bg, dsize=None, fx=bg_ratio, fy=bg_ratio, interpolation=cv2.INTER_AREA)
         png_superimpose(bg, game_bg, (0, 0))
 
-        bg_anc = Anchor(bg, 'THE bg')
+        bg_anc = Anchor(bg, 'THE bg', (0, 0))
 
         """
-        Get jacket (as background), side bar, glow, and everything about a raw template
+        From top to bottom
         """
-        jk = get_jacket(mid, m_type, size='b')
+        jk_path = get_jacket(mid, m_type, size='b')
+        jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
+        jk = add_alpha(jk)
 
+        # Main body of side bar
         side_bar = cv2.imread(img_archive + '/ms_sel/bg_sel_i_feb.png', cv2.IMREAD_UNCHANGED)
         side_bar_y, side_bar_x, chn = side_bar.shape
-        side_anc = AnchorImage(bg, 'side bar', side_bar, (y_px - side_bar_y, 0), father=bg_anc)
+        side_field = Anchor(bg, 'side field', (y_px - side_bar_y, 0), father=bg_anc)
+        side_anc = AnchorImage(bg, 'side bar', side_bar, (0, 0), father=side_field)
+
+        # Background jacket
+        jk_factor = 1.43
+        jk_bg = cv2.resize(jk, dsize=None, fx=jk_factor, fy=jk_factor, interpolation=cv2.INTER_AREA)
+        jk_bg_y, jk_bg_x, chn = jk_bg.shape
+        jk_bg = jk_bg[:, abs(jk_bg_x - side_bar_x) // 2:, :]
+        jk_bg_anc = AnchorImage(bg, 'jk bg', jk_bg, (0, 0), father=bg_anc)
+
+        jk_bg_anc.plot()
         side_anc.plot()
 
+        # Cyan glow on side bar
         side_glow = cv2.imread(img_archive + '/ms_sel/glow_blue3.png', cv2.IMREAD_UNCHANGED)
+        glow_anc = AnchorImage(bg, 'glow', side_glow, (254, 0), father=side_field)
+        glow_anc.plot()
 
+        # Jacket box and jacket itself
+        jk_box = cv2.imread(img_archive + '/ms_sel/box_jk.png', cv2.IMREAD_UNCHANGED)
+        jk_box_anc = AnchorImage(bg, 'jk box', jk_box, (136, 52), father=side_field)
+        jk_box_anc.plot()
 
+        jk_ratio = 350 / jk.shape[0]
+        jk = cv2.resize(jk, dsize=None, fx=jk_ratio, fy=jk_ratio, interpolation=cv2.INTER_AREA)
+        jk_anc = AnchorImage(bg, 'jk img', jk, (44, 44), father=jk_box_anc)
+        jk_anc.plot()
+
+        # If this song is one of your best 50s
+        if vf >= vf_floor:
+            b50 = cv2.imread(img_archive + '/ms_sel/scouter_b_1.png', cv2.IMREAD_UNCHANGED)
+            b50_anc = AnchorImage(bg, 'b50', b50, (249, 43), father=jk_box_anc)
+            b50_anc.plot()
+
+            vol_force = get_overall_vf(music_map[:50])
+            vf_icon = load_vf(vol_force, is_small=True)
+            vf_factor = 0.45
+            vf_icon = cv2.resize(vf_icon, dsize=None, fx=vf_factor, fy=vf_factor, interpolation=cv2.INTER_AREA)
+            vf_icon_anc = AnchorImage(bg, 'vf icon', vf_icon, (92, 5), b50_anc)
+            vf_icon_anc.plot()
+
+        # Grade hex box and icon
+        grade_box = cv2.imread(img_archive + '/ms_sel/box_medal.png', cv2.IMREAD_UNCHANGED)
+        grade_box_anc = AnchorImage(bg, 'grade box', grade_box, (617, 345), father=side_field)
+        grade_box_anc.plot()
+
+        grade_icon = cv2.imread(img_archive + '/ms_sel/grade_%s.png' % grade_img[grade], cv2.IMREAD_UNCHANGED)
+        grade_factor = 0.43
+        grade_icon = cv2.resize(grade_icon, dsize=None, fx=grade_factor, fy=grade_factor, interpolation=cv2.INTER_AREA)
+        grade_anc = AnchorImage(bg, 'grade', grade_icon, free=(11, 13), father=grade_box_anc)
+        grade_anc.plot()
+
+        # Clear base, hex box and icon
+        clear_base = cv2.imread(img_archive + '/ms_sel/hex_base.png', cv2.IMREAD_UNCHANGED)
+        clear_base_anc = AnchorImage(bg, 'clear base', clear_base, (648, 413), father=side_field)
+        clear_base_anc.plot()
+
+        clear_box = cv2.imread(img_archive + '/ms_sel/hex_base2.png', cv2.IMREAD_UNCHANGED)
+        box_factor = 1.07
+        clear_box = cv2.resize(clear_box, dsize=None, fx=box_factor, fy=box_factor, interpolation=cv2.INTER_AREA)
+        clear_box_anc = AnchorImage(bg, 'clear box', clear_box, free=(-107, -28), father=clear_base_anc)
+        clear_box_anc.plot()
+
+        clear_icon = cv2.imread(img_archive + '/ms_sel/mark_%s.png' % clear_img[clear], cv2.IMREAD_UNCHANGED)
+        clear_factor = 1.09
+        clear_icon = cv2.resize(clear_icon, dsize=None, fx=clear_factor, fy=clear_factor, interpolation=cv2.INTER_AREA)
+        clear_icon_anc = AnchorImage(bg, 'clear icon', clear_icon, free=(-68, 12), father=clear_base_anc)
+        clear_icon_anc.plot()
+
+        # "Best" light, cuz Asphyxia only records best record
+        best = cv2.imread(img_archive + '/ms_sel/text_bestscore2.png', cv2.IMREAD_UNCHANGED)
+        best_anc = AnchorImage(bg, 'best light', best, (608, 15), father=side_field)
+        best_anc.plot()
+
+        # Score, both bigger four and smaller four
+        score = str(score).zfill(8)
+        is_trans, opacity = 1, 0.5
+
+        bigger_anc = Anchor(bg, 'big four', free=(629, 38), father=side_field)
+        bigger_anc.creat_grid((0, 3), (0, 42))
+        b_factor = 0.69
+        for index in range(4):  # Bigger four
+            num = score[index]
+            if num != '0':
+                is_trans = 0
+            cur_num = cv2.imread(img_archive + '/psd_num/num_score_%s.png' % num, cv2.IMREAD_UNCHANGED)
+            cur_num = cv2.resize(cur_num, dsize=None, fx=b_factor, fy=b_factor, interpolation=cv2.INTER_AREA)
+            cur_anc = AnchorImage(bg, 'b_num #%d %s' % (index, num), cur_num, father=bigger_anc)
+            cur_anc.set_grid((0, index))
+            cur_anc.plot(opacity=(1 - is_trans * opacity))
+
+        s_factor = 0.46
+        smaller_anc = Anchor(bg, 'small four', free=(642, 207), father=side_field)
+        smaller_anc.creat_grid((0, 3), (0, 30))
+        for index in range(4, 8):  # Smaller four
+            num = score[index]
+            if num != '0':
+                is_trans = 0
+            cur_num = cv2.imread(img_archive + '/psd_num/num_score_%s.png' % num, cv2.IMREAD_UNCHANGED)
+            cur_num = cv2.resize(cur_num, dsize=None, fx=s_factor, fy=s_factor, interpolation=cv2.INTER_AREA)
+            cur_anc = AnchorImage(bg, 's_num #%d %s' % (index, num), cur_num, father=smaller_anc)
+            cur_anc.set_grid((0, index - 4))
+            cur_anc.plot(opacity=(1 - is_trans * opacity))
+
+        # EX score
+        ex_rate_font = ImageFont.truetype(font_continuum, 15, encoding='utf-8')
+        if exscore:
+            # Ex score box
+            ex_box = cv2.imread(img_archive + '/ms_sel/ex_score.png', cv2.IMREAD_UNCHANGED)
+            ex_anc = AnchorImage(bg, 'ex box', ex_box, (680, 21), father=side_field)
+            ex_anc.plot()
+
+            # The exscore itself
+            exscore_anc = AnchorText(bg, 'exscore', str(exscore), pen, ex_rate_font, (5, 151), ex_anc)
+            exscore_anc.plot((120, 79, 26), pos='r')
+
+        # Clear rate and number
+        rate_box = cv2.imread(img_archive + '/ms_sel/text_clearrate.png', cv2.IMREAD_UNCHANGED)
+        rate_anc = AnchorImage(bg, 'rate box', rate_box, (680, 181), father=side_field)
+        rate_anc.plot()
+
+        rate_num = '99.61'
+        rate_num_anc = AnchorText(bg, 'rate', rate_num, pen, ex_rate_font, (5, 140), rate_anc)
+        rate_num_anc.plot((255, 255, 255), pos='r')
+
+        # BPM box
+        bpm_box = cv2.imread(img_archive + '/ms_sel/box_bpm.png', cv2.IMREAD_UNCHANGED)
+        bpm_anc = AnchorImage(bg, 'bpm box', bpm_box, (759, 22), father=side_field)
+        bpm_anc.plot()
+
+        bpm_font = ImageFont.truetype(font_continuum, 20, encoding='utf-8')
+        bpm_str = get_bpm_str(single_data[3], single_data[4])
+        bpm_str_anc = AnchorText(bg, 'bpm', bpm_str, pen, bpm_font, (3, 53), bpm_anc)
+        bpm_str_anc.plot((255, 255, 255))
+
+        # Safe icon
+        safe = cv2.imread(img_archive + '/ms_sel/icon_safe.png', cv2.IMREAD_UNCHANGED)
+        safe_anc = AnchorImage(bg, 'safe', safe, (766, 237), father=side_field)
+        safe_anc.plot()
+
+        # Song name and artist
+        name_font = ImageFont.truetype(font_DFHS, 22, encoding='utf-8')
+        song_name = length_uni(name_font, single_data[1], 500)
+        artist = length_uni(name_font, single_data[2], 500)
+        name_anc = AnchorText(bg, 'name', song_name, pen, name_font, (804, 34), side_field)
+        artist_anc = AnchorText(bg, 'artist', artist, pen, name_font, (845, 34), side_field)
+
+        name_anc.plot((255, 255, 255))
+        artist_anc.plot((255, 255, 255))
+
+        # Level boxes
+        level_anc = Anchor(bg, 'level grid', free=(900, 46), father=side_field)
+        level_anc.creat_grid((0, 3), (0, 116))
+        cursor = cv2.imread(img_archive + '/ms_sel/cursor_level.png', cv2.IMREAD_UNCHANGED)
+        cursor_factor = 0.82
+        cursor = cv2.resize(cursor, dsize=None, fx=cursor_factor, fy=cursor_factor, interpolation=cv2.INTER_AREA)
+        lv_list = [single_data[7], single_data[10], single_data[13], str(int(single_data[16]) + int(single_data[19]))]
+
+        if m_type == 5:
+            cursor_index = 4
+        else:
+            cursor_index = m_type
+
+        for index in range(4):
+            cur_lv = lv_list[index].zfill(2)
+            if not int(cur_lv):
+                continue
+
+            lv_field = Anchor(bg, 'level box', free=(12, 23), father=level_anc)
+            lv_field.set_grid((0, index))
+
+            if cursor_index == index:
+                cursor_anc = AnchorImage(bg, 'cursor', cursor, free=(-15, -33), father=lv_field)
+                cursor_anc.plot()
+
+            lv_left = cv2.imread(img_archive + '/psd_num/num_level_%s.png' % cur_lv[0], cv2.IMREAD_UNCHANGED)
+            lv_right = cv2.imread(img_archive + '/psd_num/num_level_%s.png' % cur_lv[1], cv2.IMREAD_UNCHANGED)
+            left_anc = AnchorImage(bg, 'lv left', lv_left, free=(0, 0), father=lv_field)
+            right_anc = AnchorImage(bg, 'lv right', lv_right, free=(0, 29), father=lv_field)
+
+            if index <= 2:  # NOV, ADV, EXH
+                lv_text = diff_text_table[index + 1]
+            elif int(single_data[6]):  # INF, GRV, HVN, VVD
+                lv_text = diff_text_table[index + int(inf_ver) - 1]
+            else:  # MXM
+                lv_text = diff_text_table[8]
+            lv_text = cv2.imread(img_archive + '/psd_level/level_sel_%s.png' % lv_text, cv2.IMREAD_UNCHANGED)
+            lv_text_anc = AnchorImage(bg, 'level text', lv_text, free=(56, -11), father=lv_field)
+
+            left_anc.plot()
+            right_anc.plot()
+            lv_text_anc.plot()
+
+        # Effector box and Illustrator box
+        eff_ill_font = ImageFont.truetype(font_DFHS, 16, encoding='utf-8')
+
+        eff_box = cv2.imread(img_archive + '/ms_sel/box_effected.png', cv2.IMREAD_UNCHANGED)
+        eff_anc = AnchorImage(bg, 'eff box', eff_box, free=(1019, 90), father=side_field)
+        eff = length_uni(eff_ill_font, single_data[9 + m_type * 3], 260)
+        eff_text_anc = AnchorText(bg, 'eff text', eff, pen, eff_ill_font, free=(7, 162), father=eff_anc)
+        
+        eff_anc.plot()
+        eff_text_anc.plot((255, 255, 255))
+        
+        ill_box = cv2.imread(img_archive + '/ms_sel/box_illustrated.png', cv2.IMREAD_UNCHANGED)
+        ill_anc = AnchorImage(bg, 'ill box', ill_box, free=(1052, 90), father=side_field)
+        ill = length_uni(eff_ill_font, single_data[8 + m_type * 3], 260)
+        ill_text_anc = AnchorText(bg, 'ill text', ill, pen, eff_ill_font, free=(7, 162), father=ill_anc)
+
+        ill_anc.plot()
+        ill_text_anc.plot((255, 255, 255))
 
         """
         Set up user profile
         """
 
-        """
-        Draw record data
-        """
+        # Time for Saccharomyces cerevisiae
+        yeast_field = Anchor(bg, 'yeast field', free=(1230, 0), father=bg_anc)
+        yeast_bg = simple_rectangle((50, x_px), (0, 0, 0), np.uint8)
+        yeast_bg_anc = AnchorImage(bg, 'yeast bg', yeast_bg, free=(10, 0), father=yeast_field)
+        yeast_anc = AnchorText(bg, 'yeast', 'Generated by Saccharomyces cerevisiae', pen, eff_ill_font,
+                               free=(18, 270), father=yeast_field)
 
+        yeast_bg_anc.plot(0.65)
+        yeast_anc.plot(color_gray, pos='c')
+
+        text_layer = np.array(text_layer)
+        png_superimpose(bg, text_layer)
         output_path = '%s/%s_%s%s.png' % (cfg.output, user_name, mid, diff)
-        cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
+        cv2.imwrite(output_path, bg[:1270, :540, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
 
         timber.info_show('Plot saved at [%s] successfully.' % output_path)
         return msg

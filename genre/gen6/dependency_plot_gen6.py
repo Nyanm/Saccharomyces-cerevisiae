@@ -14,7 +14,6 @@ dependency = {
         'play_data_small',
         'ms_sel',
         'force',
-        'cmn_window',
         'ap_floor'
     ],
 
