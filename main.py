@@ -77,7 +77,7 @@ class SDVX:
 
         # Read sdvx@asphyxia.db
         self.raw_data = open(cfg.db_dir, 'r')
-        self.music_map = [[False, '', '', '', '', '', '', '', '', '', 0.0, 0] for _ in range(cfg.map_size * 5 + 1)]
+        self.music_map = [[False, 0, 0, 0, 0, 0, 0, '', '', '', 0.0, 0] for _ in range(cfg.map_size * 5 + 1)]
         """
         music_map is a comprehensive map to store player's play record
         It contains 5-time of map_size lines, each 5 lines define the 5 difficulties of a single song
@@ -218,7 +218,10 @@ class SDVX:
 
     def _3_get_recent(self):
         print('\nRecent play record:')
-        self.__get_single(self.last_index)
+        __music_map = self.music_map.copy()
+        __music_map.sort(key=lambda x: x[6])
+        latest = __music_map[-1]
+        self.__get_single(latest[1] * 5 + latest[2])
 
     def _4_get_specific(self):
 
@@ -404,4 +407,4 @@ if __name__ == '__main__':
         timber.error('Fatal error occurs, please report the following message to developer.\n\n%s\n'
                      % format_exc())
 
-# pyinstaller -F main.py
+# pyinstaller -i sjf.ico -F main.py

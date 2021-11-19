@@ -584,12 +584,12 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     timber.info('Generate summary data complete.\n\n%s\n' % msg)
 
     # Generate data frame for joint plot
-    vf_list, vf_size, low_score, low_lv = [], 100, 10000000, 20  # Just [score: int, vf: float, lv: str]
+    vf_list, vf_size, low_score, low_lv, high_lv = [], 100, 10000000, 20, 0  # Just [score: int, vf: float, lv: str]
     for record in music_map_sort[:vf_size]:
         if record[0]:
             score, lv, vf = record[3], record[8], record[10]
             vf_list.append((score, vf / 2, lv))
-            low_score, low_lv = min(low_score, score), min(low_lv, int(lv))
+            low_score, low_lv, high_lv = min(low_score, score), min(low_lv, int(lv)), max(high_lv, int(lv))
     high_vf, low_vf = vf_list[0][1], vf_list[-1][1]
     vf_df = pd.DataFrame(vf_list, columns=['score', 'vf', 'lv'])
 
@@ -976,8 +976,9 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         else:
             plot_palette = None
 
-        if low_lv > 14:
-            joint_palette = level_palette[low_lv - 21:]
+        lv_range = high_lv - low_lv
+        if lv_range < 6:
+            joint_palette = level_palette[-lv_range - 1:]
         else:
             joint_palette = None
 
