@@ -7,12 +7,13 @@ import pyfiglet
 import numpy as np
 import qrcode
 import base64
+from traceback import format_exc
 from xml.etree.cElementTree import parse
 
 from cfg_read import local_dir, cfg
 from cfg_read import Timber
 from update.update_init import update
-from genre.gen6 import main_plot_gen6
+from genre.gen6 import main_plot_gen6, tools_plot_gen6
 from genre.gen5 import main_plot_gen5
 
 # Dictionary for vf calculation
@@ -30,7 +31,7 @@ skin_dict = {'gen6': main_plot_gen6, 'gen5': main_plot_gen5}
 title = pyfiglet.Figlet(width=1000)
 title_text = title.renderText('Saccharomyces\n              cerevisiae')
 title_text += '                    Simple SDVX@Asphyxia Score Checker                    \n' \
-              '                             Version 2.0 beta\n' \
+              '                              Version 1.0.0\n' \
               '                       Powered by Nyanm & Achernar\n\n' \
               '查分器功能  Score checker function field\n' \
               '[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n' \
@@ -315,7 +316,8 @@ class SDVX:
               'en. Apparently the only skin we have is the primary skin for Saccharomyces cerevisiae:[gen6] :(\n'
               '    But you, %s, you can join us and help us to develop new skins!\n' % (self.user_name, self.user_name))
         print('[3] 源码在哪里看？  Where can I get the source code?\n'
-              ' -  https://github.com/Nyanm/Saccharomyces-cerevisiae, and welcome to star my project!\n')
+              ' -  https://github.com/Nyanm/Saccharomyces-cerevisiae, and welcome to star my project!\n'
+              '    Also, the up-to-date release will be uploaded to here.\n')
         print('[4] 为什么软件里有这么多工地英语？\n'
               ' -  说来惭愧，这软件最开始甚至只有英文，中文是我后来加的（\n')
 
@@ -330,7 +332,7 @@ class SDVX:
     @staticmethod
     def _10_donate():
         os.system('cls')
-        timber.info('Never gonna give you up~')
+        timber.info('Ali-pay is also recommended.')
         print('恭喜你发现了月之暗面！这里是一个赞助页面，可以请开发者喝一杯咖啡~\n'
               'Congratulations! You\'ve found the dark side of the moon!\n'
               'Here is a donate page, where you can buy the developer a cup of coffee if you like this application.\n'
@@ -380,7 +382,12 @@ class SDVX:
 
 
 if __name__ == '__main__':
-    sdvx = SDVX()
-    sdvx.plot_skin.plot_single(sdvx.music_map.copy(), sdvx.profile, 1283 * 5 - 2)
+    try:
+        sdvx = SDVX()
+        while True:
+            sdvx.input_handler()
+    except Exception:
+        timber.error('Something fatal error happens, please report the following message to developer.\n\n%s\n'
+                     % format_exc())
 
 # pyinstaller -F main.py

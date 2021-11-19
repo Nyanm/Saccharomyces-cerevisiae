@@ -132,7 +132,7 @@ class Config:
 
         timber.info('config.cfg load complete.\n\n'
                     'map size  :%d\ncard num  :%s\ndb dir    :%s\ngame dir  :%s\noutput    :%s\n'
-                    'skin name :%s\nis init   :%s\nversion   :%d'
+                    'skin name :%s\nis init   :%s\nversion   :%d\n'
                     % (map_size, card_num, db_dir, game_dir, output, skin_name, str(is_init), version))
 
         return map_size, card_num, db_dir, game_dir, output, skin_name, is_init, version

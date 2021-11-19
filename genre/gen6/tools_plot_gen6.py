@@ -29,6 +29,7 @@ Pre-define
 """
 # Quick color table
 color_white = (245, 245, 245)
+color_l_white = (255, 255, 255)
 color_black = (61, 61, 61)
 color_gray = (154, 154, 154)
 color_l_gray = (210, 210, 210)
@@ -339,6 +340,81 @@ def generate_std_profile(profile: list, vf: float) -> np.array:
     pen.text((218, 227), 'Asphyxia CORE', color_white, aka_font)
     pen.text((436, 295), '%.3f' % vf, color_white, vf_font)
     pen.text((602, 291), time.strftime('%a %Y/%m/%d %H: %M', time.localtime()), color_white, time_font)
+
+    text_layer = np.array(text_layer)
+    png_superimpose(bg, text_layer)
+
+    return bg
+
+
+def generate_mini_profile(profile: list, vf: float, vf_specific: list = None) -> np.array:
+    user_name, ap_card, aka_name, skill, crew_id = profile
+
+    profile_box = cv2.imread(img_archive + '/play_data_small/box_result_mine.png', cv2.IMREAD_UNCHANGED)
+    appeal_card = cv2.imread(get_ap_card(ap_card), cv2.IMREAD_UNCHANGED)
+    skill_img = load_skill(appeal_card, 12, dis_resize=True)
+    vf_icon = load_vf(vf, is_small=True)
+    vf_star = cv2.imread(img_archive + '/force/star_gold_i_eab.png', cv2.IMREAD_UNCHANGED)
+    vf_raw = cv2.imread(img_archive + '/force/font_force_s.png', cv2.IMREAD_UNCHANGED)
+
+    appeal_card = cv2.resize(appeal_card, dsize=None, fx=0.70, fy=0.70, interpolation=cv2.INTER_AREA)
+    skill_img = cv2.resize(skill_img, dsize=None, fx=0.32, fy=0.32, interpolation=cv2.INTER_AREA)
+    vf_icon = cv2.resize(vf_icon, dsize=None, fx=0.29, fy=0.29, interpolation=cv2.INTER_AREA)
+    vf_star = cv2.resize(vf_star, dsize=None, fx=0.10, fy=0.10, interpolation=cv2.INTER_AREA)
+
+    bg = profile_box
+    blank_layer = np.ones((profile_box.shape[0], profile_box.shape[1], 3), dtype=np.uint8) * 255
+    text_layer = Image.fromarray(blank_layer)
+    text_layer.putalpha(1)
+    pen = ImageDraw.Draw(text_layer)
+
+    png_superimpose(bg, appeal_card, (37, 24))
+    png_superimpose(bg, skill_img, (125, 160))
+    png_superimpose(bg, vf_icon, (114, 278))
+    png_superimpose(bg, vf_raw, (119, 291))
+
+    star_y, star_x, chn = vf_star.shape
+    star_interval = 1
+    star_num = get_vf_level(vf)[1]
+    star_margin = (2 * star_interval + star_x) * (4 - star_num) // 2
+    star_grid = Anchor(bg, 'star grid', (146, 282 + star_margin))
+    star_grid.creat_grid((0, star_num), (0, star_x + 2 * star_interval))
+    star_anc = AnchorImage(bg, 'stars', vf_star, (0, 0), star_grid)
+
+    for index in range(star_num):
+        star_anc.set_grid((0, index))
+        star_anc.plot()
+
+    if vf_specific:
+        vfs, rank = vf_specific
+        vf_text = load_vf(vfs, is_text=True)
+        vf_raw = cv2.imread(img_archive + '/force/font_force_m.png', cv2.IMREAD_UNCHANGED)
+
+        png_superimpose(bg, vf_raw, (102, 380))
+        png_superimpose(bg, vf_text, (112, 380))
+
+        rank_font = ImageFont.truetype(font_DFHS, 18, encoding='utf-8', index=0)
+        vfs_font = ImageFont.truetype(font_continuum, 26, encoding='utf-8', index=0)
+        pen.text((397, 135), '#', color_l_white, rank_font)
+        pen.text((415, 135), str(rank), color_l_white, rank_font)
+
+        vf_layer = np.ones((profile_box.shape[0], profile_box.shape[1], 3), dtype=np.uint8) * 48
+        vf_layer = Image.fromarray(vf_layer)
+        vf_layer.putalpha(1)
+        vf_pen = ImageDraw.Draw(vf_layer)
+        vf_pen.text((397, 148), '%.3f' % vfs, rgb_2_bgr(get_vf_level(vfs, is_color=True)), vfs_font)
+        vf_layer = np.array(vf_layer)
+        png_superimpose(bg, vf_layer)
+
+    vf_font = ImageFont.truetype(font_continuum, 16, encoding='utf-8', index=0)
+    aka_font = ImageFont.truetype(font_DFHS, 18, encoding='utf-8', index=0)
+    name_font = ImageFont.truetype(font_continuum, 27, encoding='utf-8', index=0)
+    ser_font = ImageFont.truetype(font_DFHS, 16, encoding='utf-8', index=0)
+
+    pen.text((316, 132), '%.3f' % vf, color_l_white, vf_font)
+    pen.text((153, 33), aka_name, color_l_white, aka_font)
+    pen.text((153, 57), user_name, color_l_white, name_font)
+    pen.text((46, 214), 'Asphyxia CORE', color_white, ser_font)
 
     text_layer = np.array(text_layer)
     png_superimpose(bg, text_layer)

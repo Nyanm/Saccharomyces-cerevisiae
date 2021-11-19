@@ -2,15 +2,15 @@
 
 A OpenCV &amp; PIL based sdvx@asphyxia score checker
 
-### !!! RECONSTRUCTION WOULD BE DONE SOON !!!
+### 1.0.0 HAS BEEN RELEASED !
 
 ## Introduction
 
-Simple python application to draw data from  Asphyxia  Core database, plot images to help you analyze your scores. It can be built into an exe, theoretically, and I will release it in group now and then. 
+Simple python application to generate game record images in order to help you analyze your ability.
 
-Codes here are only for exhibiting case, however you can still pull request.
+You can download a built version directly, also, it can run independently as python code in your IDE.
 
-## Function
+## Features
 
 1. ### System scale
 
@@ -37,7 +37,7 @@ Codes here are only for exhibiting case, however you can still pull request.
 
    1. Search mid: Enter anything related to the song, like the name, the author or the memes. Besides, I raised a project to collect those SDVX song memes to contribute this function. You can join it if you have some memes to share.
    
-   2. Show available skin list: Ambitious goal, humble reality.
+   2. FAQ: Well it might be unqualified as a useful function.
 
 ## How to use
 
@@ -47,19 +47,16 @@ Codes here are only for exhibiting case, however you can still pull request.
    
 3. Run the application again, it will initialize some data, and an image archive automatically from your HDD game.
    
-4. Enter the number correspond to the function you want, meanwhile a user interface would be illustrated.
-   
-5. If you have updated your game version recently, delete the "is_initialized" line to restart the initialization, otherwise new songs won't appear. 
+4. Enter the number correspond to the function you want. It has no interactive interface, thus you should enter your operate number.
 
 ## Still going to say…
 
-Finally, a makeshift was found to pack all ingredients into one .exe file. Unfortunately, the application become ungodly big. Anyway, this helps it avoid the issue "BEMANI will sue". 
+Finally, a makeshift was found to pack all ingredients into one .exe file. Unfortunately, the application become ungodly big. Whatsoever, this helps it avoid the issue "BEMANI will sue"
 
-Plot is a verb.
+Plot maybe a verb.
 
 I use matplotlib and seaborn to generate graphs, which make the summary more like an academical report than a game profile. Fortunately, I can soon use them in my diploma paper. XD
 
 用英语写README感觉自己像个文盲，麻了。
 
-~~用SHIFT-JIS的人有难了，死后会下编码地狱，满目所见都是乱码。~~不用UTF-8都得下地狱
-
+不用UTF-8都得下地狱
