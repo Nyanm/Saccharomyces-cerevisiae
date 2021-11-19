@@ -35,7 +35,7 @@ def update_img():
     def update_transport(trans_loc: list):
         trans_src = cfg.game_dir + trans_loc[0]
         trans_dst = genre_path + trans_loc[1]
-        trans_path = ''.join(trans_dst.split('/').pop())
+        trans_path = '/'.join(trans_dst.split('/')[:-1])
         if not path.exists(trans_path):
             makedirs(trans_path)
         shutil.copy(trans_src, trans_dst)

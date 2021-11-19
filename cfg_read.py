@@ -2,7 +2,6 @@ import sys
 from os import path
 from time import localtime, strftime
 from configparser import ConfigParser
-from colorama import init
 import base64
 
 
@@ -36,7 +35,6 @@ else:
 timber_path = local_dir + '/timber.log'
 f = open(timber_path, 'w', encoding='utf-8')
 f.close()
-init(autoreset=True)
 
 
 # Initialize logger
@@ -54,19 +52,19 @@ class Timber:
         self.write(msg, 'Info')
 
     def info_show(self, msg: str):
-        print('\33[32m[Info] %s\33[0m' % msg)
+        print('[Info]''%s' % msg)
         self.write(msg, 'Info')
 
     def info_clog(self, msg: str):
-        input('\33[32m[Info] %s\33[0m' % msg)
+        input('[Info]''%s' % msg)
         self.write(msg, 'Info')
 
     def warning(self, msg: str):
-        input('\33[33m[Warning] %s\33[0m' % msg)
+        input('[Warning]''%s' % msg)
         self.write(msg, 'Warning')
 
     def error(self, msg: str):
-        input('\33[31m[Error] %s\33[0m' % msg)
+        input('[Error]''%s' % msg)
         self.write(msg, 'Error')
         sys.exit(1)
 
@@ -82,10 +80,9 @@ class Config:
         self.cfg = ConfigParser()
         self.path = local_dir + '/config.cfg'
         if not path.exists(self.path):
-            timber.warning('config.cfg not found, the program will try to generate a new one.\n'
-                           'Press enter to continue.')
             self.create()
-            sys.exit(1)
+            timber.error('config.cfg not found, the program will try to generate a new one.\n'
+                         'Press enter to continue.')
 
         self.map_size, self.card_num, self.db_dir, self.game_dir, self.output, self.skin_name, self.is_init, self.version = self.read()
         self.validity_check()

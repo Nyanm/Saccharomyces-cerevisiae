@@ -21,8 +21,6 @@ except FileNotFoundError:
                    'Press enter to continue.')
 
 img_archive = local_dir + '/img_archive/gen6'
-if not path.exists(img_archive):
-    timber.error('Image archive is missing, please check your file directory or redo the initialization.')
 
 """
 Pre-define

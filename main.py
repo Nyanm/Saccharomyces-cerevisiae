@@ -3,7 +3,6 @@ import re
 import json
 import sys
 import time
-import pyfiglet
 import numpy as np
 import qrcode
 import base64
@@ -13,7 +12,7 @@ from xml.etree.cElementTree import parse
 from cfg_read import local_dir, cfg
 from cfg_read import Timber
 from update.update_init import update
-from genre.gen6 import main_plot_gen6, tools_plot_gen6
+from genre.gen6 import main_plot_gen6
 from genre.gen5 import main_plot_gen5
 
 # Dictionary for vf calculation
@@ -28,18 +27,28 @@ crew_id = {116: '0001', 95: '0002', 96: '0003', 100: '0004', 101: '0005', 102: '
 timber = Timber('main.py')
 skin_dict = {'gen6': main_plot_gen6, 'gen5': main_plot_gen5}
 
-title = pyfiglet.Figlet(width=1000)
-title_text = title.renderText('Saccharomyces\n              cerevisiae')
-title_text += '                    Simple SDVX@Asphyxia Score Checker                    \n' \
-              '                              Version 1.0.0\n' \
-              '                       Powered by Nyanm & Achernar\n\n' \
-              '查分器功能  Score checker function field\n' \
-              '[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n' \
-              '[3] 最近游玩记录  Recent play record     [4] 特定歌曲记录  Specific song record\n\n' \
-              '通常功能    Common function field\n' \
-              '[8] 搜索歌曲mid  Search mid              [9] 常见问题  FAQ\n' \
-              '[0] 退出  Exit\n\n' \
-              '输入相应数字后回车以继续  Enter corresponding number to continue:'
+title_text = " ____                 _                                                   \n" \
+             "/ ___|  __ _  ___ ___| |__   __ _ _ __ ___  _ __ ___  _   _  ___ ___  ___ \n" \
+             "\___ \ / _` |/ __/ __| '_ \ / _` | '__/ _ \| '_ ` _ \| | | |/ __/ _ \/ __|\n" \
+             " ___) | (_| | (_| (__| | | | (_| | | | (_) | | | | | | |_| | (_|  __/\__ \\\n" \
+             "|____/ \__,_|\___\___|_| |_|\__,_|_|  \___/|_| |_| |_|\__, |\___\___||___/\n" \
+             "                                                      |___/               \n" \
+             "                                       _     _            \n" \
+             "                ___ ___ _ __ _____   _(_)___(_) __ _  ___ \n" \
+             "               / __/ _ \ '__/ _ \ \ / / / __| |/ _` |/ _ \\\n" \
+             "              | (_|  __/ | |  __/\ V /| \__ \ | (_| |  __/\n" \
+             "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
+             "\n" \
+             "                    Simple SDVX@Asphyxia Score Checker                    \n" \
+             "                              Version 1.0.0\n" \
+             "                       Powered by Nyanm & Achernar\n\n" \
+             "查分器功能  Score checker function field\n" \
+             "[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n" \
+             "[3] 最近游玩记录  Recent play record     [4] 特定歌曲记录  Specific song record\n\n" \
+             "通常功能    Common function field\n" \
+             "[8] 搜索歌曲mid  Search mid              [9] 常见问题  FAQ\n" \
+             "[0] 退出  Exit\n\n" \
+             "输入相应数字后回车以继续  Enter corresponding number to continue:"
 
 
 class SDVX:

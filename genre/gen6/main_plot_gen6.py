@@ -542,7 +542,8 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     #         [NO, CR, NC, HC, UC, PUC]
     # 6-16 |  [NO, D, C, B, A, A+, AA, AA+, AAA, AAA+, S]
     # 17   |  [sum]
-    for single_music in level_table:  # Calculating the sum of each level
+    __level_table = np.load(local_dir + '/data/level_table.npy')
+    for single_music in __level_table:  # Calculating the sum of each level
         if not single_music[0]:
             continue
         nov, adv, exh, inf, mxm = \
@@ -816,7 +817,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
                 plt.pie(__data_list, radius=1, colors=__color_list, autopct='%.1f%%', pctdistance=0.75,
                         wedgeprops=wig, textprops={'fontsize': 14}, startangle=0, counterclock=False)
 
-            patch = plt.pie(np.ones(len(color_tuple), dtype=int), radius=0, colors=color_tuple)[0]
+            patch = plt.pie(np.ones(len(color_tuple), dtype=int), radius=0.01, colors=color_tuple)[0]
             plt.legend(patch, legend, fontsize=13, loc=legend_loc, ncol=l_col)
 
             return fig
