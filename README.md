@@ -2,19 +2,19 @@
 
 A OpenCV &amp; PIL based sdvx@asphyxia score checker
 
-### 1.0.0 HAS BEEN RELEASED !
+### 1.0.1 HAS BEEN RELEASED !
 
 ## Introduction
 
 Simple python application to generate game record images in order to help you analyze your ability.
 
-You can download a built version directly, also, it can run independently as python code in your IDE.
+You can download a built version directly. Also, it can run independently as python code in your IDE.
 
 ## Features
 
 1. ### System scale
 
-   1. Replaceable skins: Skin can be simply replaced through the config.txt. It's regretful that designing and coding a new skin is such a backbreaking task, so there is only one default skin by now.
+   1. Replaceable skins: Skin can be simply replaced through the config.txt. Considering that designing and coding a new skin is such a backbreaking task, there is only one default skin by now.
    
    2. One file solution: The application can do all the things with only one file initially. Thanks to ifstools, it can draw images from HDD game data. 
 
@@ -37,7 +37,7 @@ You can download a built version directly, also, it can run independently as pyt
 
    1. Search mid: Enter anything related to the song, like the name, the author or the memes. Besides, I raised a project to collect those SDVX song memes to contribute this function. You can join it if you have some memes to share.
    
-   2. FAQ: Well it might be unqualified as a useful function.
+   2. FAQ: Well it might be unqualified as a usable function.
 
 ## How to use
 
@@ -63,7 +63,7 @@ You can download a built version directly, also, it can run independently as pyt
 
 ## Still going to say…
 
-Finally, a makeshift was found to pack all ingredients into one .exe file. Unfortunately, the application become ungodly big. Whatsoever, this helps it avoid the issue "BEMANI will sue"
+Finally, a makeshift was found to pack all ingredients into one .exe file. Unfortunately, the application become ungodly big. Nonetheless, this helps it avoid the issue "BEMANI will sue"
 
 Plot maybe a verb.
 
