@@ -43,9 +43,9 @@ You can download a built version directly, also, it can run independently as pyt
 
 ### I only use built version
 
-   1. Run the bare .exe, it will generate a config.txt and shut itself down.
+   1. Run the bare .exe, it will generate a config.cfg and shut itself down.
       
-   2. Fill up the config.exe under the instruction, examples are giving there.
+   2. Fill up the config.cfg under the instruction, examples are giving there.
       
    3. Run the application again, it will initialize some data, and an image archive automatically from your HDD game.
       
