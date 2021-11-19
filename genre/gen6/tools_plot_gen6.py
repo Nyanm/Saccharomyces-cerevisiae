@@ -92,7 +92,7 @@ def get_vf_level(vf: float, is_color: bool = False, is_darker: bool = False):
     return vf_grade, vf_stars
 
 
-def get_jacket(mid: int, m_type: int, size: str = False) -> str:
+def get_jacket_path(mid: int, m_type: int, size: str = False) -> str:
     mid = str(mid).zfill(4)
     for song_folder in listdir(song_folders):
         if song_folder.startswith(mid):
@@ -108,6 +108,19 @@ def get_jacket(mid: int, m_type: int, size: str = False) -> str:
                 return cfg.game_dir + '/data/graphics/jk_dummy_%s.png' % size
             else:
                 return cfg.game_dir + '/data/graphics/jk_dummy_s.png'
+
+
+def get_jacket(mid: int, m_type: int, size: str = False):
+    jk_path = get_jacket_path(mid, m_type, size)
+    jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
+    try:
+        if jk.shape[2] == 3:
+            jk = add_alpha(jk)
+        return jk
+    except IndexError:
+        jk = cv2.merge((jk, jk, jk))
+        jk = add_alpha(jk)
+        return jk
 
 
 def get_diff(m_type: int, inf_ver: str) -> str:
@@ -279,7 +292,7 @@ def generate_std_profile(profile: list, vf: float) -> np.array:
     bl_pass = cv2.imread(img_archive + '/play_data/blpass_on.png', cv2.IMREAD_UNCHANGED)
     crew = cv2.imread(img_archive + '/psd_crew/psd_crew_%s.png' % crew_id, cv2.IMREAD_UNCHANGED)
     appeal_card = cv2.imread(get_ap_card(ap_card), cv2.IMREAD_UNCHANGED)
-    skill_img = load_skill(appeal_card, 12, dis_resize=True)
+    skill_img = load_skill(appeal_card, skill, dis_resize=True)
     vf_icon = load_vf(vf, is_small=True)
     vf_text = load_vf(vf, is_text=True)
     vf_raw = cv2.imread(img_archive + '/force/font_force_m.png', cv2.IMREAD_UNCHANGED)
@@ -350,7 +363,7 @@ def generate_mini_profile(profile: list, vf: float, vf_specific: list = None) ->
 
     profile_box = cv2.imread(img_archive + '/play_data_small/box_result_mine.png', cv2.IMREAD_UNCHANGED)
     appeal_card = cv2.imread(get_ap_card(ap_card), cv2.IMREAD_UNCHANGED)
-    skill_img = load_skill(appeal_card, 12, dis_resize=True)
+    skill_img = load_skill(appeal_card, skill, dis_resize=True)
     vf_icon = load_vf(vf, is_small=True)
     vf_star = cv2.imread(img_archive + '/force/star_gold_i_eab.png', cv2.IMREAD_UNCHANGED)
     vf_raw = cv2.imread(img_archive + '/force/font_force_s.png', cv2.IMREAD_UNCHANGED)

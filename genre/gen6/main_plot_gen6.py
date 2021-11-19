@@ -77,9 +77,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         """
         From top to bottom
         """
-        jk_path = get_jacket(mid, m_type, size='b')
-        jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
-        jk = add_alpha(jk)
+        jk = get_jacket(mid, m_type, size='b')
 
         # Main body of side bar
         side_bar = cv2.imread(img_archive + '/ms_sel/bg_sel_i_feb.png', cv2.IMREAD_UNCHANGED)
@@ -428,9 +426,7 @@ def plot_b50(music_map: list, profile: list) -> str:
             box_anc.plot()
 
             # Load and superimpose jacket
-            jk_path = get_jacket(mid, m_type, 's')
-            jk = cv2.imread(jk_path, cv2.IMREAD_UNCHANGED)
-            jk = add_alpha(jk)
+            jk = get_jacket(mid, m_type, 's')
             jk_anc = AnchorImage(bg, 'jacket', jk, free=(8, 17), father=box_anc)
             jk_anc.plot()
 

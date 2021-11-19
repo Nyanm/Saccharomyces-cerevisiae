@@ -16,8 +16,8 @@ from genre.gen6 import main_plot_gen6
 from genre.gen5 import main_plot_gen5
 
 # Dictionary for vf calculation
-clear_factor = {1: 0.5, 2: 1.0, 3: 1.02, 4: 1.05, 5: 1.10}
-grade_factor = {1: 0.80, 2: 0.82, 3: 0.85, 4: 0.88, 5: 0.91, 6: 0.94, 7: 0.97, 8: 1.00, 9: 1.02, 10: 1.05}
+clear_factor = {0: 0, 1: 0.5, 2: 1.0, 3: 1.02, 4: 1.05, 5: 1.10}
+grade_factor = {0: 0, 1: 0.80, 2: 0.82, 3: 0.85, 4: 0.88, 5: 0.91, 6: 0.94, 7: 0.97, 8: 1.00, 9: 1.02, 10: 1.05}
 
 # Look up table for crew, only support crew with LIVE-2D
 crew_id = {116: '0001', 95: '0002', 96: '0003', 100: '0004', 101: '0005', 102: '0006', 103: '0007', 104: '0008',
@@ -96,7 +96,7 @@ class SDVX:
             timber.error('Critical npy files not found, please delete the last line of config.cfg and restart.')
 
         # Get raw data from db
-        self.last_index = 0
+        self.last_index, self.skill = 0, 0
         for line in self.raw_data:
             json_dict = json.loads(line)
 
@@ -105,7 +105,12 @@ class SDVX:
             except KeyError:
                 continue
 
-            if json_dict['__refid'] != cfg.card_num:  # Specify user
+            try:
+                cur_id = json_dict['__refid']
+            except KeyError:
+                continue
+
+            if json_dict['__refid'] != cur_id:  # Specify user
                 continue
 
             if line_type == 'music':
@@ -143,7 +148,7 @@ class SDVX:
                 self.user_name, self.ap_card, self.aka_index = \
                     json_dict['name'], json_dict['appeal'], json_dict['akaname']
             elif line_type == 'skill':
-                self.skill = json_dict['base']
+                self.skill = max(json_dict['base'], self.skill)
             elif line_type == 'param':
                 if json_dict['type'] == 2 and json_dict['id'] == 1:
                     self.crew_index = json_dict['param'][24]
@@ -396,7 +401,7 @@ if __name__ == '__main__':
         while True:
             sdvx.input_handler()
     except Exception:
-        timber.error('Something fatal error happens, please report the following message to developer.\n\n%s\n'
+        timber.error('Fatal error occurs, please report the following message to developer.\n\n%s\n'
                      % format_exc())
 
 # pyinstaller -F main.py

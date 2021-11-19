@@ -33,5 +33,6 @@ def update_aka():
         os.remove(utf_path)
     except FileNotFoundError:
         pass
+    aka_map = aka_map[1:]
     aka_map = np.array(aka_map)
     np.save(local_dir + '/data/aka_db.npy', aka_map)
