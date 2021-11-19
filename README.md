@@ -41,13 +41,25 @@ You can download a built version directly, also, it can run independently as pyt
 
 ## How to use
 
-1. Run the bare .exe, it will generate a config.txt and shut itself down.
-   
-2. Fill up the config.exe under the instruction, examples are giving there.
-   
-3. Run the application again, it will initialize some data, and an image archive automatically from your HDD game.
-   
-4. Enter the number correspond to the function you want. It has no interactive interface, thus you should enter your operate number.
+### I only use built version
+
+   1. Run the bare .exe, it will generate a config.txt and shut itself down.
+      
+   2. Fill up the config.exe under the instruction, examples are giving there.
+      
+   3. Run the application again, it will initialize some data, and an image archive automatically from your HDD game.
+      
+   4. Enter the number correspond to the function you want. It has no interactive interface, thus you should enter your operate number.
+
+### I want it run on my IDE
+
+   1. Set the "test_mode" to "1" in cfg_read, otherwise the program won't be able to find the correct path.
+
+### I want to build it on my own
+
+   1. Something wrong happens between opencv-python and pyinstaller, as far as I know the opencv runs well in version 4.5.3.
+
+   2. Set the "test_mode" to "0" in cfg_read, otherwise the exe. file won't be able to find the correct path.
 
 ## Still going to say…
 
