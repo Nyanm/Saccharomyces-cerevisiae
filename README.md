@@ -2,7 +2,7 @@
 
 A OpenCV &amp; PIL based sdvx@asphyxia score checker
 
-### 1.0.1 HAS BEEN RELEASED !
+### 1.1.1 HAS BEEN RELEASED !
 
 ## Introduction
 
@@ -32,6 +32,8 @@ You can download a built version directly. Also, it can run independently as pyt
    3. Recent play record: Generate the music record you have just played. 
    
    4. Specific song record: Generate the chosen child. You can use this function with the help of "8 Search mid".
+   
+   5. Score list: Choose a level and a score threshold, then the program will generate a list which contains all songs above this score at this level. This was inspired by a IMPERIAL who needs to check her 19 S accomplishment.
 
 3. ### Universal function
 
@@ -69,6 +71,12 @@ Plot maybe a verb.
 
 I use matplotlib and seaborn to generate graphs, which make the summary more like an academical report than a game profile. Fortunately, I can soon use them in my diploma paper. XD
 
-用英语写README感觉自己像个文盲，麻了。
+Forgive my poor code ability and English. 🎵I'm just an Internet Engineering boy🎵 🎵Nobody loves me🎵
+
+Special thanks to Achernar. Amazing jobs was done by her which helps me a lot in designing gen6.plot_summary.
+
+用英语写README感觉自己像个文盲。
 
 不用UTF-8都得下地狱
+
+
