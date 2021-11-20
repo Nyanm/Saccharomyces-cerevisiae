@@ -1,8 +1,11 @@
 import sys
-from os import path
+from os import path, mkdir
 from time import localtime, strftime
 from configparser import ConfigParser
 import base64
+
+
+print('More information at https://github.com/Nyanm/Saccharomyces-cerevisiae')
 
 
 def decode_b64(msg: str, dst: str):
@@ -139,7 +142,11 @@ class Config:
         for data_path in path_list:
             __key, __value = data_path
             if not path.exists(__value):
-                timber.error('%s not found, please check your file directory.' % __key)
+                if __key == 'output path':
+                    timber.warning('output path not found, the program will try to make one.')
+                    mkdir(__value)
+                else:
+                    timber.error('%s not found, please check your file directory.' % __key)
 
     def set_init_sign(self, set_bool: bool = True):
         self.cfg.set('Init', 'is initialized', str(set_bool))

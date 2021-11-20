@@ -139,9 +139,9 @@ def get_ap_card(ap_card: int) -> str:
     else:
         card_file += ('0%s_' % card_ver)
     if is_r:
-        card_file += ('R%s' % ap_card[1:].zfill(4))
+        card_file += ('R%s' % ap_card[2:].zfill(4))
     elif is_s:
-        card_file += ('S%s' % ap_card[1:].zfill(4))
+        card_file += ('S%s' % ap_card[2:].zfill(4))
     else:
         card_file += ap_card[1:].zfill(4)
     return cfg.game_dir + '/graphics/ap_card/%s.png' % card_file
@@ -397,7 +397,7 @@ def generate_mini_profile(profile: list, vf: float, vf_specific: list = None) ->
         star_anc.plot()
 
     if vf_specific:
-        vfs, rank = vf_specific
+        vfs, rank = vf_specific[0], vf_specific[1]
         vf_text = load_vf(vfs, is_text=True)
         vf_raw = cv2.imread(img_archive + '/force/font_force_m.png', cv2.IMREAD_UNCHANGED)
 
@@ -425,7 +425,11 @@ def generate_mini_profile(profile: list, vf: float, vf_specific: list = None) ->
     pen.text((316, 132), '%.3f' % vf, color_l_white, vf_font)
     pen.text((153, 33), aka_name, color_l_white, aka_font)
     pen.text((153, 57), user_name, color_l_white, name_font)
-    pen.text((46, 214), 'Asphyxia CORE', color_white, ser_font)
+    if vf_specific:
+        time_str = vf_specific[2]
+        pen.text((46, 214), 'Played at %s' % time_str, color_white, ser_font)
+    else:
+        pen.text((46, 214), 'Asphyxia CORE', color_white, ser_font)
 
     text_layer = np.array(text_layer)
     png_superimpose(bg, text_layer)

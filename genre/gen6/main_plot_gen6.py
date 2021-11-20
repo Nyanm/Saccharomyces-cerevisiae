@@ -282,10 +282,10 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         eff_anc = AnchorImage(bg, 'eff box', eff_box, free=(1019, 90), father=side_field)
         eff = length_uni(eff_ill_font, single_data[9 + m_type * 3], 260)
         eff_text_anc = AnchorText(bg, 'eff text', eff, pen, eff_ill_font, free=(7, 162), father=eff_anc)
-        
+
         eff_anc.plot()
         eff_text_anc.plot((255, 255, 255))
-        
+
         ill_box = cv2.imread(img_archive + '/ms_sel/box_illustrated.png', cv2.IMREAD_UNCHANGED)
         ill_anc = AnchorImage(bg, 'ill box', ill_box, free=(1052, 90), father=side_field)
         ill = length_uni(eff_ill_font, single_data[8 + m_type * 3], 260)
@@ -308,7 +308,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         yeast_bg_anc.plot(0.65)
         yeast_anc.plot(color_gray, pos='c')
 
-        profile_img = generate_mini_profile(profile, vol_force, [vf / 2, rank])
+        profile_img = generate_mini_profile(profile, vol_force, [vf / 2, rank, real_time])
         profile_anc = AnchorImage(bg, 'profile', profile_img, (40, (540 - profile_img.shape[1]) // 2), yeast_field)
         profile_anc.plot()
 
@@ -512,6 +512,191 @@ def plot_b50(music_map: list, profile: list) -> str:
         return msg
 
 
+def plot_level(music_map: list, profile: list, level: int, threshold: int):
+    """
+    Plot function to list single level records (above a specific score)
+    """
+    user_name, ap_card, aka_name, skill, crew_id = profile
+    lv_map = []
+    for record in music_map:
+        if int(record[8]) == level and record[3] >= threshold:
+            lv_map.append(record)
+
+    lv_map.sort(key=lambda x: x[3], reverse=True)
+    length = len(lv_map)
+    msg = '|Level.%d       |Threshold = %d\n|No.  |Score    |Grade |Clear |VF     |Name\n' % (level, threshold)
+    for index in range(length):
+        record = lv_map[index]
+        msg += '|%-5d|%-9s|%-6s|%-6s|%.3f |%s\n' % \
+               (index + 1, record[3], grade_table[record[5]], clear_table[record[4]], record[10], record[7])
+    timber.info('Generate level.%d scores complete.\n\n%s\n' % (level, msg))
+
+    try:
+        music_map.sort(key=lambda x: x[10], reverse=True)
+        music_b50 = music_map[:50]
+        vol_force = get_overall_vf(music_b50)
+
+        """
+        Generate ingredients
+        """
+        # Stipulate the size of the background & generate
+        px_prologue, px_chapters, px_epilogue = 140, 144, 70
+        y_px, x_px = px_prologue + px_chapters * (length // 2 + 1) + px_epilogue, 1280
+        bg = generate_hex_bg((y_px, x_px))
+
+        # Init text layer
+        blank_layer = np.ones((y_px, x_px, 3), dtype=np.uint8) * 154  # Makeshift
+        text_layer = Image.fromarray(blank_layer)
+        text_layer.putalpha(1)
+        pen = ImageDraw.Draw(text_layer)
+
+        # Load image ingredients
+        level_ref, clear_ref, grade_ref = 0, 0.58, 0.42
+        level_list, clear_list, grade_list = load_level(level_ref), load_clear(clear_ref), load_grade(grade_ref)
+        box = cv2.imread(img_archive + '/bg/box_semi.png', cv2.IMREAD_UNCHANGED)
+        box_y, box_x, chn = box.shape
+
+        # Genesis
+        preface = Anchor(bg, 'preface')  # supreme anchor
+        prologue = Anchor(bg, 'prologue', free=(0, 0), father=preface)
+        chapters = Anchor(bg, 'chapter', free=(px_prologue, 0), father=preface)
+
+        cell_gap = 20  # Cell gap defines who far between two adjacent boxes, both x axis and y axis
+        cell_margin = (x_px - 2 * (box_x + cell_gap)) // 2
+        cells = Anchor(bg, 'cells', free=(0, cell_margin), father=chapters)
+        cells.creat_grid(((length // 2 + 1), 1), (px_chapters, box_x + cell_gap))
+
+        epilogue = Anchor(bg, 'epilogue', free=(y_px - px_epilogue, 0), father=preface)
+
+        """
+        Prologue: User profile
+        """
+        # Profile
+        profile_img = generate_mini_profile(profile, vol_force)
+        profile_margin = cell_gap // 2 + cell_margin + (box_x - profile_img.shape[1]) // 2
+        profile_anc = AnchorImage(bg, 'profile', profile_img, (30, profile_margin), father=prologue)
+        profile_anc.plot()
+
+        # Level title
+        title_ing = load_bar('title', is_bg=True)
+        title_bg = {'validity': True, 'image': title_ing[3], 'pos': title_ing[0].shape[1]}
+        title_box = generate_bar(title_ing[0:3], box_x, title_bg)
+        title_anc = AnchorImage(bg, 'title box', title_box, (55, (x_px + cell_margin) // 2), father=preface)
+        title_anc.plot()
+
+        title_font = ImageFont.truetype(font_continuum, 28, encoding='utf-8')
+        title_text = AnchorText(bg, 'title', 'LEVEL %d    Threshold = %d' % (level, threshold),
+                                pen, title_font, (4, 52), title_anc)
+        title_text.plot(color_white)
+
+        """
+        Chapter 1-?
+        """
+        # Set data box and fonts
+        box_anc = AnchorImage(bg, 'data box', box, free=(cell_gap // 2, cell_gap // 2), father=cells)
+
+        level_font = ImageFont.truetype(font_continuum, 17, encoding='utf-8')
+        title_font = ImageFont.truetype(font_DFHS, 26, encoding='utf-8', index=0)
+        score_h_font = ImageFont.truetype(font_DFHS, 44, encoding='utf-8', index=0)
+        score_l_font = ImageFont.truetype(font_DFHS, 32, encoding='utf-8', index=0)
+        vf_str_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8', index=0)
+        vf_num_font = ImageFont.truetype(font_continuum, 29, encoding='utf-8')
+
+        h_size, l_size = score_h_font.getsize('0')[0], score_l_font.getsize('0')[0]
+
+        for index in range(length):
+            is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf, exs = lv_map[index]
+
+            box_anc.set_grid((((index + 1) // 2), (1 - index % 2)))
+            box_anc.plot()
+
+            # Load and superimpose jacket
+            jk = get_jacket(mid, m_type, 's')
+            jk_anc = AnchorImage(bg, 'jacket', jk, free=(8, 17), father=box_anc)
+            jk_anc.plot()
+
+            # Level box
+            if m_type == 3:
+                level_box = level_list[m_type + int(inf_ver)]
+            else:
+                level_box = level_list[m_type]
+            level_box_anc = AnchorImage(bg, 'level box', level_box, free=(14, 144), father=box_anc)
+            level_box_anc.plot()
+
+            level_num_anc = AnchorText(bg, 'level text', lv, pen, level_font, free=(2, 76), father=level_box_anc)
+            level_num_anc.plot(color_white)
+
+            # Clear mark & grade mark
+            clear_icon = clear_list[clear]
+            clear_anc = AnchorImage(bg, 'clear', clear_icon, free=(61, 147), father=box_anc)
+            clear_anc.plot()
+
+            grade_icon = grade_list[grade]
+            grade_anc = AnchorImage(bg, 'grade', grade_icon, free=(61, 202), father=box_anc)
+            grade_anc.plot()
+
+            # Title
+            title = length_uni(title_font, name, length=box_x - 300)
+            title_anc = AnchorText(bg, 'title', title, pen, title_font, free=(14, 271), father=box_anc)
+            title_anc.plot(color_black)
+
+            # Score contains two parts
+            score_field = Anchor(bg, 'score field', free=(63, 271), father=box_anc)
+            score = str(score).zfill(8)
+
+            score_color = [color_black for _ in range(8)]  # Let foremost '0's be gray
+            for __index in range(8):
+                if score[__index] != '0':
+                    break
+                score_color[__index] = color_gray
+
+            high_grid = Anchor(bg, 'high num grid', free=(0, 0), father=score_field)
+            high_grid.creat_grid((0, 3), (0, h_size))
+            high_num_anc = AnchorText(bg, 'high num', '', pen, score_h_font, father=high_grid)
+            for __index in range(0, 4):
+                high_num_anc.text = score[__index]
+                high_num_anc.set_grid((0, __index))
+                high_num_anc.plot(score_color[__index])
+
+            low_grid = Anchor(bg, 'low num grid', free=(10, h_size * 4), father=score_field)
+            low_grid.creat_grid((0, 3), (0, l_size))
+            low_num_anc = AnchorText(bg, 'low num', '', pen, score_l_font, father=low_grid)
+            for __index in range(0, 4):
+                low_num_anc.text = score[__index + 4]
+                low_num_anc.set_grid((0, __index))
+                low_num_anc.plot(score_color[__index + 4])
+
+            # 'VF' and its value
+            res_vf_field = Anchor(bg, 'respective vf field', free=(53, 488), father=box_anc)  # res = respective
+            res_vf_text_anc = AnchorText(bg, 'res vf text', 'SCORE    #%03d' % (index + 1),
+                                         pen, vf_str_font, (0, -97), res_vf_field)
+            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % (vf / 2), pen, vf_num_font, (20, -5), res_vf_field)
+
+            res_vf_text_anc.plot(color_black)
+            res_vf_num_anc.plot(get_vf_level(vf / 2, is_darker=True, is_color=True))
+
+        """
+        Epilogue: Special thanks to myself
+        """
+        finale_font = ImageFont.truetype(font_DFHS, 20, encoding='utf-8')
+        yeast_anc = AnchorText(bg, 'yeast', 'Generated by Saccharomyces cerevisiae',
+                               pen, finale_font, (20, x_px // 2), epilogue)
+        yeast_anc.plot(color_gray, pos='c')
+
+        text_layer = np.array(text_layer)
+        png_superimpose(bg, text_layer)
+        output_path = '%s/%s_LEVEL%d@%d.png' % (cfg.output, user_name, level, threshold)
+        cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
+        timber.info_show('Plot saved at [%s] successfully.' % output_path)
+
+        return msg
+
+    except Exception:
+        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n\n%s\n'
+                       % format_exc())
+        return msg
+
+
 def plot_summary(music_map: list, profile: list, lv_base: int):
     """
     Plot function to analyze user's record.
@@ -575,7 +760,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
 
     # Generate pure text message to return
     msg = '----------------Level Summary----------------\n' \
-          'Level    NC      HC      UC      PUC     ||    AAA     AAA+    S     ||      SUM\n'
+          'Level    NC      HC      UC      PUC     ||    AAA     AAA+    S       ||    SUM\n'
     for index in range(lv_base, 21):
         nc, hc, uc, puc = level_summary[index][2:6]
         aaa, aaa_plus, s, __sum = level_summary[index][14:]
@@ -900,13 +1085,19 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
 
             clear_pie = plot_pie(clear_data, clear_palette, clear_legend, (0.09, 1.05), pie_size, l_col=2)
             clear_pie = get_matplotlib(clear_pie)
-            clear_pie_anc = AnchorImage(bg, 'clear_pie', clear_pie, free=(-40, 140), father=pie_field)
-            clear_pie_anc.plot()
+            try:  # Nothing to plot
+                clear_pie_anc = AnchorImage(bg, 'clear_pie', clear_pie, free=(-40, 140), father=pie_field)
+                clear_pie_anc.plot()
+            except AttributeError:
+                pass
 
             grade_pie = plot_pie(grade_data, grade_palette, grade_legend, (-0.1, -0.43), pie_size, l_col=3)
             grade_pie = get_matplotlib(grade_pie)
-            grade_pie_anc = AnchorImage(bg, 'grade_pie', grade_pie, (-200, 520), father=pie_field)
-            grade_pie_anc.plot()
+            try:
+                grade_pie_anc = AnchorImage(bg, 'grade_pie', grade_pie, (-200, 520), father=pie_field)
+                grade_pie_anc.plot()
+            except AttributeError:
+                pass
 
             """
             Chapter 5: Histogram
@@ -924,10 +1115,13 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
             hist_px = (500, 800)
             hist_size = (hist_px[1] / 100, hist_px[0] / 100)
             hist_data = hist_list[lv_cur]
-            hist = plot_histogram(hist_data, hist_size, grade_legend[-6:], grade_palette[-6:])
-            hist = get_matplotlib(hist)
-            hist_anc = AnchorImage(bg, 'histogram', hist, (50, 150), father=hist_plot_field)
-            hist_anc.plot()
+            try:  # Still nothing to do
+                hist = plot_histogram(hist_data, hist_size, grade_legend[-6:], grade_palette[-6:])
+                hist = get_matplotlib(hist)
+                hist_anc = AnchorImage(bg, 'histogram', hist, (50, 150), father=hist_plot_field)
+                hist_anc.plot()
+            except ValueError:
+                pass
 
         """
         Epilogue: Joint plot and violin plot
@@ -1029,7 +1223,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
 
         text_layer = np.array(text_layer)
         png_superimpose(bg, text_layer)
-        output_path = '%s/%s_summary.png' % (cfg.output, user_name)
+        output_path = '%s/%s_SUMMARY.png' % (cfg.output, user_name)
         cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
 
         try:

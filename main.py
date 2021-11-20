@@ -27,6 +27,7 @@ crew_id = {116: '0001', 95: '0002', 96: '0003', 100: '0004', 101: '0005', 102: '
 timber = Timber('main.py')
 skin_dict = {'gen6': main_plot_gen6, 'gen5': main_plot_gen5}
 
+# pyfiglet conflict with pyinstaller
 title_text = " ____                 _                                                   \n" \
              "/ ___|  __ _  ___ ___| |__   __ _ _ __ ___  _ __ ___  _   _  ___ ___  ___ \n" \
              "\___ \ / _` |/ __/ __| '_ \ / _` | '__/ _ \| '_ ` _ \| | | |/ __/ _ \/ __|\n" \
@@ -40,11 +41,12 @@ title_text = " ____                 _                                           
              "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
              "\n" \
              "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.0.0\n" \
+             "                              Version 1.1.0\n" \
              "                       Powered by Nyanm & Achernar\n\n" \
              "查分器功能  Score checker function field\n" \
              "[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n" \
-             "[3] 最近游玩记录  Recent play record     [4] 特定歌曲记录  Specific song record\n\n" \
+             "[3] 最近游玩记录  Recent play record     [4] 特定歌曲记录  Specific song record\n" \
+             "[5] 歌曲分数列表  Score list\n\n" \
              "通常功能    Common function field\n" \
              "[8] 搜索歌曲mid  Search mid              [9] 常见问题  FAQ\n" \
              "[0] 退出  Exit\n\n" \
@@ -77,13 +79,25 @@ class SDVX:
 
         # Read sdvx@asphyxia.db
         self.raw_data = open(cfg.db_dir, 'r')
-        self.music_map = [[False, 0, 0, 0, 0, 0, 0, '', '', '', 0.0, 0] for _ in range(cfg.map_size * 5 + 1)]
+        self.music_map = [[False, 0, 0, 0, 0, 0, 0, 'None', '0', '0', 0.0, 0] for _ in range(cfg.map_size * 5 + 1)]
         """
         music_map is a comprehensive map to store player's play record
         It contains 5-time of map_size lines, each 5 lines define the 5 difficulties of a single song
         Each line of music map should be:
-        [is_recorded: bool, mid: int, type: int, score: int, clear: int, grade: int, timestamp: int, 
-         name: str, lv: str, inf_ver: str, vf: float, exscore: int]
+        [
+            0:  is_recorded: bool, 
+            1:  mid: int, 
+            2:  music_type: int, 
+            3:  score: int, 
+            4:  clear: int, 
+            5:  grade: int, 
+            6:  timestamp: int, 
+            7:  name: str, 
+            8:  lv: str, 
+            9:  inf_ver: str, 
+            10: vf: float, 
+            11: exscore: int
+        ]
         """
         timber.info('Load data from sdvx@asphyxia.db')
 
@@ -191,6 +205,10 @@ class SDVX:
         sg_text = self.plot_skin.plot_single(self.music_map.copy(), self.profile, sg_index)
         input('%s\nPress enter to continue.' % sg_text)
 
+    def __get_level(self, level: int, threshold: int):
+        level_text = self.plot_skin.plot_level(self.music_map, self.profile, level, threshold)
+        input('%s\nPress enter to continue.' % level_text)
+
     def _1_get_b50(self):
         os.system('cls')
         self.__get_b50()
@@ -287,6 +305,36 @@ class SDVX:
         print('\nPlay record for "%s":' % ''.join(sep_arg))
         self.__get_single(sg_index)
 
+    def _5_get_level(self):
+        os.system('cls')
+        level = input('输入需要查询的歌曲等级\n'
+                      'Enter the level you want to query (1~20):')
+        timber.info('Level "%s"' % level)
+        try:
+            level = int(level)
+            if level > 20 or level < 1:
+                timber.warning('Invalid level number. Please enter a positive number no more than 20.')
+                return
+        except ValueError:
+            timber.warning('Invalid input. Please enter a positive number no more than 20.')
+            return
+
+        threshold = input('输入所查的最低分数，默认查询全部\n'
+                          'Enter the bottom score you want to query, default as 0:')
+        if not threshold:
+            threshold = 0
+        try:
+            threshold = int(threshold)
+            if threshold > 10000000 or threshold < 0:
+                timber.warning('Invalid score. Please enter a positive number no more than 10000000.')
+                return
+        except ValueError:
+            timber.warning('Invalid input. Please enter a positive number no more than 10000000.')
+            return
+
+        print('Score list for level %d above %d score:\n' % (level, threshold))
+        self.__get_level(level, threshold)
+
     def _8_search(self):
         os.system('cls')
         __msg = '输入想要查询的歌曲的相关信息(曲名、作者或者梗)后回车，不区分大小写\n' \
@@ -379,6 +427,7 @@ class SDVX:
             '2': self._2_get_summary,
             '3': self._3_get_recent,
             '4': self._4_get_specific,
+            '5': self._5_get_level,
             '8': self._8_search,
             '9': self._9_faq,
             '0': self._0_see_you_next_time,
