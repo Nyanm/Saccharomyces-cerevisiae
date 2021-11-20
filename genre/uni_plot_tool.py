@@ -487,3 +487,8 @@ def generate_bar(gradients: list or tuple, length: int, bg: dict) -> np.array:
         except KeyError:
             raise Warning('Parameter missing, the corner will be omitted.')
     return img
+
+
+def validate_filename(file_str):
+    return file_str.replace('/', ' ').replace('\\', ' ').replace(':', ' ').replace('*', ' ') \
+        .replace('?', ' ').replace('\"', ' ').replace('<', ' ').replace('>', ' ').replace('|', ' ')

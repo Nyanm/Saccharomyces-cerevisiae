@@ -41,7 +41,7 @@ title_text = " ____                 _                                           
              "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
              "\n" \
              "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.1.0\n" \
+             "                              Version 1.1.2\n" \
              "                       Powered by Nyanm & Achernar\n\n" \
              "查分器功能  Score checker function field\n" \
              "[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n" \

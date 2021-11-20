@@ -314,10 +314,11 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
         text_layer = np.array(text_layer)
         png_superimpose(bg, text_layer)
-        output_path = '%s/%s_%s%s.png' % (cfg.output, user_name, mid, diff)
+        output_path = '%s/%s_%s%s.png' % (cfg.output, validate_filename(user_name), mid, diff)
         cv2.imwrite(output_path, bg[:1560, :540, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
 
         timber.info_show('Plot saved at [%s] successfully.' % output_path)
+
         return msg
 
     except Exception:
@@ -500,7 +501,7 @@ def plot_b50(music_map: list, profile: list) -> str:
 
         text_layer = np.array(text_layer)
         png_superimpose(bg, text_layer)
-        output_path = '%s/%s_B50.png' % (cfg.output, user_name)
+        output_path = '%s/%s_B50.png' % (cfg.output, validate_filename(user_name))
         cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
 
         timber.info_show('Plot saved at [%s] successfully.' % output_path)
@@ -685,7 +686,7 @@ def plot_level(music_map: list, profile: list, level: int, threshold: int):
 
         text_layer = np.array(text_layer)
         png_superimpose(bg, text_layer)
-        output_path = '%s/%s_LEVEL%d@%d.png' % (cfg.output, user_name, level, threshold)
+        output_path = '%s/%s_LEVEL%d@%d.png' % (cfg.output, validate_filename(user_name), level, threshold)
         cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
         timber.info_show('Plot saved at [%s] successfully.' % output_path)
 
@@ -1223,7 +1224,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
 
         text_layer = np.array(text_layer)
         png_superimpose(bg, text_layer)
-        output_path = '%s/%s_SUMMARY.png' % (cfg.output, user_name)
+        output_path = '%s/%s_SUMMARY.png' % (cfg.output, validate_filename(user_name))
         cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
 
         try:
