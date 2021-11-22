@@ -2,8 +2,6 @@
 
 A OpenCV &amp; PIL(Pillow) based sdvx@asphyxia score checker
 
----
-
 ## Introduction
 
 Simple python application to generate game record images in order to help you analyze your ability.
@@ -11,8 +9,6 @@ Simple python application to generate game record images in order to help you an
 You can download a built version directly. Also, it can run independently as python code in your IDE.
 
 Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by her which helps me a lot in designing gen6.plot_summary.
-
----
 
 ## Features
 
@@ -64,8 +60,6 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
    9. **FAQ**   
       Well it might be unqualified as a usable function.
 
----
-
 ## How to use
 
 ### I only use built version
@@ -87,8 +81,6 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
 + Something wrong happens between opencv-python and pyinstaller, as far as I know the opencv runs well in version 4.5.3.
 
 + Set the "test_mode" to "0" in cfg_read, otherwise the exe. file won't be able to find the correct path.
-
----
 
 ## Behind the code
 
