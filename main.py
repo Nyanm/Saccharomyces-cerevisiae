@@ -41,7 +41,7 @@ title_text = " ____                 _                                           
              "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
              "\n" \
              "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.1.2\n" \
+             "                              Version 1.1.3\n" \
              "                       Powered by Nyanm & Achernar\n\n" \
              "查分器功能  Score checker function field\n" \
              "[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n" \
@@ -338,15 +338,20 @@ class SDVX:
     def _8_search(self):
         os.system('cls')
         __msg = '输入想要查询的歌曲的相关信息(曲名、作者或者梗)后回车，不区分大小写\n' \
-                'Enter relative message(Name, Artist, Memes) about the song you want to search, not case-sensitive:'
+                'Enter relative message(Name, Artist, Memes) about the song you want to search, not case-sensitive:\n'
         search_str = input(__msg)
         timber.info('Searching "%s"' % search_str)
         if search_str:
 
             result_list = []
             for index in range(1, cfg.map_size):
-                if re.search(search_str, self.search_db[index], re.I):
-                    result_list.append(index)
+                try:
+                    if re.search(search_str, self.search_db[index], re.I):
+                        result_list.append(index)
+                except re.error:
+                    timber.info_clog('Invalid character (for regular expression) was entered, '
+                                     'which crashed this query. Press enter to continue.')
+                    return
 
             search_res = ('%d result(s) found:\n\n|No  |MID   |[Name]  [Artist]\n' % len(result_list))
             for index in range(len(result_list)):
