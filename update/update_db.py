@@ -1,5 +1,5 @@
 from cfg_read import local_dir, cfg
-from cfg_read import decode_b64, jis_2_utf
+from .common import decode_b64, jis_2_utf, amend_jis
 from xml.etree.cElementTree import parse
 import numpy as np
 import os
@@ -25,39 +25,29 @@ def update_db():
         try:
             # Fill up each line of level_table.npy
             mid = int(root[index].attrib['id'])
-            name = root[index][0][1].text \
-                .replace("驫", "ā").replace("骭", "ü").replace("驩", "Ø").replace("罇", "ê").replace("曩", "è") \
-                .replace("齷", "é").replace("騫", "á").replace("曦", "à").replace("龕", "€").replace("趁", "Ǣ") \
-                .replace("蹇", "₂").replace("彜", "ū").replace("雋", "Ǜ").replace("隍", "Ü").replace("鬻", "♃") \
-                .replace("鬥", "Ã").replace("鬆", "Ý").replace("齶", "♡").replace("齲", "❤").replace("躔", "★") \
-                .replace('釁', '🍄').replace('頽', 'ä').replace('黻', '*')
-            artist = root[index][0][3].text \
-                .replace("驫", "ā").replace("骭", "ü").replace("驩", "Ø").replace("罇", "ê").replace("曩", "è") \
-                .replace("齷", "é").replace("騫", "á").replace("曦", "à").replace("龕", "€").replace("趁", "Ǣ") \
-                .replace("蹇", "₂").replace("彜", "ū").replace("雋", "Ǜ").replace("隍", "Ü").replace("鬻", "♃") \
-                .replace("鬥", "Ã").replace("鬆", "Ý").replace("齶", "♡").replace("齲", "❤").replace("躔", "★") \
-                .replace('釁', '🍄').replace('頽', 'ä').replace('黻', '*')
+            name = amend_jis(root[index][0][1].text)
+            artist = amend_jis(root[index][0][3].text)
             bpm_max = int(root[index][0][6].text)
             bpm_min = int(root[index][0][7].text)
             version = int(root[index][0][13].text)
             inf_ver = int(root[index][0][15].text)
 
             nov_lv = int(root[index][1][0][0].text)
-            nov_ill = root[index][1][0][1].text
-            nov_eff = root[index][1][0][2].text
+            nov_ill = amend_jis(root[index][1][0][1].text)
+            nov_eff = amend_jis(root[index][1][0][2].text)
             adv_lv = int(root[index][1][1][0].text)
-            adv_ill = root[index][1][1][1].text
-            adv_eff = root[index][1][1][2].text
+            adv_ill = amend_jis(root[index][1][1][1].text)
+            adv_eff = amend_jis(root[index][1][1][2].text)
             exh_lv = int(root[index][1][2][0].text)
-            exh_ill = root[index][1][2][1].text
-            exh_eff = root[index][1][2][2].text
+            exh_ill = amend_jis(root[index][1][2][1].text)
+            exh_eff = amend_jis(root[index][1][2][2].text)
             inf_lv = int(root[index][1][3][0].text)
-            inf_ill = root[index][1][3][1].text
-            inf_eff = root[index][1][3][2].text
+            inf_ill = amend_jis(root[index][1][3][1].text)
+            inf_eff = amend_jis(root[index][1][3][2].text)
             try:
                 mxm_lv = int(root[index][1][4][0].text)
-                mxm_ill = root[index][1][4][1].text
-                mxm_eff = root[index][1][4][2].text
+                mxm_ill = amend_jis(root[index][1][4][1].text)
+                mxm_eff = amend_jis(root[index][1][4][2].text)
             except IndexError:
                 mxm_lv = 0
                 mxm_ill = 'dummy'

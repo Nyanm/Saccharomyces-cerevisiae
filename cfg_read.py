@@ -2,29 +2,9 @@ import sys
 from os import path, mkdir
 from time import localtime, strftime
 from configparser import ConfigParser
-import base64
 
 
 print('More information at https://github.com/Nyanm/Saccharomyces-cerevisiae')
-
-
-def decode_b64(msg: str, dst: str):
-    __f = open(dst, 'wb')
-    __f.write(base64.b64decode(msg))
-    __f.close()
-
-
-def jis_2_utf(jis: str, utf: str):
-    jis_xml = open(jis, 'r', encoding='cp932')
-    jis_data = jis_xml.readlines()
-    jis_xml.close()
-
-    utf_xml = open(utf, 'w', encoding='utf-8')
-    utf_xml.write('<?xml version="1.0" encoding="utf-8"?>\n')
-    jis_data.pop(0)
-    for line in jis_data:
-        utf_xml.write(line)
-    utf_xml.close()
 
 
 # Turn off test mode when packing the program

@@ -348,9 +348,6 @@ class SDVX:
                 if re.search(search_str, self.search_db[index], re.I):
                     result_list.append(index)
 
-            if not result_list:  # Find nothing
-                return '', 0
-
             search_res = ('%d result(s) found:\n\n|No  |MID   |[Name]  [Artist]\n' % len(result_list))
             for index in range(len(result_list)):
                 __mid = result_list[index]

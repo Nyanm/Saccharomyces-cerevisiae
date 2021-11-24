@@ -1,5 +1,5 @@
 from cfg_read import local_dir, cfg
-from cfg_read import jis_2_utf
+from .common import jis_2_utf, amend_jis
 from xml.etree.cElementTree import parse
 import numpy as np
 import os
@@ -23,7 +23,7 @@ def update_aka():
     for index in range(aka_range):
         try:
             aka_id = int(root[index].attrib['id'])
-            aka_name = root[index][0].text
+            aka_name = amend_jis(root[index][0].text)
             aka_map.append([aka_id, aka_name])
         except IndexError:
             break

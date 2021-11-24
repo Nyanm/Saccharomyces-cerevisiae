@@ -280,7 +280,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
         eff_box = cv2.imread(img_archive + '/ms_sel/box_effected.png', cv2.IMREAD_UNCHANGED)
         eff_anc = AnchorImage(bg, 'eff box', eff_box, free=(1019, 90), father=side_field)
-        eff = length_uni(eff_ill_font, single_data[9 + m_type * 3], 260)
+        eff = length_uni(eff_ill_font, single_data[9 + m_type * 3], 250)
         eff_text_anc = AnchorText(bg, 'eff text', eff, pen, eff_ill_font, free=(7, 162), father=eff_anc)
 
         eff_anc.plot()
@@ -288,7 +288,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
         ill_box = cv2.imread(img_archive + '/ms_sel/box_illustrated.png', cv2.IMREAD_UNCHANGED)
         ill_anc = AnchorImage(bg, 'ill box', ill_box, free=(1052, 90), father=side_field)
-        ill = length_uni(eff_ill_font, single_data[8 + m_type * 3], 260)
+        ill = length_uni(eff_ill_font, single_data[8 + m_type * 3], 250)
         ill_text_anc = AnchorText(bg, 'ill text', ill, pen, eff_ill_font, free=(7, 162), father=ill_anc)
 
         ill_anc.plot()

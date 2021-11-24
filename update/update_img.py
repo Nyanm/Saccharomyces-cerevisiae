@@ -1,5 +1,5 @@
 from cfg_read import local_dir, cfg
-from cfg_read import decode_b64
+from .common import decode_b64
 from os import path, makedirs
 from genre.gen6 import dependency_plot_gen6
 import ifstools
