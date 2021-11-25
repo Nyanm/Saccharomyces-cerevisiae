@@ -54,13 +54,16 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
 ### 3. Universal function
 
    8. **Search mid**   
-      Enter anything related to the song, like the name, the author or the memes. Besides, I raised a project to collect those SDVX song memes to contribute this function. You can join it if you have some memes to share.
-   
+      Enter anything related to the song, like the name, the author or the memes. Besides, I raised a project to collect those SDVX song memes to contribute this function. You can join it if you have some memes to share.  
+      
+      The search result also shows the level, release date and Yomigana name at one time. This will help you to pin a song quickly when someone orders a specific song.
 
    9. **FAQ**   
       Well it might be unqualified as a usable function.
 
 ## How to use
+
+- Remember to update manually each time you have downloaded the latest release on GitHub!
 
 ### I only use built version
 
