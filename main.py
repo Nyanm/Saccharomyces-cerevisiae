@@ -41,7 +41,7 @@ title_text = " ____                 _                                           
              "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
              "\n" \
              "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.1.4\n" \
+             "                              Version 1.1.5\n" \
              "                       Powered by Nyanm & Achernar\n" \
              "\n" \
              "查分器功能  Score checker function field\n" \
@@ -129,7 +129,7 @@ class SDVX:
             except KeyError:
                 continue
 
-            if json_dict['__refid'] != cur_id:  # Specify user
+            if cur_id != cfg.card_num:  # Specify user
                 continue
 
             if line_type == 'music':
