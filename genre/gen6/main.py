@@ -213,7 +213,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         bpm_anc.plot()
 
         bpm_font = ImageFont.truetype(font_continuum, 20, encoding='utf-8')
-        bpm_str = get_bpm_str(single_data[3], single_data[4])
+        bpm_str = get_bpm_str(single_data[5], single_data[6])
         bpm_str_anc = AnchorText(bg, 'bpm', bpm_str, pen, bpm_font, (3, 53), bpm_anc)
         bpm_str_anc.plot((255, 255, 255))
 
@@ -225,7 +225,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         # Song name and artist
         name_font = ImageFont.truetype(font_DFHS, 22, encoding='utf-8')
         song_name = length_uni(name_font, single_data[1], 500)
-        artist = length_uni(name_font, single_data[2], 500)
+        artist = length_uni(name_font, single_data[3], 500)
         name_anc = AnchorText(bg, 'name', song_name, pen, name_font, (804, 34), side_field)
         artist_anc = AnchorText(bg, 'artist', artist, pen, name_font, (845, 34), side_field)
 
@@ -238,7 +238,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         cursor = cv2.imread(img_archive + '/ms_sel/cursor_level.png', cv2.IMREAD_UNCHANGED)
         cursor_factor = 0.82
         cursor = cv2.resize(cursor, dsize=None, fx=cursor_factor, fy=cursor_factor, interpolation=cv2.INTER_AREA)
-        lv_list = [single_data[7], single_data[10], single_data[13], str(int(single_data[16]) + int(single_data[19]))]
+        lv_list = [single_data[10], single_data[13], single_data[16], str(int(single_data[19]) + int(single_data[22]))]
 
         if m_type == 5:
             cursor_index = 4
@@ -264,7 +264,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
             if index <= 2:  # NOV, ADV, EXH
                 lv_text = diff_text_table[index + 1]
-            elif int(single_data[6]):  # INF, GRV, HVN, VVD
+            elif int(single_data[9]):  # INF, GRV, HVN, VVD
                 lv_text = diff_text_table[index + int(inf_ver) - 1]
             else:  # MXM
                 lv_text = diff_text_table[8]
@@ -280,7 +280,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
         eff_box = cv2.imread(img_archive + '/ms_sel/box_effected.png', cv2.IMREAD_UNCHANGED)
         eff_anc = AnchorImage(bg, 'eff box', eff_box, free=(1019, 90), father=side_field)
-        eff = length_uni(eff_ill_font, single_data[9 + m_type * 3], 250)
+        eff = length_uni(eff_ill_font, single_data[12 + m_type * 3], 250)
         eff_text_anc = AnchorText(bg, 'eff text', eff, pen, eff_ill_font, free=(7, 162), father=eff_anc)
 
         eff_anc.plot()
@@ -288,7 +288,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
         ill_box = cv2.imread(img_archive + '/ms_sel/box_illustrated.png', cv2.IMREAD_UNCHANGED)
         ill_anc = AnchorImage(bg, 'ill box', ill_box, free=(1052, 90), father=side_field)
-        ill = length_uni(eff_ill_font, single_data[8 + m_type * 3], 250)
+        ill = length_uni(eff_ill_font, single_data[11 + m_type * 3], 250)
         ill_text_anc = AnchorText(bg, 'ill text', ill, pen, eff_ill_font, free=(7, 162), father=ill_anc)
 
         ill_anc.plot()
@@ -729,8 +729,8 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         if not single_music[0]:
             continue
         nov, adv, exh, inf, mxm = \
-            int(single_music[7]), int(single_music[10]), int(single_music[13]), \
-            int(single_music[16]), int(single_music[19])
+            int(single_music[10]), int(single_music[13]), int(single_music[16]), \
+            int(single_music[19]), int(single_music[22])
         level_summary[nov][17] += 1
         level_summary[adv][17] += 1
         level_summary[exh][17] += 1

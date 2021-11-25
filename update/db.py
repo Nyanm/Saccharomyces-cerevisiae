@@ -18,17 +18,22 @@ def update_db():
     # Get level information from xml, then saved as npy file
     tree = parse(utf_path)
     root = tree.getroot()
-    music_map = [[''] * 22 for _ in range(cfg.map_size)]
+    music_map = [[''] * 25 for _ in range(cfg.map_size)]
     search_map = [[''] * 3 for _ in range(cfg.map_size)]
 
     for index in range(cfg.map_size):
         try:
             # Fill up each line of level_table.npy
             mid = int(root[index].attrib['id'])
+            label = root[index][0][0].text
             name = amend_jis(root[index][0][1].text)
+            name_yo = root[index][0][2].text
             artist = amend_jis(root[index][0][3].text)
+            artist_yo = root[index][0][4].text
+            music_ascii = root[index][0][5].text
             bpm_max = int(root[index][0][6].text)
             bpm_min = int(root[index][0][7].text)
+            date = int(root[index][0][8].text)
             version = int(root[index][0][13].text)
             inf_ver = int(root[index][0][15].text)
 
@@ -52,12 +57,18 @@ def update_db():
                 mxm_lv = 0
                 mxm_ill = 'dummy'
                 mxm_eff = 'dummy'
-            music_map[int(mid)] = [mid, name, artist, bpm_max, bpm_min, version, inf_ver, nov_lv, nov_ill,
-                                   nov_eff, adv_lv, adv_ill, adv_eff, exh_lv, exh_ill, exh_eff, inf_lv,
-                                   inf_ill, inf_eff, mxm_lv, mxm_ill, mxm_eff]
+            music_map[int(mid)] = [
+                label, name, name_yo, artist, artist_yo,
+                bpm_max, bpm_min, date, version, inf_ver,
+                nov_lv, nov_ill, nov_eff,
+                adv_lv, adv_ill, adv_eff,
+                exh_lv, exh_ill, exh_eff,
+                inf_lv, inf_ill, inf_eff,
+                mxm_lv, mxm_ill, mxm_eff
+            ]
 
             # Fill up each line of aka_db.npy
-            music_ascii = root[index][0][5].text.replace('_', ' ')
+            music_ascii = music_ascii.replace('_', ' ')
             search_map[int(mid)] = [name, artist, music_ascii]
 
         except IndexError:

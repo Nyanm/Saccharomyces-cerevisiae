@@ -64,6 +64,8 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
 
 ### I only use built version
 
+0. Download release, make sure there is no non-ASCII characters in your filepath.
+
 1. Run the bare .exe, it will generate a config.cfg and shut itself down.
       
 2. Fill up the config.cfg under the instruction, examples are giving there.

@@ -41,15 +41,18 @@ title_text = " ____                 _                                           
              "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
              "\n" \
              "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.1.3\n" \
-             "                       Powered by Nyanm & Achernar\n\n" \
+             "                              Version 1.1.4\n" \
+             "                       Powered by Nyanm & Achernar\n" \
+             "\n" \
              "查分器功能  Score checker function field\n" \
              "[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n" \
              "[3] 最近游玩记录  Recent play record     [4] 特定歌曲记录  Specific song record\n" \
-             "[5] 歌曲分数列表  Score list\n\n" \
+             "[5] 歌曲分数列表  Score list\n" \
+             "\n" \
              "通常功能    Common function field\n" \
              "[8] 搜索歌曲mid  Search mid              [9] 常见问题  FAQ\n" \
-             "[0] 退出  Exit\n\n" \
+             "[0] 退出  Exit\n" \
+             "\n" \
              "输入相应数字后回车以继续  Enter corresponding number to continue:"
 
 
@@ -111,6 +114,7 @@ class SDVX:
 
         # Get raw data from db
         self.last_index, self.skill = 0, 0
+        skill_time, profile_time, crew_time = 0, 0, 0
         for line in self.raw_data:
             json_dict = json.loads(line)
 
@@ -121,6 +125,7 @@ class SDVX:
 
             try:
                 cur_id = json_dict['__refid']
+                cur_time = json_dict['updatedAt']['$$date']
             except KeyError:
                 continue
 
@@ -131,17 +136,17 @@ class SDVX:
 
                 mid, m_type, score = json_dict['mid'], json_dict['type'], json_dict['score']
                 clear, grade = json_dict['clear'], json_dict['grade']
-                m_time = json_dict['updatedAt']['$$date']
+                m_time = cur_time
 
                 try:
-                    lv = self.level_table[mid][m_type * 3 + 7]
+                    lv = self.level_table[mid][m_type * 3 + 10]
                 except IndexError:
                     lv = 9961
                     timber.error('The value "map size" in config.cfg may be too small, '
                                  'try to set a bigger one and restart the application.')
                     cfg.set_init_sign(False)
 
-                inf_ver, name = self.level_table[mid][6], self.level_table[mid][1]
+                inf_ver, name = self.level_table[mid][9], self.level_table[mid][1]
                 if not lv:
                     lv, inf_ver = '0', '0'
 
@@ -159,13 +164,19 @@ class SDVX:
                     [True, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf, exscore]
 
             elif line_type == 'profile':
-                self.user_name, self.ap_card, self.aka_index = \
-                    json_dict['name'], json_dict['appeal'], json_dict['akaname']
+                if cur_time > profile_time:
+                    profile_time = cur_time
+                    self.user_name, self.ap_card, self.aka_index = \
+                        json_dict['name'], json_dict['appeal'], json_dict['akaname']
             elif line_type == 'skill':
-                self.skill = max(json_dict['base'], self.skill)
+                if cur_time > skill_time:
+                    skill_time = cur_time
+                    self.skill = max(json_dict['base'], self.skill)
             elif line_type == 'param':
                 if json_dict['type'] == 2 and json_dict['id'] == 1:
-                    self.crew_index = json_dict['param'][24]
+                    if cur_time > crew_time:
+                        crew_time = cur_time
+                        self.crew_index = json_dict['param'][24]
 
         if not self.last_index:
             timber.error('Music record not found, make sure you have at least played once (and saved successfully).')
@@ -353,11 +364,17 @@ class SDVX:
                                      'which crashed this query. Press enter to continue.')
                     return
 
-            search_res = ('%d result(s) found:\n\n|No  |MID   |[Name]  [Artist]\n' % len(result_list))
+            search_res = ('%d result(s) found:\n\n'
+                          '|No  |MID   |Level        |Date        |Yomigana\n'
+                          '     |Name  -  Artist\n\n' % len(result_list))
             for index in range(len(result_list)):
                 __mid = result_list[index]
-                search_res += '|%-4d|%-4d  |[%s]  [%s]\n' % \
-                              (index + 1, __mid, self.level_table[__mid][1], self.level_table[__mid][2])
+                __data = self.level_table[__mid]
+                __date = '%s/%s/%s' % (__data[7][:4], __data[7][4:6], __data[7][6:])
+                search_res += '|%-4d|%-4d  |%s/%s/%s/%s  |%-8s  |%s\n     |%s  -  %s\n\n' % \
+                              (index + 1, __mid, __data[10].zfill(2), __data[13].zfill(2), __data[16].zfill(2),
+                               str(int(__data[19]) + int(__data[22])).zfill(2), __date, __data[2], __data[1], __data[3])
+
             res_num = len(result_list)
 
             if res_num:
