@@ -11,9 +11,9 @@ from xml.etree.cElementTree import parse
 
 from cfg_read import local_dir, cfg
 from cfg_read import Timber
-from update.update_init import update
-from genre.gen6 import main_plot_gen6
-from genre.gen5 import main_plot_gen5
+from update.init import update
+import genre.gen6.main
+import genre.gen5.main
 
 # Dictionary for vf calculation
 clear_factor = {0: 0, 1: 0.5, 2: 1.0, 3: 1.02, 4: 1.05, 5: 1.10}
@@ -25,7 +25,7 @@ crew_id = {116: '0001', 95: '0002', 96: '0003', 100: '0004', 101: '0005', 102: '
            119: '0017', 120: '0018', 121: '0019'}
 
 timber = Timber('main.py')
-skin_dict = {'gen6': main_plot_gen6, 'gen5': main_plot_gen5}
+skin_dict = {'gen6': genre.gen6.main, 'gen5': genre.gen5.main}
 
 # pyfiglet conflict with pyinstaller
 title_text = " ____                 _                                                   \n" \

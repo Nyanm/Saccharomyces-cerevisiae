@@ -2,13 +2,13 @@ from cfg_read import cfg
 from cfg_read import Timber
 # from hashlib import sha256
 from os import path, listdir
-from ..uni_plot_tool import *
+from ..universal import *
 import time
 
 """
 Initialization
 """
-timber = Timber('tools_plot_gen6.py')
+timber = Timber('tools.py')
 
 # Reading config
 song_folders = cfg.game_dir + '/music'

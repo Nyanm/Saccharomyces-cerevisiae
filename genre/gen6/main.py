@@ -1,4 +1,4 @@
-from .tools_plot_gen6 import *
+from .tools import *
 import pandas as pd
 import seaborn as sns
 from os import remove

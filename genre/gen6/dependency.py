@@ -1,4 +1,4 @@
-from .data_plot_gen6 import *
+from .data import *
 
 dependency = {
     "version": ['6'],

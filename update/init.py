@@ -3,11 +3,11 @@ from cfg_read import Timber
 from os import path, makedirs, system
 from time import sleep
 
-from .update_db import update_db
-from .update_aka import update_aka
-from .update_img import update_img
+from .db import update_db
+from .aka import update_aka
+from .img import update_img
 
-timber = Timber('update_init.py')
+timber = Timber('init.py')
 
 
 def update(game_only: bool = False):

@@ -4,7 +4,7 @@ from xml.etree.cElementTree import parse
 import numpy as np
 import os
 import csv
-from .update_db_data import csv_data
+from .db_data import csv_data
 
 
 # WHY USING SHIFT-JIS???!!!
@@ -71,7 +71,7 @@ def update_db():
     music_map = np.array(music_map)
     np.save(local_dir + '/data/level_table.npy', music_map)
 
-    # Decompress csv data from update_db_data.py
+    # Decompress csv data from db_data.py
     csv_path = local_dir + '/data/raw_search_db.csv'
     decode_b64(csv_data, csv_path)
 

@@ -1,11 +1,12 @@
 from cfg_read import local_dir, cfg
 from .common import decode_b64
 from os import path, makedirs
-from genre.gen6 import dependency_plot_gen6
 import ifstools
 import shutil
 
-depend_list = {'gen6': dependency_plot_gen6}
+import genre.gen6.dependency
+
+depend_list = {'gen6': genre.gen6.dependency}
 
 
 def update_img():
