@@ -186,7 +186,7 @@ class SDVX:
         try:
             self.akaname = 'よろしくお願いします'  # If you have modified your aka name
             for akaname in self.aka_db:
-                if akaname[0] == self.aka_index:
+                if int(akaname[0]) == self.aka_index:
                     self.akaname = akaname[1]
                     break
             try:
@@ -401,7 +401,7 @@ class SDVX:
               '    But you, %s, you can join us and help us to develop new skins!\n' % (self.user_name, self.user_name))
         print('[3] 源码在哪里看？  Where can I get the source code?\n'
               ' -  https://github.com/Nyanm/Saccharomyces-cerevisiae, and welcome to star my project!\n'
-              '    Also, the up-to-date release will be uploaded to here.\n')
+              '    Also, the up-to-date release will be uploaded here.\n')
         print('[4] 为什么软件里有这么多工地英语？\n'
               ' -  说来惭愧，这软件最开始甚至只有英文，中文是我后来加的（\n')
 
