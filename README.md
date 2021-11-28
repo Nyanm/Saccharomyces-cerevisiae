@@ -63,11 +63,15 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
 
 ## How to use
 
-- Remember to update manually each time you have downloaded the latest release on GitHub!
+### Before using
+
+- Make sure there is no non-ASCII characters in your filepath. Remember, no Chinese characters, Japanese kana, Latin characters with accent, etc.
+
+- There are 2 ways to update the software's database (a few .npy tables). If you set the "config.cfg -> Init -> is initialized" to "0" or "False", the software will update both image archive and database, and it takes a lot of time to update images. If you set the "config.cfg -> Init -> version" to a smaller number, the software will only update the database.
+
+- Considering that the structure of .npy may change through software updates, you should give the software a soft update (through edit version number in config.cfg). Otherwise, the software may not work as expected.
 
 ### I only use built version
-
-0. Download release, make sure there is no non-ASCII characters in your filepath.
 
 1. Run the bare .exe, it will generate a config.cfg and shut itself down.
       
@@ -90,8 +94,6 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
 ## Behind the code
 
 Finally, a makeshift was found to pack all ingredients into one .exe file. Unfortunately, the application become ungodly big. Nonetheless, this helps it avoid the issue "BEMANI will sue"
-
-Plot maybe a verb.
 
 I use matplotlib and seaborn to generate graphs, which make the summary more like an academical report than a game profile. Fortunately, I can soon use them in my diploma paper. XD
 

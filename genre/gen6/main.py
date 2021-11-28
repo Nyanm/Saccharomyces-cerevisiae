@@ -351,13 +351,12 @@ def plot_b50(music_map: list, profile: list) -> str:
     """
     msg = ''
     msg += ('----------------VOLFORCE %.3f----------------\n' % vol_force)
-    msg += 'No.  VF      DIFF   SCORE    RANK  LHT  NAME\n'
+    msg += '|No.  |VF      |DIFF   |SCORE    |RANK  |GRA   |NAME\n'
     for index in range(50):
         diff = get_diff(music_b50[index][2], music_b50[index][9])
-        msg += ('#%-4d%.3f  %s%-2s  %-9s%-6s%-5s%s\n' % ((index + 1), music_b50[index][10] / 2, diff,
-                                                         music_b50[index][8], music_b50[index][3],
-                                                         clear_table[music_b50[index][4]],
-                                                         grade_table[music_b50[index][5]], music_b50[index][7]))
+        msg += ('|#%-4d|%-6.3f  |%s%-2s  |%-9s|%-6s|%-6s|%s\n'
+                % ((index + 1), music_b50[index][10] / 2, diff, music_b50[index][8], music_b50[index][3],
+                   clear_table[music_b50[index][4]], grade_table[music_b50[index][5]], music_b50[index][7]))
     timber.info('Generate B50 data complete.\n\n%s\n' % msg)
 
     try:  # If the plot module breaks down somehow, the function will try to return the pure text data.
@@ -513,23 +512,24 @@ def plot_b50(music_map: list, profile: list) -> str:
         return msg
 
 
-def plot_level(music_map: list, profile: list, level: int, threshold: int):
+def plot_level(music_map: list, profile: list, level: int, limits: tuple, grade_flag: str = None):
     """
     Plot function to list single level records (above a specific score)
     """
     user_name, ap_card, aka_name, skill, crew_id = profile
+    lim_l, lim_h = limits
     lv_map = []
     for record in music_map:
-        if int(record[8]) == level and record[3] >= threshold:
+        if int(record[8]) == level and lim_h >= record[3] >= lim_l:
             lv_map.append(record)
 
     lv_map.sort(key=lambda x: x[3], reverse=True)
     length = len(lv_map)
-    msg = '|Level.%d       |Threshold = %d\n|No.  |Score    |Grade |Clear |VF     |Name\n' % (level, threshold)
+    msg = '|Level.%d       |Limits = %d - %d\n|No.  |Score    |Grade |Clear |VF     |Name\n' % (level, lim_l, lim_h)
     for index in range(length):
         record = lv_map[index]
-        msg += '|%-5d|%-9s|%-6s|%-6s|%.3f |%s\n' % \
-               (index + 1, record[3], grade_table[record[5]], clear_table[record[4]], record[10], record[7])
+        msg += '|%-5d|%-9s|%-6s|%-6s|%-6.3f |%s\n' % \
+               (index + 1, record[3], grade_table[record[5]], clear_table[record[4]], record[10] / 2, record[7])
     timber.info('Generate level.%d scores complete.\n\n%s\n' % (level, msg))
 
     try:
@@ -586,8 +586,11 @@ def plot_level(music_map: list, profile: list, level: int, threshold: int):
         title_anc.plot()
 
         title_font = ImageFont.truetype(font_continuum, 28, encoding='utf-8')
-        title_text = AnchorText(bg, 'title', 'LEVEL %d    Threshold = %d' % (level, threshold),
-                                pen, title_font, (4, 52), title_anc)
+        title_text = AnchorText(bg, 'title', '', pen, title_font, (4, 52), title_anc)
+        if grade_flag:
+            title_text.text = 'LEVEL %d    GRADE %s' % (level, grade_flag)
+        else:
+            title_text.text = 'LEVEL %d    %d - %d' % (level, lim_l, lim_h)
         title_text.plot(color_white)
 
         """
@@ -686,7 +689,7 @@ def plot_level(music_map: list, profile: list, level: int, threshold: int):
 
         text_layer = np.array(text_layer)
         png_superimpose(bg, text_layer)
-        output_path = '%s/%s_LEVEL%d@%d.png' % (cfg.output, validate_filename(user_name), level, threshold)
+        output_path = '%s/%s_LEVEL%d@%d-%d.png' % (cfg.output, validate_filename(user_name), level, lim_l, lim_h)
         cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
         timber.info_show('Plot saved at [%s] successfully.' % output_path)
 

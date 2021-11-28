@@ -19,6 +19,11 @@ import genre.gen5.main
 clear_factor = {0: 0, 1: 0.5, 2: 1.0, 3: 1.02, 4: 1.05, 5: 1.10}
 grade_factor = {0: 0, 1: 0.80, 2: 0.82, 3: 0.85, 4: 0.88, 5: 0.91, 6: 0.94, 7: 0.97, 8: 1.00, 9: 1.02, 10: 1.05}
 
+# Dictionary for score list
+score_table = {'D': (0, 6499999), 'C': (6500000, 7499999), 'B': (7500000, 8699999), 'A': (8700000, 8999999),
+               'A+': (9000000, 9299999), 'AA': (9300000, 9499999), 'AA+': (9500000, 9699999), 'AAA': (9700000, 9799999),
+               'AAA+': (9800000, 9899999), 'S': (9900000, 10000000)}
+
 # Look up table for crew, only support crew with LIVE-2D
 crew_id = {116: '0001', 95: '0002', 96: '0003', 100: '0004', 101: '0005', 102: '0006', 103: '0007', 104: '0008',
            105: '0009', 106: '0010', 107: '0011', 109: '0012', 112: '0013', 113: '0014', 117: '0015', 118: '0016',
@@ -41,7 +46,7 @@ title_text = " ____                 _                                           
              "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
              "\n" \
              "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.1.5\n" \
+             "                              Version 1.1.6\n" \
              "                       Powered by Nyanm & Achernar\n" \
              "\n" \
              "查分器功能  Score checker function field\n" \
@@ -216,8 +221,8 @@ class SDVX:
         sg_text = self.plot_skin.plot_single(self.music_map.copy(), self.profile, sg_index)
         input('%s\nPress enter to continue.' % sg_text)
 
-    def __get_level(self, level: int, threshold: int):
-        level_text = self.plot_skin.plot_level(self.music_map, self.profile, level, threshold)
+    def __get_level(self, level: int, limits: tuple, grade_flag: str):
+        level_text = self.plot_skin.plot_level(self.music_map, self.profile, level, limits, grade_flag)
         input('%s\nPress enter to continue.' % level_text)
 
     def _1_get_b50(self):
@@ -330,21 +335,49 @@ class SDVX:
             timber.warning('Invalid input. Please enter a positive number no more than 20.')
             return
 
-        threshold = input('输入所查的最低分数，默认查询全部\n'
-                          'Enter the bottom score you want to query, default as 0:')
-        if not threshold:
-            threshold = 0
-        try:
-            threshold = int(threshold)
-            if threshold > 10000000 or threshold < 0:
-                timber.warning('Invalid score. Please enter a positive number no more than 10000000.')
-                return
-        except ValueError:
-            timber.warning('Invalid input. Please enter a positive number no more than 10000000.')
-            return
+        threshold = input('输入查询的分数等级，或者指定所查的分数上下限。\n'
+                          'Enter the grade you want to query. Or you can stipulate the score ceiling and floor.\n'
+                          'Examples:\n'
+                          '|Input            |Translated score limit(inclusive)\n'
+                          '|B                |7500000-8699999\n'
+                          '|AA+              |9500000-9699999\n'
+                          '|S                |9900000-10000000\n'
+                          '|                 |      0-10000000\n'
+                          '|9000000-9650000  |9000000-9650000\n\n').upper().replace('P', '+')
+        timber.info('Score limit %s' % threshold)
 
-        print('Score list for level %d above %d score:\n' % (level, threshold))
-        self.__get_level(level, threshold)
+        if not threshold:  # entered nothing, default as querying all
+            limits, grade_flag = (0, 10000000), 'ALL'
+            print('Score list for all level %d songs:\n' % level)
+        else:  # entered something, need further validity check
+            try:
+                # scores at a specific grade
+                limits = score_table[threshold]
+                grade_flag = threshold
+            except KeyError:
+                # scores between 2 limits
+
+                # thou should enter only 2 numbers separated with '-'
+                limits = threshold.split('-')
+                if len(limits) != 2:
+                    timber.warning('Invalid score. Please enter two positive numbers separated with "-".')
+                    return
+
+                try:  # thou should enter numbers between 0 and 10m
+                    lim_1, lim_2 = int(limits[0]), int(limits[1])
+                    if lim_1 > 10000000 or lim_1 < 0 or lim_2 > 10000000 or lim_2 < 0:
+                        raise ValueError('')
+                except ValueError:
+                    timber.warning('Invalid input. Please enter two positive numbers no more than 10000000.')
+                    return
+
+                limits, grade_flag = (min(lim_1, lim_2), max(lim_1, lim_2)), None
+
+            if grade_flag:
+                print('Score list for level %d at grade %s:\n' % (level, grade_flag))
+            else:
+                print('Score list for level %d in %d - %d:\n' % (level, limits[0], limits[1]))
+        self.__get_level(level, limits, grade_flag)
 
     def _8_search(self):
         os.system('cls')
