@@ -318,7 +318,7 @@ class SDVX:
             not_found_handler()
             return
 
-        print('\nPlay record for "%s":' % ''.join(sep_arg))
+        print('\nPlay record for "%s":' % ' '.join(sep_arg))
         self.__get_single(sg_index)
 
     def _5_get_level(self):

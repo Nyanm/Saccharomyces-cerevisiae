@@ -240,8 +240,8 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         cursor = cv2.resize(cursor, dsize=None, fx=cursor_factor, fy=cursor_factor, interpolation=cv2.INTER_AREA)
         lv_list = [single_data[10], single_data[13], single_data[16], str(int(single_data[19]) + int(single_data[22]))]
 
-        if m_type == 5:
-            cursor_index = 4
+        if m_type == 4:  # if it is a mxm chart
+            cursor_index = 3
         else:
             cursor_index = m_type
 
