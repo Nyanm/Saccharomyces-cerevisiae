@@ -1,6 +1,6 @@
 # Saccharomyces-cerevisiae
 
-A OpenCV &amp; PIL(Pillow) based sdvx@asphyxia score checker
+An OpenCV &amp; PIL(Pillow) based sdvx@asphyxia score checker
 
 ## Introduction
 
@@ -19,7 +19,7 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
    
 
    2. **One file solution**  
-      The application can do all the things with only one file initially. Thanks to ifstools, it can draw images from HDD game data. 
+      It can do all the things with only one file initially. Thanks to ifstools, it can draw images from HDD game data. 
 
 
    3. **~~Interactive user interface~~**  
@@ -27,7 +27,7 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
    
 
    4. **Automatic upgrade (be in line with game version)**  
-      Once you received your newest and hottest game, application will check "ext" number in ea3-config and upgrade itself.
+      Once you received your newest and hottest game, it will check "ext" number in ea3-config and upgrade itself.
 
 ### 2. Score checker function
 
@@ -77,7 +77,7 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
       
 2. Fill up the config.cfg under the instruction, examples are giving there.
       
-3. Run the application again, it will initialize some data, and an image archive automatically from your HDD game.
+3. Run the software again, it will initialize some data, and an image archive automatically from your HDD game.
       
 4. Enter the number correspond to the function you want. It has no interactive interface, thus you should input your operate number and press enter.
 
@@ -93,7 +93,7 @@ Special thanks to Achernar (with no GitHub account XD). Amazing jobs was done by
 
 ## Behind the code
 
-Finally, a makeshift was found to pack all ingredients into one .exe file. Unfortunately, the application become ungodly big. Nonetheless, this helps it avoid the issue "BEMANI will sue"
+Finally, a makeshift (using base64 encoding to convert common byte files into UTF-8 coded python variable) was found to pack all ingredients into one .exe file. Unfortunately, the .exe build become ungodly big. Nonetheless, this helps it avoid the issue "BEMANI will sue"
 
 I use matplotlib and seaborn to generate graphs, which make the summary more like an academical report than a game profile. Fortunately, I can soon use them in my diploma paper. XD
 
