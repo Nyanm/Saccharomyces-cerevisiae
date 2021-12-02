@@ -58,6 +58,7 @@ Special thanks to Achernar (with an unknown GitHub account). Amazing jobs were d
       
       The search result also shows the level, release date, and Yomigana name at one time. This will help you to pin a song quickly when someone orders a specific song.
 
+
    9. **FAQ**   
       Well, it might be unqualified as a usable function.
 
