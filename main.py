@@ -46,7 +46,7 @@ title_text = " ____                 _                                           
              "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
              "\n" \
              "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.1.6\n" \
+             "                              Version 1.1.7\n" \
              "                       Powered by Nyanm & Achernar\n" \
              "\n" \
              "查分器功能  Score checker function field\n" \
