@@ -8,7 +8,7 @@ Simple python application to generate game record images to help you analyze you
 
 You can download a built version directly. Also, it can run independently as python code in your IDE.
 
-Special thanks to Achernar (with an unknown GitHub account). Amazing jobs were done by her, which helps me a lot in designing gen6.plot_summary.
+Special thanks to Achernar (with an unknown GitHub account XD). Amazing jobs were done by her, which helps me a lot in designing gen6.plot_summary.
 
 ## Features
 
@@ -68,9 +68,12 @@ Special thanks to Achernar (with an unknown GitHub account). Amazing jobs were d
 
 - The software will try to extract skin ingredients from game files during the initialization. Thus, a Gen 6 game (Exceed Gear) is requisite.  
 
+
 - Make sure there are no non-ASCII characters in your filepath.  
 
+
 - There are 2 ways to update the software's database (a few .npy tables). If you set the "config.cfg -> Init -> is initialized" to "0" or "False", the software will update both image archive and database, and it takes a lot of time to update images. If you set the "config.cfg -> Init -> version" to a smaller number, the software will only update the database.
+
 
 - Considering that the structure of .npy may change through software updates, you should give the software a soft update (through edit version number in config.cfg) each time you have downloaded the latest build. Otherwise, the software may not work as expected.
 
@@ -78,21 +81,21 @@ Special thanks to Achernar (with an unknown GitHub account). Amazing jobs were d
 
 1. Run the bare .exe, it will generate a config.cfg and shut itself down.
       
+
 2. Fill up the config.cfg under the instruction, examples are given there.
       
+
 3. Run the software again, it will initialize some data and an image archive automatically from your HDD game.
       
+
 4. Enter the number that corresponds to the function you want. It has no interactive interface, thus you should input your operating number and press enter.
 
 ### I want it run on my IDE
 
-+ Set the "test_mode" to "1" in cfg_read, otherwise the program won't be able to find the correct path.
+1. Using ```pip install -r requirement.txt``` to build a corresponding environment.
 
-### I want to build it on my own
 
-+ Something wrong happens between opencv-python and pyinstaller, as far as I know, the opencv runs well in version 4.5.3.
-
-+ Set the "test_mode" to "0" in cfg_read, otherwise the exe. file won't be able to find the correct path.
+2. Set the "test_mode" to "1" in cfg_read, otherwise the software won't be able to find the correct path.
 
 ## Behind the code
 
