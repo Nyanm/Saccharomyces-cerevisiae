@@ -1,8 +1,8 @@
 """
-pyinstaller -i sjf.ico -F main.py
+pyinstaller -i sjf.ico -F __init__.py
 """
-from main import SDVX
-from cfg_read import Timber
+from main.main import SDVX
+from main.cfg_read import Timber
 from traceback import format_exc
 
 timber = Timber('__init__.py')

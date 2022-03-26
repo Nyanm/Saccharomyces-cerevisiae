@@ -1,10 +1,10 @@
-from cfg_read import local_dir, cfg
+from main.main import local_dir, cfg
 from .common import decode_b64, jis_2_utf, amend_jis
 from xml.etree.cElementTree import parse
 import numpy as np
 import os
 import csv
-from .db_data import csv_data
+from .__db_data import csv_data
 
 
 # WHY USING SHIFT-JIS???!!!
@@ -82,7 +82,7 @@ def update_db():
     music_map = np.array(music_map)
     np.save(local_dir + '/data/level_table.npy', music_map)
 
-    # Decompress csv data from db_data.py
+    # Decompress csv data from __db_data.py
     csv_path = local_dir + '/data/raw_search_db.csv'
     decode_b64(csv_data, csv_path)
 

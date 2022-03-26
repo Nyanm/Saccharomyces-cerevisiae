@@ -1,5 +1,5 @@
-from cfg_read import cfg
-from cfg_read import Timber
+from main.main import cfg
+from main.main import Timber
 # from hashlib import sha256
 from os import path, listdir
 from ..universal import *

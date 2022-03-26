@@ -300,7 +300,7 @@ class TenDonate:
                   '↓↓↓   微信二维码   ↓↓↓\n',
         }
 
-        def get_uncanny_qy_str() -> str:
+        def get_uncanny_qr_str() -> str:
             _msg = ''
             _qr = qrcode.QRCode()
             _qr.add_data(base64.b64decode(uncanny_b64))
@@ -315,7 +315,7 @@ class TenDonate:
             return _msg
 
         qr = {
-            'EN': get_uncanny_qy_str(),
+            'EN': get_uncanny_qr_str(),
         }
         return msg, qr,
 

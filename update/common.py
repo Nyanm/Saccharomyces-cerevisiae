@@ -2,9 +2,9 @@ import base64
 
 
 def decode_b64(msg: str, dst: str):
-    __f = open(dst, 'wb')
-    __f.write(base64.b64decode(msg))
-    __f.close()
+    _f = open(dst, 'wb')
+    _f.write(base64.b64decode(msg))
+    _f.close()
 
 
 def jis_2_utf(jis: str, utf: str):

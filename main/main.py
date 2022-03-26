@@ -6,10 +6,10 @@ import time
 import numpy as np
 from xml.etree.cElementTree import parse
 
-from cfg_read import local_dir, cfg
-from cfg_read import Timber
+from .cfg_read import local_dir, cfg
+from .cfg_read import Timber
 from utli import draft, sheet
-from update.init import update
+from update.__init__ import update
 import genre.gen6.main
 import genre.gen5.main
 

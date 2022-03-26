@@ -1,4 +1,4 @@
-from cfg_read import local_dir, cfg
+from main.main import local_dir, cfg
 from .common import jis_2_utf, amend_jis
 from xml.etree.cElementTree import parse
 import numpy as np

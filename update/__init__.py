@@ -1,5 +1,5 @@
-from cfg_read import local_dir, cfg
-from cfg_read import Timber
+from main.main import local_dir, cfg
+from main.main import Timber
 from os import path, makedirs, system
 from time import sleep
 
@@ -7,7 +7,7 @@ from .db import update_db
 from .aka import update_aka
 from .img import update_img
 
-timber = Timber('init.py')
+timber = Timber('__init__.py')
 
 
 def update(game_only: bool = False):

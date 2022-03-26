@@ -1,4 +1,4 @@
-from cfg_read import local_dir, cfg
+from main.main import local_dir, cfg
 from .common import decode_b64
 from os import path, makedirs
 import ifstools
