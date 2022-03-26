@@ -116,7 +116,7 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
             b50_anc = AnchorImage(bg, 'b50', b50, (249, 43), father=jk_box_anc)
             b50_anc.plot()
 
-            vol_force = get_overall_vf(music_map[:50])
+            # vol_force = get_overall_vf(music_map[:50])
             vf_icon = load_vf(vol_force, is_small=True)
             vf_factor = 0.45
             vf_icon = cv2.resize(vf_icon, dsize=None, fx=vf_factor, fy=vf_factor, interpolation=cv2.INTER_AREA)

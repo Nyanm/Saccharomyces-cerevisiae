@@ -4,61 +4,18 @@ import json
 import sys
 import time
 import numpy as np
-import qrcode
-import base64
-from traceback import format_exc
 from xml.etree.cElementTree import parse
 
 from cfg_read import local_dir, cfg
 from cfg_read import Timber
+from utli import draft, sheet
 from update.init import update
 import genre.gen6.main
 import genre.gen5.main
 
-# Dictionary for vf calculation
-clear_factor = {0: 0, 1: 0.5, 2: 1.0, 3: 1.02, 4: 1.05, 5: 1.10}
-grade_factor = {0: 0, 1: 0.80, 2: 0.82, 3: 0.85, 4: 0.88, 5: 0.91, 6: 0.94, 7: 0.97, 8: 1.00, 9: 1.02, 10: 1.05}
-
-# Dictionary for score list
-score_table = {'D': (0, 6499999), 'C': (6500000, 7499999), 'B': (7500000, 8699999), 'A': (8700000, 8999999),
-               'A+': (9000000, 9299999), 'AA': (9300000, 9499999), 'AA+': (9500000, 9699999), 'AAA': (9700000, 9799999),
-               'AAA+': (9800000, 9899999), 'S': (9900000, 10000000)}
-
-# Look up table for crew, only support crew with LIVE-2D
-crew_id = {116: '0001', 95: '0002', 96: '0003', 100: '0004', 101: '0005', 102: '0006', 103: '0007', 104: '0008',
-           105: '0009', 106: '0010', 107: '0011', 109: '0012', 112: '0013', 113: '0014', 117: '0015', 118: '0016',
-           119: '0017', 120: '0018', 121: '0019'}
-
 timber = Timber('main.py')
 skin_dict = {'gen6': genre.gen6.main, 'gen5': genre.gen5.main}
-
-# pyfiglet conflict with pyinstaller
-title_text = " ____                 _                                                   \n" \
-             "/ ___|  __ _  ___ ___| |__   __ _ _ __ ___  _ __ ___  _   _  ___ ___  ___ \n" \
-             "\___ \ / _` |/ __/ __| '_ \ / _` | '__/ _ \| '_ ` _ \| | | |/ __/ _ \/ __|\n" \
-             " ___) | (_| | (_| (__| | | | (_| | | | (_) | | | | | | |_| | (_|  __/\__ \\\n" \
-             "|____/ \__,_|\___\___|_| |_|\__,_|_|  \___/|_| |_| |_|\__, |\___\___||___/\n" \
-             "                                                      |___/               \n" \
-             "                                       _     _            \n" \
-             "                ___ ___ _ __ _____   _(_)___(_) __ _  ___ \n" \
-             "               / __/ _ \ '__/ _ \ \ / / / __| |/ _` |/ _ \\\n" \
-             "              | (_|  __/ | |  __/\ V /| \__ \ | (_| |  __/\n" \
-             "               \___\___|_|  \___| \_/ |_|___/_|\__,_|\___|\n" \
-             "\n" \
-             "                    Simple SDVX@Asphyxia Score Checker                    \n" \
-             "                              Version 1.1.7\n" \
-             "                       Powered by Nyanm & Achernar\n" \
-             "\n" \
-             "查分器功能  Score checker function field\n" \
-             "[1] B50成绩查询   Best 50 Songs query    [2] 玩家点灯总结  User summary        \n" \
-             "[3] 最近游玩记录  Recent play record     [4] 特定歌曲记录  Specific song record\n" \
-             "[5] 歌曲分数列表  Score list\n" \
-             "\n" \
-             "通常功能    Common function field\n" \
-             "[8] 搜索歌曲mid  Search mid              [9] 常见问题  FAQ\n" \
-             "[0] 退出  Exit\n" \
-             "\n" \
-             "输入相应数字后回车以继续  Enter corresponding number to continue:"
+VERSION = [1, 2, 'alpha']
 
 
 class SDVX:
@@ -156,7 +113,7 @@ class SDVX:
                     lv, inf_ver = '0', '0'
 
                 try:
-                    vf = int(lv) * (score / 10000000) * clear_factor[clear] * grade_factor[grade] * 2
+                    vf = int(lv) * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade] * 2
                 except ValueError:
                     vf = 0.0
                 try:
@@ -195,7 +152,7 @@ class SDVX:
                     self.akaname = akaname[1]
                     break
             try:
-                self.crew_id = crew_id[self.crew_index]
+                self.crew_id = sheet.crew_id[self.crew_index]
             except KeyError:
                 self.crew_id = '0014'  # Gen 6 Rasis
 
@@ -231,8 +188,7 @@ class SDVX:
 
     def _2_get_summary(self):
         os.system('cls')
-        base_lv = input('This function will generate summaries form lv.base to lv.20. \n'
-                        'Please enter the lv.base you want, default as 17:')
+        base_lv = input(draft.TwoGetSummary.init_hint())
         timber.info('Get summary from level "%s"' % base_lv)
 
         if not base_lv:
@@ -251,7 +207,7 @@ class SDVX:
         self.__get_summary(base_lv)
 
     def _3_get_recent(self):
-        print('\nRecent play record:')
+        print(draft.ThreeGetRecent.init_hint())
         __music_map = self.music_map.copy()
         __music_map.sort(key=lambda x: x[6])
         latest = __music_map[-1]
@@ -261,14 +217,10 @@ class SDVX:
 
         def not_found_handler():
             timber.info('Record not found.')
-            input('Record not found. Press enter to continue.')
+            input(draft.FourGetSpecific.not_found())
 
         sg_index = 0
-        __msg = '\nNOV->1   ADV->2   EXH->3   INF/GRV/HVN/VVD/MXM->4\n' \
-                '输入指令形如[歌曲mid] [难度(可选)]，默认搜索最高难度，例如: 天极圈 -> 927 4 (或者 927)\n' \
-                'Enter operators like "[mid] [diff(optional)], Search highest difficulty as default, \n' \
-                'for example: Kyokuken -> 927 4 (or 927)"\n'
-        sep_arg = input(__msg).split()
+        sep_arg = input(draft.FourGetSpecific.init_hint()).split()
         timber.info('Get specific "%s"' % ' '.join(sep_arg))
 
         if len(sep_arg) == 1:  # Default highest difficulty
@@ -318,13 +270,12 @@ class SDVX:
             not_found_handler()
             return
 
-        print('\nPlay record for "%s":' % ' '.join(sep_arg))
+        print(draft.FourGetSpecific.search_res(sep_arg))
         self.__get_single(sg_index)
 
     def _5_get_level(self):
         os.system('cls')
-        level = input('输入需要查询的歌曲等级\n'
-                      'Enter the level you want to query (1~20):')
+        level = input(draft.FiveGetLevel.init_hint())
         timber.info('Level "%s"' % level)
         try:
             level = int(level)
@@ -335,24 +286,16 @@ class SDVX:
             timber.warning('Invalid input. Please enter a positive number no more than 20.')
             return
 
-        threshold = input('输入查询的分数等级，或者指定所查的分数上下限。\n'
-                          'Enter the grade you want to query. Or you can stipulate the score ceiling and floor.\n'
-                          'Examples:\n'
-                          '|Input            |Translated score limit(inclusive)\n'
-                          '|B                |7500000-8699999\n'
-                          '|AA+              |9500000-9699999\n'
-                          '|S                |9900000-10000000\n'
-                          '|                 |      0-10000000\n'
-                          '|9000000-9650000  |9000000-9650000\n\n').upper().replace('P', '+')
+        threshold = input(draft.FiveGetLevel.threshold()).upper().replace('P', '+')
         timber.info('Score limit %s' % threshold)
 
         if not threshold:  # entered nothing, default as querying all
             limits, grade_flag = (0, 10000000), 'ALL'
-            print('Score list for all level %d songs:\n' % level)
+            print(draft.FiveGetLevel.all_songs(level))
         else:  # entered something, need further validity check
             try:
                 # scores at a specific grade
-                limits = score_table[threshold]
+                limits = sheet.score_table[threshold]
                 grade_flag = threshold
             except KeyError:
                 # scores between 2 limits
@@ -374,16 +317,14 @@ class SDVX:
                 limits, grade_flag = (min(lim_1, lim_2), max(lim_1, lim_2)), None
 
             if grade_flag:
-                print('Score list for level %d at grade %s:\n' % (level, grade_flag))
+                print(draft.FiveGetLevel.grade_songs(level, grade_flag))
             else:
-                print('Score list for level %d in %d - %d:\n' % (level, limits[0], limits[1]))
+                print(draft.FiveGetLevel.limit_songs(level, limits[0], limits[1]))
         self.__get_level(level, limits, grade_flag)
 
     def _8_search(self):
         os.system('cls')
-        __msg = '输入想要查询的歌曲的相关信息(曲名、作者或者梗)后回车，不区分大小写\n' \
-                'Enter relative message(Name, Artist, Memes) about the song you want to search, not case-sensitive:\n'
-        search_str = input(__msg)
+        search_str = input(draft.EightSearch.init_hint())
         timber.info('Searching "%s"' % search_str)
         if search_str:
 
@@ -412,66 +353,35 @@ class SDVX:
 
             if res_num:
                 timber.info(search_res)
-                print('\n共搜索到%d个结果  %s' % (res_num, search_res))
+                print(draft.EightSearch.success(res_num, search_res))
             else:
-                print('\n未能搜索到结果  No search result found')
+                print(draft.EightSearch.failed())
                 timber.info('Search failed.')
         else:
-            print('Empty input. Please try again and at least enter something.')
-        input('Press enter to continue.')
+            print(draft.EightSearch.empty())
+        input(draft.CommonMsg.enter())
 
     def _9_faq(self):
         os.system('cls')
         timber.info('FAQ')
-        print('[1] 为什么新歌不显示？  Why some of the newest songs don\'t appear?\n'
-              'zh. 将config.cfg中的"is initialized"项置为"False"或"0"，重启软件，软件将强制对数据库进行更新。\n'
-              'en. Try to set the "is initialized" in config.cfg to "False" or "0" and restart the application. '
-              'This will force the application to update the databases.\n')
-        print('[2] 还有其他皮肤吗？  Is there any other skin?\n'
-              'zh. 显然这软件只有gen6一个默认皮肤:(\n'
-              '    但是%s，你可以加入我们来开发新的皮肤！\n'
-              'en. Apparently the only skin we have is the primary skin for Saccharomyces cerevisiae:[gen6] :(\n'
-              '    But you, %s, you can join us and help us to develop new skins!\n' % (self.user_name, self.user_name))
-        print('[3] 源码在哪里看？  Where can I get the source code?\n'
-              ' -  https://github.com/Nyanm/Saccharomyces-cerevisiae, and welcome to star my project!\n'
-              '    Also, the up-to-date release will be uploaded here.\n')
-        print('[4] 为什么软件里有这么多工地英语？\n'
-              ' -  说来惭愧，这软件最开始甚至只有英文，中文是我后来加的（\n')
+        print(draft.NineFAQ.first(self.user_name))
+        print(draft.NineFAQ.second())
 
-        input('Press enter to continue.')
+        input(draft.CommonMsg.enter())
 
     def _0_see_you_next_time(self):
         timber.info('Exit by operator number 0.')
-        print('\nSee you next time, %s' % self.user_name)
-        time.sleep(2)
+        print(draft.ZeroExit.farewell(self.user_name))
+        time.sleep(1.5)
         sys.exit(0)
 
     @staticmethod
     def _10_donate():
         os.system('cls')
         timber.info('Ali-pay is also recommended.')
-        print('恭喜你发现了月之暗面！这里是一个赞助页面，可以请开发者喝一杯咖啡~\n'
-              'Congratulations! You\'ve found the dark side of the moon!\n'
-              'Here is a donate page, where you can buy the developer a cup of coffee if you like this application.\n'
-              '↓↓↓ 微信二维码    Wechat QrCode ↓↓↓\n')
+        print(draft.TenDonate.init_hint())
 
-        __msg = ''
-        qr = qrcode.QRCode()
-        qr.add_data(
-            base64.b64decode('aHR0cHM6Ly92ZHNlLmJkc3RhdGljLmNvbS8vMTkyZDlhOThkNzgyZDljNzRjOTZmMDlkYjkzNzhkOTMubXA0')
-        )
-        __mat = qr.get_matrix()
-
-        for line in __mat:
-            for column in line:
-                if column:
-                    __msg += '  '
-                else:
-                    __msg += '██'
-            __msg += '\n'
-
-        print(__msg)
-        input('Press enter to return light side.')
+        input(draft.TenDonate.back_to_light())
 
     def input_handler(self):
         key_dict = {
@@ -488,7 +398,7 @@ class SDVX:
 
         os.system('cls')
         time.sleep(0.05)
-        print(title_text, end='')
+        print(draft.TitleMsg.title(VERSION), end='')
         while True:
             base_arg = input()
             timber.info('Get user operator %s' % base_arg)
@@ -497,15 +407,3 @@ class SDVX:
                 break
             except KeyError:
                 pass
-
-
-if __name__ == '__main__':
-    try:
-        sdvx = SDVX()
-        while True:
-            sdvx.input_handler()
-    except Exception:
-        timber.error('Fatal error occurs, please report the following message to developer.\n\n%s\n'
-                     % format_exc())
-
-# pyinstaller -i sjf.ico -F main.py

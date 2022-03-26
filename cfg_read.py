@@ -58,6 +58,7 @@ timber.info('test mode=%s' % test_mode)  # Initial logging
 
 # Read config.cfg
 class Config:
+    # TODO: ADD "LANGUAGE" OPTION
 
     def __init__(self):
         self.cfg = ConfigParser()
