@@ -2,7 +2,9 @@ from functools import wraps
 import base64
 import qrcode
 
-LAN = 'ZH'
+from main.cfg_read import cfg
+
+LAN = cfg.language
 DFT_LAN = 'EN'
 uncanny_b64 = 'aHR0cHM6Ly92ZHNlLmJkc3RhdGljLmNvbS8vMTkyZDlhOThkNzgyZDljNzRjOTZmMDlkYjkzNzhkOTMubXA0'
 
@@ -23,13 +25,13 @@ def _languageHandler(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        msg_list, _msg = func(*args, **kwargs), ''
-        for msg_dict in msg_list:
-            if msg_dict.get(LAN):
-                _msg += msg_dict[LAN]
+        msg_list = func(*args, **kwargs)
+        for index in range(len(msg_list)):
+            if msg_list[index].get(LAN):
+                msg_list[index] = msg_list[index].get(LAN)
             else:
-                _msg += msg_dict[DFT_LAN]
-        return _msg
+                msg_list[index] = msg_list[index].get(DFT_LAN)
+        return ''.join(msg_list)
 
     return wrapper
 

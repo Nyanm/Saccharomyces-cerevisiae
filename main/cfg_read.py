@@ -1,5 +1,6 @@
 from os import mkdir, path
 from configparser import ConfigParser
+import sys
 
 from logger import timber
 from dir import local_dir
@@ -15,6 +16,7 @@ class Config:
             self.create()
             timber.error('config.cfg not found, the program will try to generate a new one.\n'
                          'Press enter to continue.')
+            sys.exit(1)
 
         self.map_size, self.card_num, self.db_dir, self.game_dir, self.output, \
         self.skin_name, self.language, self.is_init, self.version = self.read()
@@ -73,7 +75,7 @@ class Config:
         is_init = self.cfg.getboolean('Init', 'is initialized')
         version = self.cfg.getint('Init', 'version')
 
-        timber.info('config.cfg load complete.\n\n'
+        timber.info('config.cfg load complete.\n'
                     'map size  :%d\ncard num  :%s\ndb dir    :%s\ngame dir  :%s\noutput    :%s\n'
                     'skin name :%s\nlanguage  :%s\nis init   :%s\nversion   :%d\n'
                     % (map_size, card_num, db_dir, game_dir, output, skin_name, language, str(is_init), version))
@@ -90,6 +92,7 @@ class Config:
                     mkdir(__value)
                 else:
                     timber.error('%s not found, please check your file directory.' % __key)
+                    sys.exit(1)
 
     def set_init_sign(self, set_bool: bool = True):
         self.cfg.set('Init', 'is initialized', str(set_bool))
@@ -101,4 +104,3 @@ class Config:
 
 
 cfg = Config()
-timber.info('config load successfully')

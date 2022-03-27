@@ -6,14 +6,16 @@ import time
 import numpy as np
 from xml.etree.cElementTree import parse
 
-from .cfg_read import local_dir, cfg
-from .cfg_read import Timber
+from .dir import local_dir
+from .cfg_read import cfg
+from .logger import timber
+from .parser import ASPParser
 from utli import draft, sheet
-from update.__init__ import update
+from update import update
 import genre.gen6.main
 import genre.gen5.main
 
-timber = Timber('main.py')
+
 skin_dict = {'gen6': genre.gen6.main, 'gen5': genre.gen5.main}
 VERSION = [1, 2, 'alpha']
 
@@ -27,6 +29,7 @@ class SDVX:
             self.plot_skin = skin_dict[cfg.skin_name]
         except KeyError:
             timber.error('Invalid skin name, please check your configurations.')
+            sys.exit(1)
 
         # Update check
         ea3_path = '/'.join(cfg.game_dir.split('/')[:-1]) + '/prop/ea3-config.xml'
@@ -42,30 +45,6 @@ class SDVX:
             update(game_only=True)
             cfg.set_version(cur_ver)
 
-        # Read sdvx@asphyxia.db
-        self.raw_data = open(cfg.db_dir, 'r')
-        self.music_map = [[False, 0, 0, 0, 0, 0, 0, 'None', '0', '0', 0.0, 0] for _ in range(cfg.map_size * 5 + 1)]
-        """
-        music_map is a comprehensive map to store player's play record
-        It contains 5-time of map_size lines, each 5 lines define the 5 difficulties of a single song
-        Each line of music map should be:
-        [
-            0:  is_recorded: bool, 
-            1:  mid: int, 
-            2:  music_type: int, 
-            3:  score: int, 
-            4:  clear: int, 
-            5:  grade: int, 
-            6:  timestamp: int, 
-            7:  name: str, 
-            8:  lv: str, 
-            9:  inf_ver: str, 
-            10: vf: float, 
-            11: exscore: int
-        ]
-        """
-        timber.info('Load data from sdvx@asphyxia.db')
-
         # Load level table
         try:
             self.level_table = np.load(local_dir + '/data/level_table.npy')
@@ -74,97 +53,8 @@ class SDVX:
         except FileNotFoundError:
             timber.error('Critical npy files not found, please delete the last line of config.cfg and restart.')
 
-        # Get raw data from db
-        self.last_index, self.skill = 0, 0
-        skill_time, profile_time, crew_time = 0, 0, 0
-        for line in self.raw_data:
-            json_dict = json.loads(line)
+        self.asp = ASPParser(db_dir=cfg.db_dir, map_size=cfg.map_size, card_num=cfg.card_num, aka_db=self.aka_db)
 
-            try:  # Some lines have no collection name
-                line_type = json_dict['collection']
-            except KeyError:
-                continue
-
-            try:
-                cur_id = json_dict['__refid']
-                cur_time = json_dict['updatedAt']['$$date']
-            except KeyError:
-                continue
-
-            if cur_id != cfg.card_num:  # Specify user
-                continue
-
-            if line_type == 'music':
-
-                mid, m_type, score = json_dict['mid'], json_dict['type'], json_dict['score']
-                clear, grade = json_dict['clear'], json_dict['grade']
-                m_time = cur_time
-
-                try:
-                    lv = self.level_table[mid][m_type * 3 + 10]
-                except IndexError:
-                    lv = 9961
-                    timber.error('The value "map size" in config.cfg may be too small, '
-                                 'try to set a bigger one and restart the application.')
-                    cfg.set_init_sign(False)
-
-                inf_ver, name = self.level_table[mid][9], self.level_table[mid][1]
-                if not lv:
-                    lv, inf_ver = '0', '0'
-
-                try:
-                    vf = int(lv) * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade] * 2
-                except ValueError:
-                    vf = 0.0
-                try:
-                    exscore = json_dict['exscore']
-                except KeyError:
-                    exscore = 0
-
-                self.last_index = mid * 5 + m_type
-                self.music_map[self.last_index] = \
-                    [True, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf, exscore]
-
-            elif line_type == 'profile':
-                if cur_time > profile_time:
-                    profile_time = cur_time
-                    self.user_name, self.ap_card, self.aka_index = \
-                        json_dict['name'], json_dict['appeal'], json_dict['akaname']
-            elif line_type == 'skill':
-                if cur_time > skill_time:
-                    skill_time = cur_time
-                    self.skill = max(json_dict['base'], self.skill)
-            elif line_type == 'param':
-                if json_dict['type'] == 2 and json_dict['id'] == 1:
-                    if cur_time > crew_time:
-                        crew_time = cur_time
-                        self.crew_index = json_dict['param'][24]
-
-        if not self.last_index:
-            timber.error('Music record not found, make sure you have at least played once (and saved successfully).')
-
-        # Unpack last record, profile, skill and param data
-        timber.info('Draw data from sdvx@asphyxia.db successfully.')
-        try:
-            self.akaname = 'よろしくお願いします'  # If you have modified your aka name
-            for akaname in self.aka_db:
-                if int(akaname[0]) == self.aka_index:
-                    self.akaname = akaname[1]
-                    break
-            try:
-                self.crew_id = sheet.crew_id[self.crew_index]
-            except KeyError:
-                self.crew_id = '0014'  # Gen 6 Rasis
-
-            timber.info('Profile data load successfully.\n\n'
-                        'user name   :%s\nappeal card :%d\nakaname     :%s\nskill       :%d\ncrew        :%s\n' %
-                        (self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id))
-        except AttributeError:
-            timber.error('Profile/Skill/Crew data not found, '
-                         'make sure you have at least played once (and saved successfully).')
-
-        self.profile = [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
-        timber.info('Initialization complete.')
 
     def __get_b50(self):
         b50_text = self.plot_skin.plot_b50(self.music_map.copy(), self.profile)
