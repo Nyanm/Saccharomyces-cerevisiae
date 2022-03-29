@@ -2,6 +2,8 @@
 
 An OpenCV &amp; PIL(Pillow) based sdvx@asphyxia score checker
 
+**/ / / 1.2.0 WIP, SOURCE CODE IS UNAVAILABLE CURRENTLY / / /**
+
 ## Introduction
 
 Simple python application to generate game record images to help you analyze your ability.

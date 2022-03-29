@@ -2,10 +2,8 @@
 pyinstaller -i sjf.ico -F __init__.py
 """
 from main.main import SDVX
-from main.cfg_read import Timber
+from main.logger import timber
 from traceback import format_exc
-
-timber = Timber('__init__.py')
 
 if __name__ == '__main__':
     try:

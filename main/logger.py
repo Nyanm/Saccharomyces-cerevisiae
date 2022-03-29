@@ -3,10 +3,7 @@ import sys
 
 from dir import local_dir, TEST_MODE
 
-# Clean timber.log up
 timber_path = local_dir + '/timber.log'
-f = open(timber_path, 'w', encoding='utf-8')
-f.close()
 
 file_handler = logging.FileHandler(filename=timber_path, mode='w')
 file_handler.setLevel(logging.DEBUG)

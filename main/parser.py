@@ -1,13 +1,12 @@
 import json
 import sys
-import numpy as np
 
 from logger import timber
 from utli import sheet
 
 
 class ASPParser:
-    def __init__(self, db_dir: str, map_size: int, card_num: str, aka_db: np.array):
+    def __init__(self, db_dir: str, map_size: int, card_num: str, aka_db):
 
         # load sdvx@asphyxia.db
         raw_data = open(db_dir, 'r')
@@ -109,6 +108,7 @@ class ASPParser:
         except AttributeError:
             timber.error('Profile/Skill/Crew data not found, '
                          'make sure you have at least played once (and saved successfully).')
+            sys.exit(1)
 
         self.profile = [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
         timber.info('Asphyxia database parse complete.')

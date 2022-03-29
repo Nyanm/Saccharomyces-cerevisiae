@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import sys
 import time
 import numpy as np
@@ -55,26 +54,25 @@ class SDVX:
 
         self.asp = ASPParser(db_dir=cfg.db_dir, map_size=cfg.map_size, card_num=cfg.card_num, aka_db=self.aka_db)
 
-
-    def __get_b50(self):
+    def _get_b50(self):
         b50_text = self.plot_skin.plot_b50(self.music_map.copy(), self.profile)
         input('%s\nPress enter to continue.' % b50_text)
 
-    def __get_summary(self, base_lv: int):
+    def _get_summary(self, base_lv: int):
         summary_text = self.plot_skin.plot_summary(self.music_map.copy(), self.profile, base_lv)
         input('%s\nPress enter to continue.' % summary_text)
 
-    def __get_single(self, sg_index: int):
+    def _get_single(self, sg_index: int):
         sg_text = self.plot_skin.plot_single(self.music_map.copy(), self.profile, sg_index)
         input('%s\nPress enter to continue.' % sg_text)
 
-    def __get_level(self, level: int, limits: tuple, grade_flag: str):
+    def _get_level(self, level: int, limits: tuple, grade_flag: str):
         level_text = self.plot_skin.plot_level(self.music_map, self.profile, level, limits, grade_flag)
         input('%s\nPress enter to continue.' % level_text)
 
     def _1_get_b50(self):
         os.system('cls')
-        self.__get_b50()
+        self._get_b50()
 
     def _2_get_summary(self):
         os.system('cls')
@@ -82,7 +80,7 @@ class SDVX:
         timber.info('Get summary from level "%s"' % base_lv)
 
         if not base_lv:
-            self.__get_summary(17)
+            self._get_summary(17)
             return
 
         try:
@@ -94,14 +92,14 @@ class SDVX:
             timber.warning('Invalid level number.')
             return
 
-        self.__get_summary(base_lv)
+        self._get_summary(base_lv)
 
     def _3_get_recent(self):
         print(draft.ThreeGetRecent.init_hint())
         __music_map = self.music_map.copy()
         __music_map.sort(key=lambda x: x[6])
         latest = __music_map[-1]
-        self.__get_single(latest[1] * 5 + latest[2])
+        self._get_single(latest[1] * 5 + latest[2])
 
     def _4_get_specific(self):
 
@@ -161,7 +159,7 @@ class SDVX:
             return
 
         print(draft.FourGetSpecific.search_res(sep_arg))
-        self.__get_single(sg_index)
+        self._get_single(sg_index)
 
     def _5_get_level(self):
         os.system('cls')
@@ -210,7 +208,7 @@ class SDVX:
                 print(draft.FiveGetLevel.grade_songs(level, grade_flag))
             else:
                 print(draft.FiveGetLevel.limit_songs(level, limits[0], limits[1]))
-        self.__get_level(level, limits, grade_flag)
+        self._get_level(level, limits, grade_flag)
 
     def _8_search(self):
         os.system('cls')
@@ -256,7 +254,6 @@ class SDVX:
         timber.info('FAQ')
         print(draft.NineFAQ.first(self.user_name))
         print(draft.NineFAQ.second())
-
         input(draft.CommonMsg.enter())
 
     def _0_see_you_next_time(self):
@@ -270,7 +267,6 @@ class SDVX:
         os.system('cls')
         timber.info('Ali-pay is also recommended.')
         print(draft.TenDonate.init_hint())
-
         input(draft.TenDonate.back_to_light())
 
     def input_handler(self):
