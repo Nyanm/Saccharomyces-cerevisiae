@@ -1,21 +1,19 @@
+# non-local packages
 import os
 import re
 import sys
 import time
-import numpy as np
-from xml.etree.cElementTree import parse
+from traceback import format_exc
 
-from .dir import local_dir
-from .cfg_read import cfg
-from .logger import timber
-from .parser import ASPParser
+# interior packages
+from utli.cfg_read import cfg
+from utli.logger import timber
+
+# exterior packages
 from utli import draft, sheet
-from update import update
-import genre.gen6.main
-import genre.gen5.main
+from genre import packet
+from parse import asp
 
-
-skin_dict = {'gen6': genre.gen6.main, 'gen5': genre.gen5.main}
 VERSION = [1, 2, 'alpha']
 
 
@@ -25,34 +23,10 @@ class SDVX:
 
         # Load skin
         try:
-            self.plot_skin = skin_dict[cfg.skin_name]
+            self.plot_skin = packet[cfg.skin_name]
         except KeyError:
             timber.error('Invalid skin name, please check your configurations.')
             sys.exit(1)
-
-        # Update check
-        ea3_path = '/'.join(cfg.game_dir.split('/')[:-1]) + '/prop/ea3-config.xml'
-        tree = parse(ea3_path)
-        root = tree.getroot()
-        cur_ver = int(root[1][4].text)
-
-        if not cfg.is_init:
-            update()
-            cfg.set_init_sign()
-            cfg.set_version(cur_ver)
-        elif cur_ver > cfg.version:
-            update(game_only=True)
-            cfg.set_version(cur_ver)
-
-        # Load level table
-        try:
-            self.level_table = np.load(local_dir + '/data/level_table.npy')
-            self.search_db = np.load(local_dir + '/data/search_db.npy')
-            self.aka_db = np.load(local_dir + '/data/aka_db.npy', allow_pickle=True)
-        except FileNotFoundError:
-            timber.error('Critical npy files not found, please delete the last line of config.cfg and restart.')
-
-        self.asp = ASPParser(db_dir=cfg.db_dir, map_size=cfg.map_size, card_num=cfg.card_num, aka_db=self.aka_db)
 
     def _get_b50(self):
         b50_text = self.plot_skin.plot_b50(self.music_map.copy(), self.profile)
@@ -293,3 +267,13 @@ class SDVX:
                 break
             except KeyError:
                 pass
+
+
+def main():
+    try:
+        sdvx = SDVX()
+        while True:
+            sdvx.input_handler()
+    except Exception:
+        timber.error('Fatal error occurs, please report the following message to developer.\n\n%s\n'
+                     % format_exc())

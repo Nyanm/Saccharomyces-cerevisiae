@@ -1,15 +1,17 @@
-from main.main import local_dir, cfg
-from .common import jis_2_utf, amend_jis
-from xml.etree.cElementTree import parse
-import numpy as np
 import os
 
+import numpy as np
+from xml.etree.cElementTree import parse
+
+from .common import jis_2_utf, amend_jis
+
+from utli.dir import local_dir
 
 aka_range = 500
 
 
-def update_aka():
-    jis_path = cfg.game_dir + '/others/akaname_parts.xml'
+def update_aka(game_dir):
+    jis_path = game_dir + '/others/akaname_parts.xml'
     utf_path = local_dir + '/data/akaname_parts.xml'
 
     # Set up akaname_parts encoded with UTF-8

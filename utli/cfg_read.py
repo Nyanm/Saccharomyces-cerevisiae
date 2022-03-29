@@ -2,8 +2,12 @@ from os import mkdir, path
 from configparser import ConfigParser
 import sys
 
-from logger import timber
-from dir import local_dir
+from xml.etree.cElementTree import parse
+
+from .logger import timber
+from .dir import local_dir
+
+from update import update
 
 
 # Read config.cfg
@@ -13,18 +17,44 @@ class Config:
         self.cfg = ConfigParser()
         self.path = local_dir + '/config.cfg'
         if not path.exists(self.path):
-            self.create()
+            self._create()
             timber.error('config.cfg not found, the program will try to generate a new one.\n'
                          'Press enter to continue.')
             sys.exit(1)
 
         self.map_size, self.card_num, self.db_dir, self.game_dir, self.output, \
-        self.skin_name, self.language, self.is_init, self.version = self.read()
-        self.validity_check()
+        self.skin_name, self.language, self.is_init, self.version = self._read()
 
-    def create(self):
-        __cfg = open(self.path, 'w', encoding='utf-8')
-        __cfg.write(
+        # validity check for paths
+        path_list = self.cfg.items('Directory')
+        for data_path in path_list:
+            __key, __value = data_path
+            if not path.exists(__value):
+                if __key == 'output path':
+                    timber.warning('output path not found, the program will try to make one.')
+                    mkdir(__value)
+                else:
+                    timber.error('%s not found, please check your file directory.' % __key)
+                    sys.exit(1)
+
+        # update check (from version date code)
+        ea3_path = '/'.join(self.game_dir.split('/')[:-1]) + '/prop/ea3-config.xml'
+        tree = parse(ea3_path)
+        root = tree.getroot()
+        cur_ver = int(root[1][4].text)
+
+        # update (if necessary)
+        if not self.is_init:
+            update.update(self)
+            self._set_init_sign()
+            self._set_version(cur_ver)
+        elif cur_ver > self.version:
+            update.update(self, game_only=True)
+            self._set_version(cur_ver)
+
+    def _create(self):
+        _cfg = open(self.path, 'w', encoding='utf-8')
+        _cfg.write(
             '[Search]\n'
             '# Range of mid, default as 2000\n'
             'map size = 2000\n'
@@ -60,9 +90,9 @@ class Config:
             '# Current game version in ea3-config, you can leave it as "00000000", it will be filled automatically.\n'
             'version = 0000000000\n'
         )
-        __cfg.close()
+        _cfg.close()
 
-    def read(self):
+    def _read(self):
         self.cfg.read(self.path, encoding='utf-8')
 
         map_size = self.cfg.getint('Search', 'map size')
@@ -82,23 +112,11 @@ class Config:
 
         return map_size, card_num, db_dir, game_dir, output, skin_name, language, is_init, version
 
-    def validity_check(self):
-        path_list = self.cfg.items('Directory')
-        for data_path in path_list:
-            __key, __value = data_path
-            if not path.exists(__value):
-                if __key == 'output path':
-                    timber.warning('output path not found, the program will try to make one.')
-                    mkdir(__value)
-                else:
-                    timber.error('%s not found, please check your file directory.' % __key)
-                    sys.exit(1)
-
-    def set_init_sign(self, set_bool: bool = True):
+    def _set_init_sign(self, set_bool: bool = True):
         self.cfg.set('Init', 'is initialized', str(set_bool))
         self.cfg.write(open(self.path, 'w'))
 
-    def set_version(self, version: int):
+    def _set_version(self, version: int):
         self.cfg.set('Init', 'version', str(version))
         self.cfg.write(open(self.path, 'w'))
 

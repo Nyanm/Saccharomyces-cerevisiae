@@ -1,5 +1,6 @@
-from main.main import cfg
-from main.main import Timber
+from utli.logger import timber
+from utli.cfg_read import cfg
+from utli.dir import local_dir
 # from hashlib import sha256
 from os import path, listdir
 from ..universal import *
@@ -8,7 +9,6 @@ import time
 """
 Initialization
 """
-timber = Timber('tools.py')
 
 # Reading config
 song_folders = cfg.game_dir + '/music'

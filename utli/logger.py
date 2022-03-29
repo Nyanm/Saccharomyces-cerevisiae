@@ -1,7 +1,6 @@
 import logging
-import sys
 
-from dir import local_dir, TEST_MODE
+from .dir import local_dir, TEST_MODE
 
 timber_path = local_dir + '/timber.log'
 

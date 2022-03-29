@@ -1,4 +1,4 @@
-from main.main import local_dir
+from utli.dir import local_dir
 import numpy as np
 import cv2
 from PIL import Image, ImageDraw, ImageFont

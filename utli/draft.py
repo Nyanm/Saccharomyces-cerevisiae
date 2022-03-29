@@ -2,7 +2,7 @@ from functools import wraps
 import base64
 import qrcode
 
-from main.cfg_read import cfg
+from utli.cfg_read import cfg
 
 LAN = cfg.language
 DFT_LAN = 'EN'
@@ -25,12 +25,12 @@ def _languageHandler(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        msg_list = func(*args, **kwargs)
-        for index in range(len(msg_list)):
-            if msg_list[index].get(LAN):
-                msg_list[index] = msg_list[index].get(LAN)
+        msg_tuple, msg_list = func(*args, **kwargs), []
+        for index in range(len(msg_tuple)):
+            if msg_tuple[index].get(LAN):
+                msg_list.append(msg_tuple[index].get(LAN))
             else:
-                msg_list[index] = msg_list[index].get(DFT_LAN)
+                msg_list.append(msg_tuple[index].get(DFT_LAN))
         return ''.join(msg_list)
 
     return wrapper
