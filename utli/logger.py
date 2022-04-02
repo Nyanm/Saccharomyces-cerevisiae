@@ -4,7 +4,7 @@ from .dir import local_dir, TEST_MODE
 
 timber_path = local_dir + '/timber.log'
 
-file_handler = logging.FileHandler(filename=timber_path, mode='w')
+file_handler = logging.FileHandler(filename=timber_path, mode='w', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_fmt = logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(filename)s(%(lineno)s) - %(message)s",
                              datefmt="%Y/%m/%d %H:%M:%S")

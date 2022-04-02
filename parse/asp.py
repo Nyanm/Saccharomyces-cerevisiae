@@ -107,7 +107,7 @@ class ASPParser:
                 self.crew_id = '0014'  # Gen 6 Rasis
 
             timber.info('Profile data load successfully.\n'
-                        'user name   :%s\nappeal card :%d\nakaname     :%s\nskill       :%d\ncrew        :%s\n' %
+                        'user name   :%s\nappeal card :%d\nakaname     :%s\nskill       :%d\ncrew        :%s' %
                         (self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id))
         except AttributeError:
             timber.error('Profile/Skill/Crew data not found, '

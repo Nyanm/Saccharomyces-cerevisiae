@@ -107,7 +107,7 @@ class Config:
 
         timber.info('config.cfg load complete.\n'
                     'map size  :%d\ncard num  :%s\ndb dir    :%s\ngame dir  :%s\noutput    :%s\n'
-                    'skin name :%s\nlanguage  :%s\nis init   :%s\nversion   :%d\n'
+                    'skin name :%s\nlanguage  :%s\nis init   :%s\nversion   :%d'
                     % (map_size, card_num, db_dir, game_dir, output, skin_name, language, str(is_init), version))
 
         return map_size, card_num, db_dir, game_dir, output, skin_name, language, is_init, version

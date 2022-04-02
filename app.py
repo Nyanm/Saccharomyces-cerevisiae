@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import time
-from traceback import format_exc
 
 # interior packages
 from utli.cfg_read import cfg
@@ -12,7 +11,7 @@ from utli.logger import timber
 # exterior packages
 from utli import draft, sheet
 from genre import packet
-from parse import asp
+from parse import asp, npdb
 
 VERSION = [1, 2, 'alpha']
 
@@ -269,11 +268,5 @@ class SDVX:
                 pass
 
 
-def main():
-    try:
-        sdvx = SDVX()
-        while True:
-            sdvx.input_handler()
-    except Exception:
-        timber.error('Fatal error occurs, please report the following message to developer.\n\n%s\n'
-                     % format_exc())
+for line in npdb.level_table:
+    print(line)

@@ -31,9 +31,9 @@ def amend_jis(jis_str: str) -> str:
         .replace("鬆", "Ý").replace("驩", "Ø")
     # symbol field
     new = new\
-        .replace("龕", "€").replace("蹇", "₂").replace("鬻", "♃").replace('黻', '*')
+        .replace("龕", "€").replace("蹇", "₂").replace("鬻", "♃").replace('黻', '*').replace('鑷', 'ゔ')
     # graph field
     new = new\
         .replace("齶", "♡").replace("齲", "❤").replace("躔", "★").replace('釁', '🍄').replace('齪', '♣').replace('鑈', '♦')\
-        .replace('霻', '♠')
+        .replace('霻', '♠').replace('盥', '⚙')
     return new
