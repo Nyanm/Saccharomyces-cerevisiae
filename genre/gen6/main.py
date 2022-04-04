@@ -1,4 +1,5 @@
-from .tools import *
+from copy import deepcopy
+
 import pandas as pd
 import seaborn as sns
 from os import remove
@@ -6,49 +7,51 @@ from traceback import format_exc
 from matplotlib.ticker import MaxNLocator
 from matplotlib.font_manager import FontProperties
 
+from .tools import *
 
-def plot_single(music_map: list, profile: list, sg_index: int) -> str:
+from parse import npdb
+from parse.asp import asp
+
+
+def plot_single(sg_index: int, music_map: list = asp.music_map, profile: list = asp.profile) -> str:
     """
     Plot function for single record
-    Now Plot function is ongoing, again.
-    :param music_map: a list contains all music records, each line of music_map should be:
-                      [is_record, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf, exscore]
-                      Please check music_map for explicit definition.
-    :param profile:   a list of [user_name, ap_card, aka_index, skill, crew_id]
-    :param sg_index:  the index of THE record in music_map
-    :return:          text data of single record
+
+    :param sg_index:  index of the record in asp.music_map
+    :param music_map: see plot_b50
+    :param profile:   see plot_b50
     """
 
     """
     Unfold data and generate text message
     """
-    record = music_map[sg_index]
-    id_recorded, mid, m_type, score, clear, grade, m_time, name, lv, inf_ver, vf, exscore = record
+    valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = music_map[sg_index][:10]
     user_name, ap_card, aka_index, skill, crew_id = profile
+    inf_ver, name = npdb.level_table[mid][9], npdb.level_table[mid][1]
     diff = get_diff(m_type, inf_ver)
     real_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(m_time / 1000))
 
     # Get recent text message
-    msg = '|Date                 |Diff  |Score    |Grade |Clear |VF     |Name\n|%-21s|%-6s|%-9s|%-6s|%-6s|%.3f |%s\n' \
-          % (real_time, (diff + lv), score, grade_table[grade], clear_table[clear], vf / 2, name)
-    timber.info('Generate single data complete.\n\n%s\n' % msg)
+    msg = '|Date                 |Diff  |Score    |Grade |Clear |VF     |Name\n' \
+          '|%-21s|%-6s|%-9s|%-6s|%-6s|%-6.3f |%s' \
+          % (real_time, (diff + str(lv)), score, grade_table[grade], clear_table[clear], vf, name)
+    timber.debug('Generate single data complete.\n%s' % msg)
 
     try:
         """
         Preparation for b50 and single record data
         """
-        __level_table = np.load(local_dir + '/data/level_table.npy')
-        single_data = __level_table[mid]
+        single_data = npdb.level_table[mid]
 
-        music_map.sort(key=lambda x: x[10], reverse=True)
+        music_map.sort(key=lambda x: x[9], reverse=True)
         music_b50 = music_map[:50]
-        vf_floor = music_b50[-1][10]
+        vf_floor = music_b50[-1][9]
         vol_force = get_overall_vf(music_b50)
 
         rank = 0
         for record in music_map:
             rank += 1
-            if vf >= record[10]:
+            if vf >= record[9]:
                 break
 
         """
@@ -188,14 +191,14 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
 
         # EX score
         ex_rate_font = ImageFont.truetype(font_continuum, 15, encoding='utf-8')
-        if exscore:
+        if exs:
             # Ex score box
             ex_box = cv2.imread(img_archive + '/ms_sel/ex_score.png', cv2.IMREAD_UNCHANGED)
             ex_anc = AnchorImage(bg, 'ex box', ex_box, (680, 21), father=side_field)
             ex_anc.plot()
 
             # The exscore itself
-            exscore_anc = AnchorText(bg, 'exscore', str(exscore), pen, ex_rate_font, (5, 151), ex_anc)
+            exscore_anc = AnchorText(bg, 'exscore', str(exs), pen, ex_rate_font, (5, 151), ex_anc)
             exscore_anc.plot((120, 79, 26), pos='r')
 
         # Clear rate and number
@@ -317,47 +320,49 @@ def plot_single(music_map: list, profile: list, sg_index: int) -> str:
         output_path = '%s/%s_%s%s.png' % (cfg.output, validate_filename(user_name), mid, diff)
         cv2.imwrite(output_path, bg[:1560, :540, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
 
-        timber.info_show('Plot saved at [%s] successfully.' % output_path)
+        timber.info('Plot saved at [%s] successfully.' % output_path)
 
         return msg
 
     except Exception:
-        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n\n%s\n'
+        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n%s'
                        % format_exc())
         return msg
 
 
-def plot_b50(music_map: list, profile: list) -> str:
+def plot_b50(_music_map: list = asp.music_map) -> str:
     """
     Plot function for best 50 records
-    :param music_map: a list contains all music records, each line of music_map should be:
-                      [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf, exscore]
-                      Please check music_map for explicit definition.
-    :param profile:   a list of [user_name, aka_name, ap_card, skill], all strings
-    :return:          text data of best 50
+    :param _music_map: a list contains all music records, each line of music_map should be:
+                       [is_recorded, mid, m_type, score, clear, grade, timestamp, exscore] (1 bool with 8 ints)
+                       and (at least) two additional line:
+                       [lv, vf] (int, float)
+                       Please check /parse/asp.music_map for explicit definition.
+    :return:           text data of best 50
     """
 
     """
     Read and initialize data
     """
     # Unpack profile data & sort music records
-    user_name, ap_card, aka_name, skill, crew_id = profile
-    music_map.sort(key=lambda x: x[10], reverse=True)
+    music_map = deepcopy(_music_map)
+    music_map.sort(key=lambda x: x[9], reverse=True)
     music_b50 = music_map[:50]
     vol_force = get_overall_vf(music_b50)  # Get overall volforce
 
     """
     Generate text message before any wrong would happen
     """
-    msg = ''
-    msg += ('----------------VOLFORCE %.3f----------------\n' % vol_force)
-    msg += '|No.  |VF      |DIFF   |SCORE    |RANK  |GRA   |NAME\n'
+    msg = ['|OVERALL VOLFORCE %.3f\n' % vol_force,
+           '|No.  |VF      |DIFF   |SCORE    |RANK  |GRA   |NAME']
     for index in range(50):
-        diff = get_diff(music_b50[index][2], music_b50[index][9])
-        msg += ('|#%-4d|%-6.3f  |%s%-2s  |%-9s|%-6s|%-6s|%s\n'
-                % ((index + 1), music_b50[index][10] / 2, diff, music_b50[index][8], music_b50[index][3],
-                   clear_table[music_b50[index][4]], grade_table[music_b50[index][5]], music_b50[index][7]))
-    timber.info('Generate B50 data complete.\n\n%s\n' % msg)
+        valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = music_b50[index][:10]
+        inf_ver = npdb.level_table[mid][9]
+        diff = get_diff(m_type, inf_ver)
+        msg.append('\n|#%-4d|%-6.3f  |%s%-2s  |%-9s|%-6s|%-6s|%s' %
+                   ((index + 1), vf, diff, lv, score, clear_table[clear], grade_table[grade], npdb.level_table[mid][1]))
+    msg = ''.join(msg)
+    timber.debug('Generate B50 data complete.\n%s' % msg)
 
     try:  # If the plot module breaks down somehow, the function will try to return the pure text data.
         """
@@ -396,7 +401,7 @@ def plot_b50(music_map: list, profile: list) -> str:
         Prologue: User profile
         """
 
-        std_profile = generate_std_profile(profile, vol_force)
+        std_profile = generate_std_profile(asp.profile, vol_force)
         profile_anc = AnchorImage(bg, 'profile', std_profile, (30, (x_px - std_profile.shape[1]) // 2), father=prologue)
         profile_anc.plot()
 
@@ -417,8 +422,9 @@ def plot_b50(music_map: list, profile: list) -> str:
 
         for index in range(50):
             # Unpack data & validity check
-            is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf, exs = music_b50[index]
-            if not is_recorded:
+            valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = music_b50[index][:10]
+            inf_ver = npdb.level_table[mid][9]
+            if not valid:
                 break
 
             # Box as mini background for each songs
@@ -451,7 +457,7 @@ def plot_b50(music_map: list, profile: list) -> str:
             grade_anc.plot()
 
             # Title
-            title = length_uni(title_font, name, length=box_x - 300)
+            title = length_uni(title_font, npdb.level_table[mid][1], length=box_x - 300)
             title_anc = AnchorText(bg, 'title', title, pen, title_font, free=(14, 271), father=box_anc)
             title_anc.plot(color_black)
 
@@ -500,10 +506,13 @@ def plot_b50(music_map: list, profile: list) -> str:
 
         text_layer = np.array(text_layer)
         png_superimpose(bg, text_layer)
-        output_path = '%s/%s_B50.png' % (cfg.output, validate_filename(user_name))
+        output_path = '%s/%s_B50.png' % (cfg.output, validate_filename(asp.user_name))
         cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
 
-        timber.info_show('Plot saved at [%s] successfully.' % output_path)
+        # an attempt to alleviate memory use
+        del bg, music_map, music_b50
+
+        timber.info('Plot saved at [%s] successfully.' % output_path)
         return msg
 
     except Exception:
@@ -512,9 +521,16 @@ def plot_b50(music_map: list, profile: list) -> str:
         return msg
 
 
-def plot_level(music_map: list, profile: list, level: int, limits: tuple, grade_flag: str = None):
+def plot_level(level: int, limits: tuple, grade_flag: str = None,
+               music_map: list = asp.music_map, profile: list = asp.profile):
     """
     Plot function to list single level records (above a specific score)
+
+    :param level:      the searching level
+    :param limits:     a tuple of score (floor, ceiling)
+    :param grade_flag: show additional information of grade flag
+    :param music_map:  see plot_b50
+    :param profile:    see plot_b50
     """
     user_name, ap_card, aka_name, skill, crew_id = profile
     lim_l, lim_h = limits
@@ -530,7 +546,7 @@ def plot_level(music_map: list, profile: list, level: int, limits: tuple, grade_
         record = lv_map[index]
         msg += '|%-5d|%-9s|%-6s|%-6s|%-6.3f |%s\n' % \
                (index + 1, record[3], grade_table[record[5]], clear_table[record[4]], record[10] / 2, record[7])
-    timber.info('Generate level.%d scores complete.\n\n%s\n' % (level, msg))
+    timber.debug('Generate level.%d scores complete.\n\n%s\n' % (level, msg))
 
     try:
         music_map.sort(key=lambda x: x[10], reverse=True)
@@ -691,7 +707,7 @@ def plot_level(music_map: list, profile: list, level: int, limits: tuple, grade_
         png_superimpose(bg, text_layer)
         output_path = '%s/%s_LEVEL%d@%d-%d.png' % (cfg.output, validate_filename(user_name), level, lim_l, lim_h)
         cv2.imwrite(output_path, bg[:, :, :3], params=[cv2.IMWRITE_PNG_COMPRESSION, 3])
-        timber.info_show('Plot saved at [%s] successfully.' % output_path)
+        timber.info('Plot saved at [%s] successfully.' % output_path)
 
         return msg
 
@@ -704,10 +720,8 @@ def plot_level(music_map: list, profile: list, level: int, limits: tuple, grade_
 def plot_summary(music_map: list, profile: list, lv_base: int):
     """
     Plot function to analyze user's record.
-    :param music_map: a list of all available music records, each line of music_map should be like:
-                      [is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf, exscore]
-                      Please check music_map for explicit definition.
-    :param profile:   a list of [user_name, aka_name, ap_card, skill], all strings
+    :param music_map: see plot_b50
+    :param profile:   see plot_b50
     :param lv_base:   lowest level to analysis
     :return:          text data of summary
     """
@@ -727,8 +741,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     #         [NO, CR, NC, HC, UC, PUC]
     # 6-16 |  [NO, D, C, B, A, A+, AA, AA+, AAA, AAA+, S]
     # 17   |  [sum]
-    __level_table = np.load(local_dir + '/data/level_table.npy')
-    for single_music in __level_table:  # Calculating the sum of each level
+    for single_music in npdb.level_table:  # Calculating the sum of each level
         if not single_music[0]:
             continue
         nov, adv, exh, inf, mxm = \
@@ -770,7 +783,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         aaa, aaa_plus, s, __sum = level_summary[index][14:]
         msg += ('lv.%d    ' % index)
         msg += ('%-8d%-8d%-8d%-8d||    %-8d%-8d%-8d||    %-8d\n' % (nc, hc, uc, puc, aaa, aaa_plus, s, __sum))
-    timber.info('Generate summary data complete.\n\n%s\n' % msg)
+    timber.debug('Generate summary data complete.\n\n%s\n' % msg)
 
     # Generate data frame for joint plot
     vf_list, vf_size, low_score, low_lv, high_lv = [], 100, 10000000, 20, 0  # Just [score: int, vf: float, lv: str]
@@ -1235,7 +1248,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         except FileNotFoundError:
             pass
 
-        timber.info_show('Plot saved at [%s] successfully.' % output_path)
+        timber.info('Plot saved at [%s] successfully.' % output_path)
         return msg
 
     except Exception:

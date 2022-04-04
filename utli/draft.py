@@ -41,8 +41,8 @@ class CommonMsg:
     @_languageHandler
     def enter() -> tuple:
         msg = {
-            'EN': 'Press enter to continue.',
-            'ZH': '按回车继续。',
+            'EN': 'Press enter to continue.\n',
+            'ZH': '按回车继续。\n',
         }
         return msg,
 
@@ -297,7 +297,7 @@ class TenDonate:
             'EN': 'Congratulations! You\'ve found the dark side of the moon!\n'
                   'Here is a donate page, '
                   'where you can buy the developer a cup of coffee if you like this application.\n'
-                  '↓↓↓   Wechat QrCode   ↓↓↓',
+                  '↓↓↓   Wechat QrCode   ↓↓↓\n',
             'ZH': '恭喜你发现了月之暗面！这里是一个赞助页面，可以请开发者喝一杯咖啡~\n'
                   '↓↓↓   微信二维码   ↓↓↓\n',
         }

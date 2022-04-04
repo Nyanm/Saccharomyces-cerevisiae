@@ -151,7 +151,7 @@ def get_overall_vf(music_b50: list) -> float:
     vol_force = 0.0
     for record in music_b50:
         if record[0]:
-            vol_force += int(record[10] * 10) / 1000
+            vol_force += int(record[9] * 10) / 500
         else:
             break
     return vol_force

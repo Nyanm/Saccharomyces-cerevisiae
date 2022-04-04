@@ -5,15 +5,15 @@ from utli.logger import timber
 from utli import sheet
 from utli.cfg_read import cfg
 
-from .npdb import aka_db
+from .npdb import level_table, aka_db
 
 
 class ASPParser:
-    def __init__(self, db_dir: str, map_size: int, card_num: str):
+    def __init__(self, db_dir: str, map_size: int, card_num: str, reserve: int = 2):
 
         # load sdvx@asphyxia.db
         raw_data = open(db_dir, 'r')
-        self.music_map = [[False, 0, 0, 0, 0, 0, 0, 0] for _ in range(map_size * 5 + 1)]
+        self.music_map = [[False, 0, 0, 0, 0, 0, 0, 0] + [False] * reserve for _ in range(map_size * 5 + 1)]
         """music_map is a comprehensive map to store player's play record
         It contains 5-time of map_size lines, each 5 lines define the 5 difficulties of a single song
         Each line of music map should be:
@@ -26,6 +26,7 @@ class ASPParser:
             5: grade(int), 
             6: timestamp(int), 
             7: exscore(int),
+            8+: reservation,
         ]
         """
 
@@ -64,7 +65,14 @@ class ASPParser:
                     exscore = 0
 
                 cur_index = mid * 5 + m_type
-                self.music_map[cur_index] = [True, mid, m_type, score, clear, grade, m_time, exscore]
+                self.music_map[cur_index][0] = True
+                self.music_map[cur_index][1] = mid
+                self.music_map[cur_index][2] = m_type
+                self.music_map[cur_index][3] = score
+                self.music_map[cur_index][4] = clear
+                self.music_map[cur_index][5] = grade
+                self.music_map[cur_index][6] = m_time
+                self.music_map[cur_index][7] = exscore
 
                 if m_type > last_time:
                     last_time = m_time
@@ -94,13 +102,8 @@ class ASPParser:
             timber.error('Music record not found, make sure you have at least played once (and saved successfully).')
             sys.exit(1)
 
+        self.akaname = 'よろしくお願いします'  # Default akaname
         try:
-            self.akaname = 'よろしくお願いします'  # If you have modified your aka name
-            for akaname in aka_db:
-                if int(akaname[0]) == self.aka_index:
-                    self.akaname = akaname[1]
-                    break
-
             try:
                 self.crew_id = sheet.crew_id[self._crew_index]
             except KeyError:
@@ -117,5 +120,36 @@ class ASPParser:
         self.profile = [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
         timber.info('Asphyxia database parse complete.')
 
+    def get_akaname(self):
+        """Update the akaname through npdb.aka_db, can be removed if necessary"""
+        for akaname in aka_db:
+            if int(akaname[0]) == self.aka_index:
+                self.akaname = akaname[1]
+                timber.info('Update akaname data to %s' % self.akaname)
+                break
+
+    def get_lv_vf(self, lv_i: int = 8, vf_i: int = 9):
+        """
+        Look up level and calculate vf through npdb.level_table
+
+        :param lv_i: index of level
+        :param vf_i: index of volforce
+        """
+        if self.music_map[self.last_index][lv_i] or self.music_map[self.last_index][vf_i]:
+            timber.error('Designed index has been occupied, try another index.')
+            sys.exit(1)
+        for index in range(len(self.music_map)):
+            valid, mid, m_type, score, clear, grade, m_time, exs = self.music_map[index][:8]
+            if not valid:
+                continue
+            try:
+                lv = int(level_table[mid][10 + m_type * 3])
+            except ValueError:
+                lv = 0
+            vf = lv * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade]
+            self.music_map[index][lv_i], self.music_map[index][vf_i] = lv, vf
+
 
 asp = ASPParser(db_dir=cfg.db_dir, map_size=cfg.map_size, card_num=cfg.card_num)
+asp.get_akaname()
+asp.get_lv_vf()

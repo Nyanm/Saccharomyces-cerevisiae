@@ -11,7 +11,8 @@ from utli.logger import timber
 # exterior packages
 from utli import draft, sheet
 from genre import packet
-from parse import asp, npdb
+from parse import npdb
+from parse.asp import asp
 
 VERSION = [1, 2, 'alpha']
 
@@ -19,28 +20,27 @@ VERSION = [1, 2, 'alpha']
 class SDVX:
 
     def __init__(self):
-
         # Load skin
         try:
-            self.plot_skin = packet[cfg.skin_name]
+            self.plot_skin = packet[cfg.skin_name].main
         except KeyError:
             timber.error('Invalid skin name, please check your configurations.')
             sys.exit(1)
 
     def _get_b50(self):
-        b50_text = self.plot_skin.plot_b50(self.music_map.copy(), self.profile)
+        b50_text = self.plot_skin.plot_b50()
         input('%s\nPress enter to continue.' % b50_text)
 
     def _get_summary(self, base_lv: int):
-        summary_text = self.plot_skin.plot_summary(self.music_map.copy(), self.profile, base_lv)
+        summary_text = self.plot_skin.plot_summary(base_lv=base_lv)
         input('%s\nPress enter to continue.' % summary_text)
 
     def _get_single(self, sg_index: int):
-        sg_text = self.plot_skin.plot_single(self.music_map.copy(), self.profile, sg_index)
+        sg_text = self.plot_skin.plot_single(sg_index=sg_index)
         input('%s\nPress enter to continue.' % sg_text)
 
     def _get_level(self, level: int, limits: tuple, grade_flag: str):
-        level_text = self.plot_skin.plot_level(self.music_map, self.profile, level, limits, grade_flag)
+        level_text = self.plot_skin.plot_level(level=level, limits=limits, grade_flag=grade_flag)
         input('%s\nPress enter to continue.' % level_text)
 
     def _1_get_b50(self):
@@ -69,13 +69,9 @@ class SDVX:
 
     def _3_get_recent(self):
         print(draft.ThreeGetRecent.init_hint())
-        __music_map = self.music_map.copy()
-        __music_map.sort(key=lambda x: x[6])
-        latest = __music_map[-1]
-        self._get_single(latest[1] * 5 + latest[2])
+        self._get_single(asp.last_index)
 
     def _4_get_specific(self):
-
         def not_found_handler():
             timber.info('Record not found.')
             input(draft.FourGetSpecific.not_found())
@@ -96,7 +92,7 @@ class SDVX:
                 return
             for lv_index in range(4, -1, -1):
                 index = mid * 5 + lv_index
-                if self.music_map[index][0]:
+                if asp.music_map[index][0]:
                     sg_index = index
                     break
 
@@ -113,14 +109,14 @@ class SDVX:
             if m_type >= 4:  # 4th difficulty
                 mxm_index = mid * 5 + m_type
                 inf_index = mid * 5 + m_type - 1
-                if self.music_map[mxm_index][0]:
+                if asp.music_map[mxm_index][0]:
                     sg_index = mxm_index
-                elif self.music_map[inf_index][0]:
+                elif asp.music_map[inf_index][0]:
                     sg_index = inf_index
 
             elif m_type > 0:  # 1st ~ 3rd difficulty
                 index = mid * 5 + m_type - 1
-                if self.music_map[index][0]:
+                if asp.music_map[index][0]:
                     sg_index = index
 
         else:
@@ -183,7 +179,8 @@ class SDVX:
                 print(draft.FiveGetLevel.limit_songs(level, limits[0], limits[1]))
         self._get_level(level, limits, grade_flag)
 
-    def _8_search(self):
+    @staticmethod
+    def _8_search():
         os.system('cls')
         search_str = input(draft.EightSearch.init_hint())
         timber.info('Searching "%s"' % search_str)
@@ -192,7 +189,7 @@ class SDVX:
             result_list = []
             for index in range(1, cfg.map_size):
                 try:
-                    if re.search(search_str, self.search_db[index], re.I):
+                    if re.search(search_str, npdb.search_db[index], re.I):
                         result_list.append(index)
                 except re.error:
                     timber.info_clog('Invalid character (for regular expression) was entered, '
@@ -204,7 +201,7 @@ class SDVX:
                           '     |Name  -  Artist\n\n' % len(result_list))
             for index in range(len(result_list)):
                 __mid = result_list[index]
-                __data = self.level_table[__mid]
+                __data = npdb.level_table[__mid]
                 __date = '%s/%s/%s' % (__data[7][:4], __data[7][4:6], __data[7][6:])
                 search_res += '|%-4d|%-4d  |%s/%s/%s/%s  |%-8s  |%s\n     |%s  -  %s\n\n' % \
                               (index + 1, __mid, __data[10].zfill(2), __data[13].zfill(2), __data[16].zfill(2),
@@ -222,16 +219,18 @@ class SDVX:
             print(draft.EightSearch.empty())
         input(draft.CommonMsg.enter())
 
-    def _9_faq(self):
+    @staticmethod
+    def _9_faq():
         os.system('cls')
         timber.info('FAQ')
-        print(draft.NineFAQ.first(self.user_name))
+        print(draft.NineFAQ.first(asp.user_name))
         print(draft.NineFAQ.second())
         input(draft.CommonMsg.enter())
 
-    def _0_see_you_next_time(self):
+    @staticmethod
+    def _0_see_you_next_time():
         timber.info('Exit by operator number 0.')
-        print(draft.ZeroExit.farewell(self.user_name))
+        print(draft.ZeroExit.farewell(asp.user_name))
         time.sleep(1.5)
         sys.exit(0)
 
@@ -266,7 +265,3 @@ class SDVX:
                 break
             except KeyError:
                 pass
-
-
-for line in npdb.level_table:
-    print(line)

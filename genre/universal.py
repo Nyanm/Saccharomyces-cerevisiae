@@ -335,7 +335,7 @@ class AnchorText(Anchor):
     def __init__(self, bg: np.array, name: str, text: str, pen: ImageDraw.Draw, font: ImageFont.truetype,
                  free: tuple = (0, 0), father: classmethod.__class__ = None):
         Anchor.__init__(self, bg, name, free, father)
-        self.text = text
+        self.text = str(text)
         self.pen = pen
         self.font = font
 
