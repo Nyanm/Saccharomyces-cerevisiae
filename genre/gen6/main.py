@@ -13,19 +13,19 @@ from parse import npdb
 from parse.asp import asp
 
 
-def plot_single(sg_index: int, music_map: list = asp.music_map, profile: list = asp.profile) -> str:
+def plot_single(sg_index: int, _music_map: list = asp.music_map, profile: list = asp.profile) -> str:
     """
     Plot function for single record
 
-    :param sg_index:  index of the record in asp.music_map
-    :param music_map: see plot_b50
-    :param profile:   see plot_b50
+    :param sg_index:   index of the record in asp.music_map
+    :param _music_map: see plot_b50
+    :param profile:    see plot_b50
     """
 
     """
     Unfold data and generate text message
     """
-    valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = music_map[sg_index][:10]
+    valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = _music_map[sg_index][:10]
     user_name, ap_card, aka_index, skill, crew_id = profile
     inf_ver, name = npdb.level_table[mid][9], npdb.level_table[mid][1]
     diff = get_diff(m_type, inf_ver)
@@ -43,6 +43,7 @@ def plot_single(sg_index: int, music_map: list = asp.music_map, profile: list = 
         """
         single_data = npdb.level_table[mid]
 
+        music_map = deepcopy(_music_map)
         music_map.sort(key=lambda x: x[9], reverse=True)
         music_b50 = music_map[:50]
         vf_floor = music_b50[-1][9]
@@ -311,7 +312,7 @@ def plot_single(sg_index: int, music_map: list = asp.music_map, profile: list = 
         yeast_bg_anc.plot(0.65)
         yeast_anc.plot(color_gray, pos='c')
 
-        profile_img = generate_mini_profile(profile, vol_force, [vf / 2, rank, real_time])
+        profile_img = generate_mini_profile(profile, vol_force, [vf, rank, real_time])
         profile_anc = AnchorImage(bg, 'profile', profile_img, (40, (540 - profile_img.shape[1]) // 2), yeast_field)
         profile_anc.plot()
 
@@ -330,7 +331,7 @@ def plot_single(sg_index: int, music_map: list = asp.music_map, profile: list = 
         return msg
 
 
-def plot_b50(_music_map: list = asp.music_map) -> str:
+def plot_b50(_music_map: list = asp.music_map, profile: list = asp.profile) -> str:
     """
     Plot function for best 50 records
     :param _music_map: a list contains all music records, each line of music_map should be:
@@ -338,6 +339,8 @@ def plot_b50(_music_map: list = asp.music_map) -> str:
                        and (at least) two additional line:
                        [lv, vf] (int, float)
                        Please check /parse/asp.music_map for explicit definition.
+    :param profile:    a list of user profile:
+                       [user_name, ap_card, akaname, skill, crew_id]
     :return:           text data of best 50
     """
 
@@ -401,7 +404,7 @@ def plot_b50(_music_map: list = asp.music_map) -> str:
         Prologue: User profile
         """
 
-        std_profile = generate_std_profile(asp.profile, vol_force)
+        std_profile = generate_std_profile(profile, vol_force)
         profile_anc = AnchorImage(bg, 'profile', std_profile, (30, (x_px - std_profile.shape[1]) // 2), father=prologue)
         profile_anc.plot()
 
@@ -491,10 +494,10 @@ def plot_b50(_music_map: list = asp.music_map) -> str:
             res_vf_field = Anchor(bg, 'respective vf field', free=(53, 488), father=box_anc)  # res = respective
             res_vf_text_anc = AnchorText(bg, 'res vf text', 'VF   #%02d' % (index + 1),
                                          pen, vf_str_font, (0, 1), res_vf_field)
-            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % (vf / 2), pen, vf_num_font, (20, -5), res_vf_field)
+            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % vf, pen, vf_num_font, (20, -5), res_vf_field)
 
             res_vf_text_anc.plot(color_black)
-            res_vf_num_anc.plot(get_vf_level(vf / 2, is_darker=True, is_color=True))
+            res_vf_num_anc.plot(get_vf_level(vf, is_darker=True, is_color=True))
 
         """
         Epilogue: Special thanks to myself
@@ -516,40 +519,43 @@ def plot_b50(_music_map: list = asp.music_map) -> str:
         return msg
 
     except Exception:
-        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n\n%s\n'
+        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n%s'
                        % format_exc())
         return msg
 
 
 def plot_level(level: int, limits: tuple, grade_flag: str = None,
-               music_map: list = asp.music_map, profile: list = asp.profile):
+               _music_map: list = asp.music_map, profile: list = asp.profile):
     """
     Plot function to list single level records (above a specific score)
 
-    :param level:      the searching level
-    :param limits:     a tuple of score (floor, ceiling)
-    :param grade_flag: show additional information of grade flag
-    :param music_map:  see plot_b50
-    :param profile:    see plot_b50
+    :param level:       the searching level
+    :param limits:      a tuple of score (floor, ceiling)
+    :param grade_flag:  show additional information of grade flag
+    :param _music_map:  see plot_b50
+    :param profile:     see plot_b50
     """
     user_name, ap_card, aka_name, skill, crew_id = profile
     lim_l, lim_h = limits
     lv_map = []
-    for record in music_map:
+    for record in _music_map:
         if int(record[8]) == level and lim_h >= record[3] >= lim_l:
             lv_map.append(record)
 
     lv_map.sort(key=lambda x: x[3], reverse=True)
     length = len(lv_map)
-    msg = '|Level.%d       |Limits = %d - %d\n|No.  |Score    |Grade |Clear |VF     |Name\n' % (level, lim_l, lim_h)
+    msg = ['|Level.%d       |Limits = %d - %d\n'
+           '|No.  |Score    |Clear |Grade |VF     |Name' % (level, lim_l, lim_h)]
     for index in range(length):
-        record = lv_map[index]
-        msg += '|%-5d|%-9s|%-6s|%-6s|%-6.3f |%s\n' % \
-               (index + 1, record[3], grade_table[record[5]], clear_table[record[4]], record[10] / 2, record[7])
-    timber.debug('Generate level.%d scores complete.\n\n%s\n' % (level, msg))
+        valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = lv_map[index][:10]
+        msg.append('\n|%-5d|%-9s|%-6s|%-6s|%-6.3f |%s' %
+                   (index + 1, score, clear_table[clear], grade_table[grade], vf, npdb.level_table[mid][1]))
+    msg = ''.join(msg)
+    timber.debug('Generate level.%d scores complete.\n%s' % (level, msg))
 
     try:
-        music_map.sort(key=lambda x: x[10], reverse=True)
+        music_map = deepcopy(_music_map)
+        music_map.sort(key=lambda x: x[9], reverse=True)
         music_b50 = music_map[:50]
         vol_force = get_overall_vf(music_b50)
 
@@ -625,7 +631,9 @@ def plot_level(level: int, limits: tuple, grade_flag: str = None,
         h_size, l_size = score_h_font.getsize('0')[0], score_l_font.getsize('0')[0]
 
         for index in range(length):
-            is_recorded, mid, m_type, score, clear, grade, timestamp, name, lv, inf_ver, vf, exs = lv_map[index]
+            valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = lv_map[index][:10]
+            inf_ver = npdb.level_table[mid][9]
+            name = npdb.level_table[mid][1]
 
             box_anc.set_grid((((index + 1) // 2), (1 - index % 2)))
             box_anc.plot()
@@ -690,10 +698,10 @@ def plot_level(level: int, limits: tuple, grade_flag: str = None,
             res_vf_field = Anchor(bg, 'respective vf field', free=(53, 488), father=box_anc)  # res = respective
             res_vf_text_anc = AnchorText(bg, 'res vf text', 'SCORE    #%03d' % (index + 1),
                                          pen, vf_str_font, (0, -97), res_vf_field)
-            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % (vf / 2), pen, vf_num_font, (20, -5), res_vf_field)
+            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.3f' % vf, pen, vf_num_font, (20, -5), res_vf_field)
 
             res_vf_text_anc.plot(color_black)
-            res_vf_num_anc.plot(get_vf_level(vf / 2, is_darker=True, is_color=True))
+            res_vf_num_anc.plot(get_vf_level(vf, is_darker=True, is_color=True))
 
         """
         Epilogue: Special thanks to myself
@@ -712,26 +720,26 @@ def plot_level(level: int, limits: tuple, grade_flag: str = None,
         return msg
 
     except Exception:
-        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n\n%s\n'
+        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n%s'
                        % format_exc())
         return msg
 
 
-def plot_summary(music_map: list, profile: list, lv_base: int):
+def plot_summary(base_lv: int, _music_map: list = asp.music_map, profile: list = asp.profile):
     """
     Plot function to analyze user's record.
-    :param music_map: see plot_b50
-    :param profile:   see plot_b50
-    :param lv_base:   lowest level to analysis
-    :return:          text data of summary
+    :param _music_map: see plot_b50
+    :param profile:    see plot_b50
+    :param base_lv:    lowest level to analysis
+    :return:           text data of summary
     """
 
     """
     Read and initialize data
     """
     user_name, ap_card, akaname, skill, crew_id = profile  # get profile data
-    music_map_sort = music_map.copy()
-    music_map_sort.sort(key=lambda x: x[10], reverse=True)  # make a sorted map duplicate
+    music_map_sort = deepcopy(_music_map)
+    music_map_sort.sort(key=lambda x: x[9], reverse=True)  # make a sorted map duplicate
     vol_force = get_overall_vf(music_map_sort[0:50])  # Get overall volforce
 
     level_summary = np.zeros((21, 18), dtype=int)  # Get default level summary
@@ -762,36 +770,37 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
     # Generate data frame for histogram, violin plot
     hist_list = [[[], [], [], [], [], []] for _ in range(21)]  # [[A+], [AA], [AA+], [AAA], [AAA+], [S]]
     violin_list = []  # Each line should be [score: int, lv: str]
-    for record in music_map:
-        if not record[0]:
+    for record in _music_map:
+        valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = record[:10]
+        if not valid:
             continue
-        score, clear, grade, lv = record[3], record[4], record[5], int(record[8])
         level_summary[lv][clear_index[clear]] += 1
         level_summary[lv][grade_index[grade]] += 1
         hist_list[lv][int(grade_index[grade] - 11)].append(score // 10000)
-        if lv >= lv_base and score > 8000000:
+        if lv >= base_lv and score > 8000000:
             violin_list.append([score, str(lv)])
     for index in range(21):
         level_summary[index][0] = level_summary[index][6] = level_summary[index][17] - sum(level_summary[index][1:6])
     violin_df = pd.DataFrame(violin_list, columns=['score', 'lv'])
 
     # Generate pure text message to return
-    msg = '----------------Level Summary----------------\n' \
-          'Level    NC      HC      UC      PUC     ||    AAA     AAA+    S       ||    SUM\n'
-    for index in range(lv_base, 21):
+    msg = ['| Level Summary from lv.%d\n'
+           '| Level    NC      HC      UC      PUC     | AAA     AAA+    S       | SUM' % base_lv]
+    for index in range(base_lv, 21):
         nc, hc, uc, puc = level_summary[index][2:6]
-        aaa, aaa_plus, s, __sum = level_summary[index][14:]
-        msg += ('lv.%d    ' % index)
-        msg += ('%-8d%-8d%-8d%-8d||    %-8d%-8d%-8d||    %-8d\n' % (nc, hc, uc, puc, aaa, aaa_plus, s, __sum))
-    timber.debug('Generate summary data complete.\n\n%s\n' % msg)
+        aaa, aaa_plus, s, _sum = level_summary[index][14:]
+        msg.append('\n| lv.%-6d%-8d%-8d%-8d%-8d| %-8d%-8d%-8d| %-8d' % (index, nc, hc, uc, puc, aaa, aaa_plus, s, _sum))
+    msg = ''.join(msg)
+    timber.debug('Generate summary data complete.\n%s' % msg)
 
     # Generate data frame for joint plot
     vf_list, vf_size, low_score, low_lv, high_lv = [], 100, 10000000, 20, 0  # Just [score: int, vf: float, lv: str]
     for record in music_map_sort[:vf_size]:
-        if record[0]:
-            score, lv, vf = record[3], record[8], record[10]
-            vf_list.append((score, vf / 2, lv))
-            low_score, low_lv, high_lv = min(low_score, score), min(low_lv, int(lv)), max(high_lv, int(lv))
+        valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = record[:10]
+        if not valid:
+            continue
+        vf_list.append((score, vf, lv))
+        low_score, low_lv, high_lv = min(low_score, score), min(low_lv, int(lv)), max(high_lv, int(lv))
     high_vf, low_vf = vf_list[0][1], vf_list[-1][1]
     vf_df = pd.DataFrame(vf_list, columns=['score', 'vf', 'lv'])
 
@@ -801,7 +810,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         """
         # Stipulate the size of the background & generate
         px_prologue, px_chapters, px_epilogue = 450, 1625, 1950
-        y_px, x_px = px_prologue + px_chapters * (21 - lv_base) + px_epilogue, 1080
+        y_px, x_px = px_prologue + px_chapters * (21 - base_lv) + px_epilogue, 1080
         bg = generate_hex_bg((y_px, x_px))
 
         # Init text layer
@@ -835,7 +844,7 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         preface = Anchor(bg, 'preface')  # supreme anchor
         prologue = Anchor(bg, 'prologue', free=(0, 0), father=preface)
         chapters = Anchor(bg, 'chapters', free=(px_prologue, 0), father=preface)
-        chapters.creat_grid(grid=(20 - lv_base, 0), precession=(px_chapters, 0))
+        chapters.creat_grid(grid=(20 - base_lv, 0), precession=(px_chapters, 0))
         epilogue = Anchor(bg, 'epilogue', free=(y_px - px_epilogue, 0), father=preface)
 
         """
@@ -922,22 +931,22 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
             icon = [None, None, None, None, None, None]
             text_b = [None, None, None, None, None, None]
             text_s = [None, None, None, None, None, None]
-            for __index in range(6):
+            for _index in range(6):
                 if dire:
-                    grid_id = (__index % 3 * 2 + __index // 3, __index // 3)
+                    grid_id = (_index % 3 * 2 + _index // 3, _index // 3)
                 else:
-                    grid_id = (__index % 3 * 2 + __index // 3, 1 - __index // 3)
-                __bg = icon_bg.copy()
-                content[__index] = AnchorImage(bg, '%s img %d' % (name, __index), __bg, father=icon_grid)
-                content[__index].set_grid(grid_id)
-                icon[__index] = AnchorImage(__bg, '%s icon %d' % (name, __index), icon_list[__index])
-                icon[__index].plot_center(offset=(1, 1))
-                text_b[__index] = \
-                    AnchorText(bg, '%s text_b %d' % (name, __index), '', pen, sta_b_font, (7, text_shift), text_grid)
-                text_b[__index].set_grid(grid_id)
-                text_s[__index] = \
-                    AnchorText(bg, '%s text_s %d' % (name, __index), '', pen, sta_s_font, (50, text_shift), text_grid)
-                text_s[__index].set_grid(grid_id)
+                    grid_id = (_index % 3 * 2 + _index // 3, 1 - _index // 3)
+                _bg = icon_bg.copy()
+                content[_index] = AnchorImage(bg, '%s img %d' % (name, _index), _bg, father=icon_grid)
+                content[_index].set_grid(grid_id)
+                icon[_index] = AnchorImage(_bg, '%s icon %d' % (name, _index), icon_list[_index])
+                icon[_index].plot_center(offset=(1, 1))
+                text_b[_index] = \
+                    AnchorText(bg, '%s text_b %d' % (name, _index), '', pen, sta_b_font, (7, text_shift), text_grid)
+                text_b[_index].set_grid(grid_id)
+                text_s[_index] = \
+                    AnchorText(bg, '%s text_s %d' % (name, _index), '', pen, sta_s_font, (50, text_shift), text_grid)
+                text_s[_index].set_grid(grid_id)
             return icon_grid, text_grid, content, text_b, text_s
 
         clear_grid, clear_text_grid, clear_content, clear_text_b, clear_text_s = \
@@ -952,8 +961,8 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
             text_grid.set_father(field)
             lv_data_small, lv_cnt, lv_color = [], 0, []
 
-            for __data in lv_data[::-1]:
-                lv_cnt += __data
+            for _data in lv_data[::-1]:
+                lv_cnt += _data
                 lv_data_small.append('(%d)' % lv_cnt)
                 if lv_cnt == lv_sum:
                     lv_color.append(color_gold)
@@ -969,50 +978,50 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
                     lv_color = [color_white] * 6
                 lv_color[0] = lv_color[1] = color_gray
 
-            for __index in range(6):
-                content[__index].update_pos()
-                data_box_anc.set_father(content[__index])
-                data_box_anc.plot(x_reverse=(content[__index].grid_id[1] == 0), offset=(0, int(hex_y * sqrt_3 * 3 / 4)))
-                glow_anc.set_father(content[__index])
+            for _index in range(6):
+                content[_index].update_pos()
+                data_box_anc.set_father(content[_index])
+                data_box_anc.plot(x_reverse=(content[_index].grid_id[1] == 0), offset=(0, int(hex_y * sqrt_3 * 3 / 4)))
+                glow_anc.set_father(content[_index])
                 glow_anc.plot()
-            for __index in range(6):
-                content[__index].plot()
-                text_b[__index].text = str(lv_data[__index])
-                text_s[__index].text = lv_data_small[__index]
-                if text_b[__index].grid_id[1] == 0:
-                    text_b[__index].plot(lv_color[__index], pos='r')
-                    text_s[__index].plot(lv_color[__index], pos='r')
+            for _index in range(6):
+                content[_index].plot()
+                text_b[_index].text = str(lv_data[_index])
+                text_s[_index].text = lv_data_small[_index]
+                if text_b[_index].grid_id[1] == 0:
+                    text_b[_index].plot(lv_color[_index], pos='r')
+                    text_s[_index].plot(lv_color[_index], pos='r')
                 else:
-                    text_b[__index].plot(lv_color[__index])
-                    text_s[__index].plot(lv_color[__index])
+                    text_b[_index].plot(lv_color[_index])
+                    text_s[_index].plot(lv_color[_index])
 
         def plot_pie(data_list: list, color_tuple: tuple, legend: tuple, legend_loc: tuple,
                      size: tuple, l_col: int = 1):
             fig, ax = plt.subplots(figsize=size)
-            __data_list = []
-            __color_list = []
+            _data_list = []
+            _color_list = []
 
             if data_list[0]:
                 wig = dict(width=0.4, edgecolor='w', lw=2)
-                __data_list.append(data_list[0])
-                __color_list.append(color_tuple[0])
-                for __index in range(1, len(data_list)):
-                    if data_list[__index]:
-                        __data_list.append(data_list[__index])
-                        __color_list.append(color_tuple[__index])
-                if len(__data_list) == 1:
+                _data_list.append(data_list[0])
+                _color_list.append(color_tuple[0])
+                for _index in range(1, len(data_list)):
+                    if data_list[_index]:
+                        _data_list.append(data_list[_index])
+                        _color_list.append(color_tuple[_index])
+                if len(_data_list) == 1:
                     return None
-                plt.pie(__data_list, radius=1, colors=__color_list, autopct='%.1f%%', pctdistance=0.8,
+                plt.pie(_data_list, radius=1, colors=_color_list, autopct='%.1f%%', pctdistance=0.8,
                         wedgeprops=wig, textprops={'fontsize': 13}, startangle=0, counterclock=False)
-                plt.pie(__data_list[1:], radius=0.6, colors=__color_list[1:],
+                plt.pie(_data_list[1:], radius=0.6, colors=_color_list[1:],
                         wedgeprops=wig, textprops={'fontsize': 13}, startangle=0, counterclock=False)
             else:
-                for __index in range(len(data_list)):
-                    if data_list[__index]:
-                        __data_list.append(data_list[__index])
-                        __color_list.append(color_tuple[__index])
+                for _index in range(len(data_list)):
+                    if data_list[_index]:
+                        _data_list.append(data_list[_index])
+                        _color_list.append(color_tuple[_index])
                 wig = dict(width=0.6, edgecolor='w', lw=2)
-                plt.pie(__data_list, radius=1, colors=__color_list, autopct='%.1f%%', pctdistance=0.75,
+                plt.pie(_data_list, radius=1, colors=_color_list, autopct='%.1f%%', pctdistance=0.75,
                         wedgeprops=wig, textprops={'fontsize': 14}, startangle=0, counterclock=False)
 
             patch = plt.pie(np.ones(len(color_tuple), dtype=int), radius=0.01, colors=color_tuple)[0]
@@ -1048,11 +1057,11 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
             return fig
 
         # Plot them by level
-        for lv_index in range(21 - lv_base):
+        for lv_index in range(21 - base_lv):
             """
             Chapter 2: Topmost level box
             """
-            lv_cur = lv_index + lv_base
+            lv_cur = lv_index + base_lv
             lv_sum = level_summary[lv_cur][-1]
             lv_field = Anchor(bg, 'level field', father=chapters)
             lv_field.set_grid((lv_index, 0))
@@ -1182,8 +1191,8 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
                        [870, 900, 930, 950, 970, 980, 990, 1000], fontproperties=mat_font)
             return fig
 
-        if lv_base > 14:
-            plot_palette = level_palette[lv_base - 21:]
+        if base_lv > 14:
+            plot_palette = level_palette[base_lv - 21:]
         else:
             plot_palette = None
 
@@ -1252,6 +1261,6 @@ def plot_summary(music_map: list, profile: list, lv_base: int):
         return msg
 
     except Exception:
-        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n\n%s\n'
+        timber.warning('Something wrong happens in the plot function, only will the text message be returned.\n%s'
                        % format_exc())
         return msg

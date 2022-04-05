@@ -2,8 +2,6 @@
 
 An OpenCV &amp; PIL(Pillow) based sdvx@asphyxia score checker
 
-**/ / / 1.2.0 WIP, SOURCE CODE IS UNAVAILABLE CURRENTLY / / /**
-
 ## Introduction
 
 Simple python application to generate game record images to help you analyze your ability.
@@ -18,18 +16,18 @@ Special thanks to Achernar (with an unknown GitHub account XD). Amazing jobs wer
 
    1. **Replaceable skins**  
       Skin can be simply replaced through the config.cfg. Considering that designing and coding a new skin is such a backbreaking task, there is only one default skin by now.
-   
+
 
    2. **One file solution**  
-      It can do all the things with only one file initially. Thanks to ifstools which can draw images from HDD game data. 
+      It can do all the things with only one file initially. Thanks to ifstools which can draw images from HDD game data.
 
 
-   3. **~~Interactive user interface~~**  
-      Failed. As a redemption, a better interface was made to exalt the user experience.
-   
-
-   4. **Automatic upgrade (be in line with game version)**  
+   3. **Automatic upgrade (be in line with game version)**  
       Once you received your newest and hottest game, it will check the "ext" number in ea3-config and upgrade its database.
+
+
+   4. **Multi-language support**
+      Support EN (English), ZH (Simplified Chinese) for users around the world.
 
 ### 2. Score checker function
 
@@ -104,8 +102,6 @@ Special thanks to Achernar (with an unknown GitHub account XD). Amazing jobs wer
 Finally, a makeshift (using base64 encoding to convert common byte files into UTF-8 coded python variable) was found to pack all ingredients into one .exe file. Unfortunately, the .exe build become ungodly big. Nonetheless, this helps the software avoid the issue "BEMANI will sue".
 
 I use matplotlib and seaborn to generate graphs, which make the summary more like an academic report than a game profile. Fortunately, I can soon use them in my diploma paper. XD
-
-Forgive my poor code ability and English. 🎵I'm just an Internet Engineering boy🎵 🎵Nobody loves me🎵
 
 用英语写README感觉自己像个文盲
 

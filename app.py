@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import time
+from traceback import format_exc
 
 # interior packages
 from utli.cfg_read import cfg
@@ -14,7 +15,7 @@ from genre import packet
 from parse import npdb
 from parse.asp import asp
 
-VERSION = [1, 2, 'alpha']
+VERSION = [1, 2, 0]
 
 
 class SDVX:
@@ -28,20 +29,20 @@ class SDVX:
             sys.exit(1)
 
     def _get_b50(self):
-        b50_text = self.plot_skin.plot_b50()
-        input('%s\nPress enter to continue.' % b50_text)
+        print(self.plot_skin.plot_b50())
+        input(draft.CommonMsg.enter())
 
     def _get_summary(self, base_lv: int):
-        summary_text = self.plot_skin.plot_summary(base_lv=base_lv)
-        input('%s\nPress enter to continue.' % summary_text)
+        print(self.plot_skin.plot_summary(base_lv=base_lv))
+        input(draft.CommonMsg.enter())
 
     def _get_single(self, sg_index: int):
-        sg_text = self.plot_skin.plot_single(sg_index=sg_index)
-        input('%s\nPress enter to continue.' % sg_text)
+        print(self.plot_skin.plot_single(sg_index=sg_index))
+        input(draft.CommonMsg.enter())
 
     def _get_level(self, level: int, limits: tuple, grade_flag: str):
-        level_text = self.plot_skin.plot_level(level=level, limits=limits, grade_flag=grade_flag)
-        input('%s\nPress enter to continue.' % level_text)
+        print(self.plot_skin.plot_level(level=level, limits=limits, grade_flag=grade_flag))
+        input(draft.CommonMsg.enter())
 
     def _1_get_b50(self):
         os.system('cls')
@@ -50,7 +51,7 @@ class SDVX:
     def _2_get_summary(self):
         os.system('cls')
         base_lv = input(draft.TwoGetSummary.init_hint())
-        timber.info('Get summary from level "%s"' % base_lv)
+        timber.debug('Get summary from level "%s"' % base_lv)
 
         if not base_lv:
             self._get_summary(17)
@@ -59,10 +60,11 @@ class SDVX:
         try:
             base_lv = int(base_lv)
             if base_lv > 20 or base_lv < 1:
-                timber.warning('Invalid level number.')
-                return
+                raise ValueError
         except ValueError:
-            timber.warning('Invalid level number.')
+            timber.warning('Invalid level number')
+            print(draft.CommonMsg.invalid_lv_num())
+            input(draft.CommonMsg.enter())
             return
 
         self._get_summary(base_lv)
@@ -73,12 +75,12 @@ class SDVX:
 
     def _4_get_specific(self):
         def not_found_handler():
-            timber.info('Record not found.')
+            timber.debug('Record not found.')
             input(draft.FourGetSpecific.not_found())
 
         sg_index = 0
         sep_arg = input(draft.FourGetSpecific.init_hint()).split()
-        timber.info('Get specific "%s"' % ' '.join(sep_arg))
+        timber.debug('Get specific "%s"' % ' '.join(sep_arg))
 
         if len(sep_arg) == 1:  # Default highest difficulty
             try:
@@ -87,8 +89,9 @@ class SDVX:
                     not_found_handler()
                     return
             except ValueError:
-                timber.warning('Invalid character was found, please try again and enter only number(s).\n'
-                               'Press enter to continue.')
+                timber.warning('Invalid character')
+                print(draft.FourGetSpecific.invalid_char())
+                input(draft.CommonMsg.enter())
                 return
             for lv_index in range(4, -1, -1):
                 index = mid * 5 + lv_index
@@ -103,9 +106,11 @@ class SDVX:
                     not_found_handler()
                     return
             except ValueError:
-                timber.warning('Invalid character was found, please try again and enter only number(s).\n'
-                               'Press enter to continue.')
+                timber.warning('Invalid character')
+                print(draft.FourGetSpecific.invalid_char())
+                input(draft.CommonMsg.enter())
                 return
+
             if m_type >= 4:  # 4th difficulty
                 mxm_index = mid * 5 + m_type
                 inf_index = mid * 5 + m_type - 1
@@ -120,7 +125,9 @@ class SDVX:
                     sg_index = index
 
         else:
-            timber.warning('Enter operators no more than 2. Press enter to continue.\n')
+            timber.warning('Excessive operator')
+            print(draft.FourGetSpecific.invalid_arg_num())
+            input(draft.CommonMsg.enter())
             return
 
         if not sg_index:
@@ -133,18 +140,19 @@ class SDVX:
     def _5_get_level(self):
         os.system('cls')
         level = input(draft.FiveGetLevel.init_hint())
-        timber.info('Level "%s"' % level)
+        timber.debug('Level "%s"' % level)
         try:
             level = int(level)
             if level > 20 or level < 1:
-                timber.warning('Invalid level number. Please enter a positive number no more than 20.')
-                return
+                raise ValueError
         except ValueError:
-            timber.warning('Invalid input. Please enter a positive number no more than 20.')
+            timber.warning('Invalid input')
+            print(draft.CommonMsg.invalid_lv_num())
+            input(draft.CommonMsg.enter())
             return
 
         threshold = input(draft.FiveGetLevel.threshold()).upper().replace('P', '+')
-        timber.info('Score limit %s' % threshold)
+        timber.debug('Score limit %s' % threshold)
 
         if not threshold:  # entered nothing, default as querying all
             limits, grade_flag = (0, 10000000), 'ALL'
@@ -160,7 +168,9 @@ class SDVX:
                 # thou should enter only 2 numbers separated with '-'
                 limits = threshold.split('-')
                 if len(limits) != 2:
-                    timber.warning('Invalid score. Please enter two positive numbers separated with "-".')
+                    timber.warning('Invalid score')
+                    print(draft.FiveGetLevel.invalid_sep())
+                    input(draft.CommonMsg.enter())
                     return
 
                 try:  # thou should enter numbers between 0 and 10m
@@ -168,7 +178,9 @@ class SDVX:
                     if lim_1 > 10000000 or lim_1 < 0 or lim_2 > 10000000 or lim_2 < 0:
                         raise ValueError('')
                 except ValueError:
-                    timber.warning('Invalid input. Please enter two positive numbers no more than 10000000.')
+                    timber.warning('Invalid input')
+                    print(draft.FiveGetLevel.invalid_score())
+                    input(draft.CommonMsg.enter())
                     return
 
                 limits, grade_flag = (min(lim_1, lim_2), max(lim_1, lim_2)), None
@@ -183,38 +195,40 @@ class SDVX:
     def _8_search():
         os.system('cls')
         search_str = input(draft.EightSearch.init_hint())
-        timber.info('Searching "%s"' % search_str)
-        if search_str:
+        timber.debug('Searching "%s"' % search_str)
 
+        if search_str:
             result_list = []
             for index in range(1, cfg.map_size):
                 try:
                     if re.search(search_str, npdb.search_db[index], re.I):
                         result_list.append(index)
                 except re.error:
-                    timber.info_clog('Invalid character (for regular expression) was entered, '
-                                     'which crashed this query. Press enter to continue.')
+                    timber.warning('Regular expression crashed.')
+                    print(draft.EightSearch.re_crash())
+                    input(draft.CommonMsg.enter())
                     return
 
-            search_res = ('%d result(s) found:\n\n'
+            search_res = ['%d result(s) found:\n'
                           '|No  |MID   |Level        |Date        |Yomigana\n'
-                          '     |Name  -  Artist\n\n' % len(result_list))
+                          '     |Name  -  Artist' % len(result_list)]
             for index in range(len(result_list)):
-                __mid = result_list[index]
-                __data = npdb.level_table[__mid]
-                __date = '%s/%s/%s' % (__data[7][:4], __data[7][4:6], __data[7][6:])
-                search_res += '|%-4d|%-4d  |%s/%s/%s/%s  |%-8s  |%s\n     |%s  -  %s\n\n' % \
-                              (index + 1, __mid, __data[10].zfill(2), __data[13].zfill(2), __data[16].zfill(2),
-                               str(int(__data[19]) + int(__data[22])).zfill(2), __date, __data[2], __data[1], __data[3])
+                _mid = result_list[index]
+                _data = npdb.level_table[_mid]
+                _date = '%s/%s/%s' % (_data[7][:4], _data[7][4:6], _data[7][6:])
+                search_res.append('\n\n|%-4d|%-4d  |%s/%s/%s/%s  |%-8s  |%s\n     |%s  -  %s' %
+                                  (index + 1, _mid, _data[10].zfill(2), _data[13].zfill(2), _data[16].zfill(2),
+                                   str(int(_data[19]) + int(_data[22])).zfill(2), _date, _data[2], _data[1], _data[3]))
 
             res_num = len(result_list)
+            search_res = ''.join(search_res)
 
             if res_num:
-                timber.info(search_res)
+                timber.debug(search_res)
                 print(draft.EightSearch.success(res_num, search_res))
             else:
+                timber.debug('Search failed.')
                 print(draft.EightSearch.failed())
-                timber.info('Search failed.')
         else:
             print(draft.EightSearch.empty())
         input(draft.CommonMsg.enter())
@@ -222,14 +236,14 @@ class SDVX:
     @staticmethod
     def _9_faq():
         os.system('cls')
-        timber.info('FAQ')
+        timber.debug('FAQ')
         print(draft.NineFAQ.first(asp.user_name))
         print(draft.NineFAQ.second())
         input(draft.CommonMsg.enter())
 
     @staticmethod
     def _0_see_you_next_time():
-        timber.info('Exit by operator number 0.')
+        timber.debug('Exit by operator number 0.')
         print(draft.ZeroExit.farewell(asp.user_name))
         time.sleep(1.5)
         sys.exit(0)
@@ -237,7 +251,7 @@ class SDVX:
     @staticmethod
     def _10_donate():
         os.system('cls')
-        timber.info('Ali-pay is also recommended.')
+        timber.debug('Ali-pay is also recommended.')
         print(draft.TenDonate.init_hint())
         input(draft.TenDonate.back_to_light())
 
@@ -259,9 +273,23 @@ class SDVX:
         print(draft.TitleMsg.title(VERSION), end='')
         while True:
             base_arg = input()
-            timber.info('Get user operator %s' % base_arg)
+            timber.debug('Get user operator %s' % base_arg)
             try:
                 key_dict[base_arg]()
                 break
             except KeyError:
                 pass
+
+
+if __name__ == '__main__':
+    try:
+        sdvx = SDVX()
+        while True:
+            sdvx.input_handler()
+    except Exception:
+        timber.error('Fatal error occurs, please report the following message to developer.\n%s' % format_exc())
+        sys.exit(1)
+
+"""
+pyinstaller -i sjf.ico -F app.py
+"""

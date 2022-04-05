@@ -18,8 +18,8 @@ class Config:
         self.path = local_dir + '/config.cfg'
         if not path.exists(self.path):
             self._create()
-            timber.error('config.cfg not found, the program will try to generate a new one.\n'
-                         'Press enter to continue.')
+            timber.error('config.cfg not found, the program will try to generate a new one.\n')
+            input('Press enter to continue.')
             sys.exit(1)
 
         self.map_size, self.card_num, self.db_dir, self.game_dir, self.output, \
@@ -79,7 +79,7 @@ class Config:
             '[Plot]\n'
             '# name of skin, default as "gen6" (actually there is no other choice)\n'
             'skin name = gen6\n'
-            '# supported languages:[EN, ZH], default as EN\n'
+            '# supported languages:[EN (English), ZH (Simplified Chinese)], default as EN\n'
             'language = EN\n'
             '\n'
             '\n'

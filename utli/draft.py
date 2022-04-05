@@ -46,6 +46,15 @@ class CommonMsg:
         }
         return msg,
 
+    @staticmethod
+    @_languageHandler
+    def invalid_lv_num() -> tuple:
+        msg = {
+            'EN': 'Please enter a positive number no more than 20 and try again.',
+            'ZH': '请输入一个不高于20的等级并再次尝试',
+        }
+        return msg,
+
 
 class TitleMsg:
 
@@ -153,6 +162,24 @@ class FourGetSpecific:
         }
         return msg,
 
+    @staticmethod
+    @_languageHandler
+    def invalid_char() -> tuple:
+        msg = {
+            'EN': 'Invalid character was found, please try again and enter only number(s).',
+            'ZH': '存在非法字符，请只输入数字并再次尝试。',
+        }
+        return msg,
+
+    @staticmethod
+    @_languageHandler
+    def invalid_arg_num() -> tuple:
+        msg = {
+            'EN': 'Please enter operators no more than 2.',
+            'ZH': '请不要输入多于两个参数。',
+        }
+        return msg,
+
 
 class FiveGetLevel:
     @staticmethod
@@ -180,7 +207,7 @@ class FiveGetLevel:
                   '|AA+              |9500000-9699999\n'
                   '|S                |9900000-10000000\n'
                   '|                 |      0-10000000\n'
-                  '|9000000-9650000  |9000000-9650000\n\n',
+                  '|9000000-9650000  |9000000-9650000\n',
         }
         return msg, example,
 
@@ -208,6 +235,24 @@ class FiveGetLevel:
         msg = {
             'EN': 'Score list for level %d in %d - %d:\n' % (level, low, high),
             'ZH': '等级 %d，分数区间 %d - %d 下全部歌曲:' % (level, low, high),
+        }
+        return msg,
+
+    @staticmethod
+    @_languageHandler
+    def invalid_sep() -> tuple:
+        msg = {
+            'EN': 'Please enter two positive integers separated with "-" and try again.',
+            'ZH': '请在两个正整数之间使用"-"分隔并再次尝试。',
+        }
+        return msg,
+
+    @staticmethod
+    @_languageHandler
+    def invalid_score() -> tuple:
+        msg = {
+            'EN': 'Please enter two positive integers no more than 10000000 and try again.',
+            'ZH': '请输入两个不大于10000000的正整数并再次尝试。',
         }
         return msg,
 
@@ -247,6 +292,15 @@ class EightSearch:
         msg = {
             'EN': 'Empty input. Please try again and at least enter something.',
             'ZH': '未输入任何内容，试着搜点什么吧',
+        }
+        return msg,
+
+    @staticmethod
+    @_languageHandler
+    def re_crash() -> tuple:
+        msg = {
+            'EN': 'Invalid character (for regular expression) crashed this query.',
+            'ZH': '输入非法字符串导致正则表达式崩溃。',
         }
         return msg,
 
