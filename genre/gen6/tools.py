@@ -1,6 +1,4 @@
-from utli.logger import timber
 from utli.cfg_read import cfg
-from utli.dir import local_dir
 # from hashlib import sha256
 from os import path, listdir
 from ..universal import *
@@ -12,14 +10,6 @@ Initialization
 
 # Reading config
 song_folders = cfg.game_dir + '/music'
-try:
-    npy_path = local_dir + '/data/level_table.npy'
-    level_table = np.load(npy_path)
-except FileNotFoundError:
-    timber.warning('level_table.npy not found, please check your file directory, '
-                   'unless this is the first time you have started the application.\n'
-                   'Press enter to continue.')
-
 img_archive = local_dir + '/img_archive/gen6'
 
 """

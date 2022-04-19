@@ -36,6 +36,6 @@ crew_id = {
     119: '0017',  # gen6 tsumabuki (つまぶき)
     120: '0018',  # gen6 near & noah (ニア & ノア)
     121: '0019',  # gen6 cawol & ashita (カヲル&アシタ)
-    124: '0021',  # gen6 hiyuki-chan (氷雪ちゃん)
-    128: '0022',  # 10th kac chrono-capsule rasis
+    124: '0022',  # gen6 hiyuki-chan (氷雪ちゃん)
+    128: '0023',  # 10th kac chrono-capsule rasis
 }
