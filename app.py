@@ -15,7 +15,7 @@ from genre import packet
 from parse import npdb
 from parse.asp import asp
 
-VERSION = [1, 2, 0]
+VERSION = [1, 2, 2]
 
 
 class SDVX:
@@ -284,6 +284,7 @@ class SDVX:
 if __name__ == '__main__':
     try:
         sdvx = SDVX()
+        print(asp.last_index, asp.music_map[asp.last_index])
         while True:
             sdvx.input_handler()
     except Exception:

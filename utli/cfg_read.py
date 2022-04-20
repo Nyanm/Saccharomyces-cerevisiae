@@ -101,7 +101,7 @@ class Config:
         game_dir = self.cfg.get('Directory', 'game path').replace('\\', '/')
         output = self.cfg.get('Directory', 'output path').replace('\\', '/')
         skin_name = self.cfg.get('Plot', 'skin name')
-        language = self.cfg.get('Plot', 'language')
+        language = self.cfg.get('Plot', 'language').upper()
         is_init = self.cfg.getboolean('Init', 'is initialized')
         version = self.cfg.getint('Init', 'version')
 

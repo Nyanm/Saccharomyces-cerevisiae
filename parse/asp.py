@@ -74,7 +74,7 @@ class ASPParser:
                 self.music_map[cur_index][6] = m_time
                 self.music_map[cur_index][7] = exscore
 
-                if m_type > last_time:
+                if m_time > last_time:
                     last_time = m_time
                     self.last_index = cur_index
 
@@ -117,7 +117,6 @@ class ASPParser:
                          'make sure you have at least played once (and saved successfully).')
             sys.exit(1)
 
-        self.profile = [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
         timber.info('Asphyxia database parse complete.')
 
     def get_akaname(self):
@@ -148,6 +147,10 @@ class ASPParser:
                 lv = 0
             vf = lv * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade]
             self.music_map[index][lv_i], self.music_map[index][vf_i] = lv, vf
+
+    @property
+    def profile(self):
+        return [self.user_name, self.ap_card, self.akaname, self.skill, self.crew_id]
 
 
 asp = ASPParser(db_dir=cfg.db_dir, map_size=cfg.map_size, card_num=cfg.card_num)
