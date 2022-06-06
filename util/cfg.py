@@ -45,8 +45,14 @@ class Config:
             _key, _value = data_path
             if not path.exists(_value):
                 if _key == 'output_dir':
-                    timber.warning('output directory not found, the program will try to generate one.')
-                    mkdir(_value)
+                    if not _value:  # output_dir is empty
+                        self.outputDir = local_dir + '/temp'
+                        if not path.exists(self.outputDir):  # temp folder doesn't exist
+                            timber.warning('output directory is empty, the program will try to generate one.')
+                            mkdir(self.outputDir)
+                    else:  # find a unknown directory
+                        timber.warning('output directory not found, the program will try to generate one.')
+                        mkdir(_value)
                 else:
                     timber.error(f'{_key} not found, please check your file directory.')
                     input('Press enter to continue.')

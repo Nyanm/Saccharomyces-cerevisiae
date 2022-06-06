@@ -8,6 +8,7 @@ class Application:
 
     def __init__(self):
 
-        cfg = Config()
-        sdvx_parser = SdvxParser(cfg)
-        asp_parser = AspParser(cfg, sdvx_parser.mapSize)
+        self.cfg = Config()
+        self.sdvxParser = SdvxParser(self.cfg)
+        self.sdvxParser.mapSize = 2000
+        self.aspParser = AspParser(cfg=self.cfg, map_size=self.sdvxParser.mapSize)

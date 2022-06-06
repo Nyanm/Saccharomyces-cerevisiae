@@ -11,7 +11,7 @@ file_fmt = logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(filename)s(%(lin
 file_handler.setFormatter(file_fmt)
 
 cmd_handler = logging.StreamHandler()
-cmd_handler.setLevel(logging.INFO)
+cmd_handler.setLevel(logging.WARNING)
 cmd_fmt = logging.Formatter(fmt="[%(levelname)s] %(message)s")
 cmd_handler.setFormatter(cmd_fmt)
 

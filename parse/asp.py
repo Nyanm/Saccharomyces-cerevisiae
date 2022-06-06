@@ -15,7 +15,7 @@ class AspParser:
     def __init__(self, cfg: Config, map_size: int):
         # public zone
         # general music map
-        self.musicRecordMap = [MusicRecord() for _ in range(map_size * + 1)]
+        self.musicRecordMap = [MusicRecord() for _ in range(map_size * 5 + 1)]
         self.lastIndex: int = 0
         # user profile
         self.userName: str = ''
@@ -105,11 +105,6 @@ class AspParser:
                          'Or you might check whether your card number has filled appropriately.')
             input('Press enter to continue.')
             exit(1)
-
-
-
-
-
 
 
 
