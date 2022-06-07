@@ -7,6 +7,7 @@ class MusicData:
         self.nameYmgn: str = ''  # ymgn = 読み仮名
         self.artist: str = ''
         self.artistYmgn: str = ''
+        self.ascii: str = ''
 
         self.bpmMax: int = 0
         self.bpmMin: int = 0
@@ -39,16 +40,16 @@ class LevelData:
 
 class AkaData:
 
-    def __init__(self):
-        self.mID: int = 0
-        self.akaName: str = ''
+    def __init__(self, aka_id: int = 0, aka_name: str = ''):
+        self.akaID: int = aka_id
+        self.akaName: str = aka_name
 
 
 class SearchData:
 
-    def __init__(self):
-        self.mID: int = 0
-        self.meme: str = ''
+    def __init__(self, mid: int = 0, meme: str = ''):
+        self.mID: int = mid
+        self.meme: str = meme
 
 
 class MusicRecord:

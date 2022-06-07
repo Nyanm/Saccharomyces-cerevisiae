@@ -13,7 +13,8 @@ score_table = {
     'AA+': (9500000, 9699999),
     'AAA': (9700000, 9799999),
     'AAA+': (9800000, 9899999),
-    'S': (9900000, 10000000)}
+    'S': (9900000, 10000000)
+}
 
 # Look up table for crew, only support crew with LIVE-2D
 crew_id = {
