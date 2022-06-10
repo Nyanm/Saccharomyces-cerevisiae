@@ -77,7 +77,7 @@ CREATE_MUSIC = '''
     MXM_TMM INT ,
     MXM_TRK INT ,
     MXM_HDT INT ,
-    MXM_OHD INT ,);'''
+    MXM_OHD INT);'''
 CREATE_AKA = '''CREATE TABLE AKA (AID INT PRIMARY KEY NOT NULL, NAME VARCHAR);'''
 CREATE_MEME = '''CREATE TABLE SEARCH (MID INT PRIMARY KEY NOT NULL, MEME_STR VARCHAR);'''
 
@@ -87,21 +87,22 @@ def CREATE_AND_INSERT_METADATA(meta_version: int, contents: dict) -> tuple:
     if meta_version == 1:
         return _METADATA_V1(contents)
     else:
-        raise RuntimeError('Unsupported metadata version.')
+        raise RuntimeError(f'Unsupported metadata version: {meta_version}')
 
 
 def _METADATA_V1(contents: dict) -> tuple:
     """
     Version 1 of METADATA has 4 rows, namely
-    METADATA_VER: version of metadata, fixed on 1
-    FIX_VER     : an optional version code of metadata, allows developer to upgrade database without changing other
-                  version code
-    SDVX_VER    : version of game itself, drew from ea3-config.xml
-    MAP_SIZE    : maximum mid of all musics
+    METADATA_VER : version of metadata, fixed on 1
+    FIX_VER      : an optional version code of metadata, allows developer to upgrade database without changing other
+                   version code
+    SDVX_VER     : version of game itself, drew from ea3-config.xml
+    MAP_SIZE     : maximum mid of all musics
     """
     CREATE_METADATA = '''
         CREATE TABLE METADATA(
         METADATA_VER INT PRIMARY KEY NOT NULL ,
+        FIX_VER INT NOT NULL,
         SDVX_VER INT NOT NULL ,
         MAP_SIZE INT NOT NULL);'''
     INSERT_METADATA = '''
@@ -120,7 +121,7 @@ def INSERT_MUSIC(md: MusicData) -> str:
            'ADV_LV, ADV_ILL, ADV_EFF, ADV_NTS, ADV_PEK, ADV_TMM, ADV_TRK, ADV_HDT, ADV_OHD,'
            'EXH_LV, EXH_ILL, EXH_EFF, EXH_NTS, EXH_PEK, EXH_TMM, EXH_TRK, EXH_HDT, EXH_OHD,'
            'INF_LV, INF_ILL, INF_EFF, INF_NTS, INF_PEK, INF_TMM, INF_TRK, INF_HDT, INF_OHD,'
-           'MXM_LV, MXM_ILL, MXM_EFF, MXM_NTS, MXM_PEK, MXM_TMM, MXM_TRK, MXM_HDT, MXM_OHD,) VALUES (']
+           'MXM_LV, MXM_ILL, MXM_EFF, MXM_NTS, MXM_PEK, MXM_TMM, MXM_TRK, MXM_HDT, MXM_OHD) VALUES (']
 
     common_data = [md.mID, md.name, md.nameYmgn, md.artist, md.artistYmgn, md.ascii,
                    md.bpmMax, md.bpmMin, md.date, md.version, md.infVer]
@@ -129,19 +130,29 @@ def INSERT_MUSIC(md: MusicData) -> str:
     for data in common_data:
         res.append(_get_sql_str(data))
     for diff in diffs:
-        diff_data = [diff.level, diff.illustrator, diff.effector,
-                     diff.notes, diff.peak, diff.tsumami, diff.tricky, diff.handTrip, diff.oneHand]
-        res.append(_get_sql_str(diff_data))
+        diff_data_list = [diff.level, diff.illustrator, diff.effector,
+                          diff.notes, diff.peak, diff.tsumami, diff.tricky, diff.handTrip, diff.oneHand]
+        for diff_data in diff_data_list:
+            res.append(_get_sql_str(diff_data))
+    res.pop()
+    res.append(_get_sql_str(md.maximum.oneHand, disable_comma=True))
 
     res.append(');')
     return ''.join(res)
 
+
 def INSERT_AKA(ad: AkaData) -> str:
-    pass
+    res = ['INSERT INTO AKA (AID, NAME) VALUES (', _get_sql_str(ad.akaID), _get_sql_str(ad.akaName, True), ');']
+    return ''.join(res)
 
 
-def _get_sql_str(variable: int or str) -> str:
+def _get_sql_str(variable: int or str, disable_comma: bool = False) -> str:
     if isinstance(variable, int):
-        return str(variable)
+        res = str(variable)
     elif isinstance(variable, str):
-        return '\'%s\'' % variable.replace('\'', '\'\'')
+        res = '\'%s\'' % variable.replace('\'', '\'\'')
+    else:
+        raise RuntimeError(f'Unsupported variable type at parse.sql_handler._get_sql_str: {variable}')
+    if disable_comma:
+        return res
+    return res + ','

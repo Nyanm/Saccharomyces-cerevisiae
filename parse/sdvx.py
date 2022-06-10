@@ -57,14 +57,15 @@ class SdvxParser:
         local_db_path = local_data_dir + '/music.sqlite3'
         database = sqlite3.connect(local_db_path)
         self._cur = database.cursor()
-        if cfg.forceInit:
+        if not self._update_check():  # self.mapSize has been initialized here (if passed)
+            self._update()
+        elif cfg.forceInit:
             timber.info('Force update enabled')
             self._update()
-        elif not self._update_check():
-            self._update()
+        else:
+            self._read_database()
 
         # load data from sqlite database
-        self._read_database()
         self._cur.close()
         database.commit()
         database.close()
@@ -84,7 +85,65 @@ class SdvxParser:
             return False
 
     def _read_database(self):
-        pass
+        # read table 'MUSIC'
+        self.musicDataMap = [MusicData() for _ in range(self.mapSize + 1)]  # initialize map
+        self._cur.execute(sh.QUERY_MUSIC)
+        music_data = self._cur.fetchall()
+        for _data in music_data:
+            # unpack the query result
+            mID, name, nameYmgn, artist, artistYmgn, _ascii, \
+            bpmMax, bpmMin, date, version, infVer, \
+            nov_lv, nov_ill, nov_eff, nov_nts, nov_pek, nov_tmm, nov_trk, nov_hdt, nov_ohd, \
+            adv_lv, adv_ill, adv_eff, adv_nts, adv_pek, adv_tmm, adv_trk, adv_hdt, adv_ohd, \
+            exh_lv, exh_ill, exh_eff, exh_nts, exh_pek, exh_tmm, exh_trk, exh_hdt, exh_ohd, \
+            inf_lv, inf_ill, inf_eff, inf_nts, inf_pek, inf_tmm, inf_trk, inf_hdt, inf_ohd, \
+            mxm_lv, mxm_ill, mxm_eff, mxm_nts, mxm_pek, mxm_tmm, mxm_trk, mxm_hdt, mxm_ohd, \
+                = _data
+            diff_data = \
+                [[nov_lv, nov_ill, nov_eff, nov_nts, nov_pek, nov_tmm, nov_trk, nov_hdt, nov_ohd, ],
+                 [adv_lv, adv_ill, adv_eff, adv_nts, adv_pek, adv_tmm, adv_trk, adv_hdt, adv_ohd, ],
+                 [exh_lv, exh_ill, exh_eff, exh_nts, exh_pek, exh_tmm, exh_trk, exh_hdt, exh_ohd, ],
+                 [inf_lv, inf_ill, inf_eff, inf_nts, inf_pek, inf_tmm, inf_trk, inf_hdt, inf_ohd, ],
+                 [mxm_lv, mxm_ill, mxm_eff, mxm_nts, mxm_pek, mxm_tmm, mxm_trk, mxm_hdt, mxm_ohd, ], ]
+
+            cur_md: MusicData = self.musicDataMap[mID]  # current music data
+            cur_diffs = [cur_md.novice, cur_md.advanced, cur_md.exhausted, cur_md.infinite, cur_md.maximum]
+            cur_md.mID = mID
+            cur_md.name = name
+            cur_md.nameYmgn = nameYmgn
+            cur_md.artist = artist
+            cur_md.artistYmgn = artistYmgn
+            cur_md.ascii = _ascii
+            cur_md.bpmMax = bpmMax
+            cur_md.bpmMin = bpmMin
+            cur_md.date = date
+            cur_md.version = version
+            cur_md.infVer = infVer
+            for diff in range(len(cur_diffs)):
+                level, illustrator, effector, notes, peak, tsumami, tricky, handTrip, oneHand = diff_data[diff]
+                cur_diff = cur_diffs[diff]
+                cur_diff.level = level
+                cur_diff.illustrator = illustrator
+                cur_diff.effector = effector
+                cur_diff.notes = notes
+                cur_diff.peak = peak
+                cur_diff.tricky = tricky
+                cur_diff.handTrip = handTrip
+                cur_diff.oneHand = oneHand
+        timber.debug(f'Read from table \'MUSIC\', write into self.musicDataMap')
+
+        # read table 'AKA'
+        self._cur.execute(sh.QUERY_AKA)
+        aka_data = self._cur.fetchall()
+        for _data in aka_data:
+            akaID, akaName = _data
+            self.akaDataMap.append(AkaData(akaID, akaName))
+
+        timber.debug('Read from table \'AKA\', write into self.akaDataMap')
+
+        # read table 'MEME'
+        # self._cur.execute(sh.QUERY_MEME)
+        # TODO: EVERYTHING ABOUT MEME PART
 
     def _update(self):
         timber.info('database will be updated due to the force option or outdated version')
@@ -245,19 +304,22 @@ class SdvxParser:
         self._cur.execute(sh.CREATE_MUSIC)
         for music_data in self.musicDataMap:
             if music_data.mID:
-                i_music = sh.INSERT_MUSIC(music_data)
-                self._cur.execute(i_music)
+                INSERT_MUSIC = sh.INSERT_MUSIC(music_data)
+                self._cur.execute(INSERT_MUSIC)
         timber.debug(f'Construct table \'MUSIC\' with {self.mapSize} songs')
 
         # setup table 'AKA'
         self._cur.execute(sh.DROP_AKA)
+        self._cur.execute(sh.CREATE_AKA)
         for aka_data in self.akaDataMap:
             if aka_data.akaID:
-                pass
+                INSERT_AKA = sh.INSERT_AKA(aka_data)
+                self._cur.execute(INSERT_AKA)
         timber.debug(f'Construct table \'AKA\' with {len(self.akaDataMap)} records')
 
         # setup table ''MEME
         self._cur.execute(sh.DROP_MEME)
+        # TODO: IMPLEMENT MEME PART
 
     def _get_metadata_content(self, meta_ver: int) -> dict:
         if meta_ver == 1:
@@ -279,9 +341,12 @@ class SdvxParser:
                 exit(1)
         if meta_ver == 1:
             meta_ver, fix_ver, game_ver, map_size = fetch_res
+            self.mapSize = map_size
             if game_ver < self._game_version:  # outdated game
                 return False
             if fix_ver < METADATA_FIX_VERSION:
                 return False
+        else:  # unsupported metadata version
+            return False
 
         return True  # finally you make it!

@@ -67,12 +67,5 @@ class MusicRecord:
         self.level: int = 0
         self.vf: int = 0
 
-
-class BestPtr:
-
-    def __init__(self):
-        self.vf: int = 0
-        self.mID: int = 0
-
     def __gt__(self, other):
         return self.vf > other.vf

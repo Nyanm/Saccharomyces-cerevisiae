@@ -1,10 +1,12 @@
 import json
+import heapq
 
 from util.logger import timber
-from util.struct import MusicRecord, BestPtr
+from util.struct import MusicRecord
 from util.cfg import Config
 
-from value.mapping import clear_factor, grade_factor, crew_id
+import value.mapping as val_map
+from value.project_cfg import BEST_MAP_SIZE
 
 
 class AspParser:
@@ -25,12 +27,12 @@ class AspParser:
         self.crewID: str = '0014'  # Gen 6 Rasis
         # b50 data
         self.b50VF: int = 0
-        self.bestMap = [BestPtr() for _ in range(100)]
+        self.bestMap = []
 
         # load sdvx@asphyxia.db the json file
         raw_data = open(cfg.dbPath, 'r')
         last_time, skill_time, profile_time, crew_time = 0, 0, 0, 0  # records the last appearance time
-        aka_index = 0  # index of akaName in music.db
+        self._aka_index = 0  # index of akaName in music.db, lookup in SdvxParser.akaDataMap
         crew_index = 0  # index of crew in mapping.crew_id
         for line in raw_data:
             json_dict = json.loads(line)
@@ -85,7 +87,7 @@ class AspParser:
                     profile_time = cur_time
                     self.userName = json_dict['name']
                     self.apCard = json_dict['appeal']
-                    aka_index = json_dict['akaname']
+                    self._aka_index = json_dict['akaname']
 
             # skill record, maintains highest skill you've achieved
             elif line_type == 'skill':
@@ -106,16 +108,57 @@ class AspParser:
             input('Press enter to continue.')
             exit(1)
 
+        # (try to) update crewID
+        try:
+            self.crewID = val_map.crew_id[crew_index]
+            timber.debug(f'crew id (index={crew_index}) updated to {self.crewID}.')
+        except KeyError:
+            timber.debug(f'crew id (index={crew_index}) not found, the program will keep the default crew Gen 6 Rasis. '
+                         f'Everyone loves Rasis.')
 
+    def update_aka(self, aka_data_map: list):
+        for aka_data in aka_data_map:
+            if self._aka_index == aka_data.akaID:
+                self.akaName = aka_data.akaName
+                timber.debug(f'aka name (index={self._aka_index}) updated to {self.akaName}.')
+                return
+        timber.debug(f'aka name (index={self._aka_index}) not found. You may have costumed your akaname before.')
 
+    def update_lv_vf(self, music_data_map: list):
+        for _record in self.musicRecordMap:
+            if not _record.isRecorded:
+                continue
+            _data = music_data_map[_record.mID]
+            levels = [_data.novice.level, _data.advanced.level, _data.exhausted.level,
+                      _data.infinite.level, _data.maximum.level]
+            clear_factor = val_map.clear_factor[_record.clear]
+            grade_factor = val_map.grade_factor[_record.grade]
+            level = levels[_record.musicType]
+            score = _record.score
+            vf = level * score * clear_factor * grade_factor  # vf is an integer
 
+            _record.level = level
+            _record.vf = vf
 
+            if len(self.bestMap) < BEST_MAP_SIZE:  # the heap still has spare space
+                heapq.heappush(self.bestMap, _record)
+            else:  # gotta kick someone out
+                if vf > self.bestMap[0].vf:  # kick it!
+                    heapq.heappop(self.bestMap)
+                    heapq.heappush(self.bestMap, _record)
 
+        # sort them by vf
+        self.bestMap.sort(key=lambda record: record.vf, reverse=True)
+        # get b50 the value
+        for index in range(50):
+            try:
+                self.b50VF += self.bestMap[index].vf // 10000000000 * 100
+            except IndexError:
+                timber.debug(f'Only {index} records were found, try to play more next time.')
+                break
+        self.b50VF //= 50
+        timber.debug(f'Calculate B50 VolForce {self.b50VF}')
 
-
-
-
-
-
-
-
+    @property
+    def profile(self):
+        return self.userName, self.apCard, self.akaName, self.skill, self.crewID

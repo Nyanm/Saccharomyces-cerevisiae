@@ -3,6 +3,8 @@ STRING_VERSION_CODE = '2.0.0 alpha'
 BUILD_CODE = 13
 """These two options are basically follow the rules of Android development"""
 
+BEST_MAP_SIZE = 100
+
 # GAME PROPERTY FIELD
 LOWEST_GAME_VERSION = 2022041500
 """The program will not support versions before 20220428 anymore. 
