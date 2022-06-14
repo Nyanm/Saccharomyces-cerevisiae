@@ -125,6 +125,13 @@ class AspParser:
         timber.debug(f'aka name (index={self._aka_index}) not found. You may have costumed your akaname before.')
 
     def update_lv_vf(self, music_data_map: list):
+        """
+        Copied from BEMANI WIKI 2ND:
+
+        VOLFORCE計算方法
+        単曲FORCE計算式：Lv×(スコア÷1000万)×(GRADE係数)×(クリアメダル係数)×2(小数第1位まで算出し、以降切り捨て)
+        VOLFORCE計算式:VOLFORCE対象曲の単曲FORCE(50譜面)の合計÷100
+        """
         for _record in self.musicRecordMap:
             if not _record.isRecorded:
                 continue
@@ -135,7 +142,7 @@ class AspParser:
             grade_factor = val_map.grade_factor[_record.grade]
             level = levels[_record.musicType]
             score = _record.score
-            vf = level * score * clear_factor * grade_factor  # vf is an integer
+            vf = level * score * clear_factor * grade_factor # vf is an integer
 
             _record.level = level
             _record.vf = vf
@@ -152,11 +159,11 @@ class AspParser:
         # get b50 the value
         for index in range(50):
             try:
-                self.b50VF += self.bestMap[index].vf // 10000000000 * 100
+                self.b50VF += self.bestMap[index].vf * 2 // 1000000
             except IndexError:
                 timber.debug(f'Only {index} records were found, try to play more next time.')
                 break
-        self.b50VF //= 50
+        self.b50VF /= 1000
         timber.debug(f'Calculate B50 VolForce {self.b50VF}')
 
     @property
