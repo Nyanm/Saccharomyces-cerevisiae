@@ -142,7 +142,7 @@ class AspParser:
             grade_factor = val_map.grade_factor[_record.grade]
             level = levels[_record.musicType]
             score = _record.score
-            vf = level * score * clear_factor * grade_factor # vf is an integer
+            vf = level * score * clear_factor * grade_factor  # vf is an integer
 
             _record.level = level
             _record.vf = vf

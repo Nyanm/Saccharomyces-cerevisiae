@@ -53,6 +53,7 @@ class SdvxParser:
         local_data_dir = local_dir + '/data'
         if not path.exists(local_data_dir):
             mkdir(local_data_dir)
+            timber.debug(f'Create data directory at [{local_data_dir}]')
 
         local_db_path = local_data_dir + '/music.sqlite3'
         database = sqlite3.connect(local_db_path)
