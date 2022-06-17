@@ -11,6 +11,7 @@ from util.logger import timber
 def update_images(dependency: dict, game_dir: str):
     """
     dependency is a dict which has the following keys:
+    skin_name : str, name of the skin
     is_ifs    : bool, option to enable ifs transformation
     ifs_ver   : list of int, ifs versions (of sdvx game)
     ifs_{gen} : list of str, specific ifs files of {gen}
@@ -43,6 +44,7 @@ def update_images(dependency: dict, game_dir: str):
             for ifs_file in ifs_list:
                 ifs_path = f'{ver_dir}/{ifs_file}.ifs'
                 ifs_dst = f'{genre_dir}/{ifs_file}'
+                timber.debug(f'Get ifs file \'{ifs_file}\' at [{ifs_path}]')
                 if not path.exists(ifs_dst):
                     makedirs(ifs_dst)
                     timber.debug(f'Create directory for ifs {ifs_file} [{ifs_dst}]')
@@ -91,7 +93,10 @@ def update_images(dependency: dict, game_dir: str):
             if not path.exists(tsp_dir):
                 makedirs(tsp_dir)
                 timber.debug(f'Create directory for file transportation \'{tsp_val}\' [{tsp_dir}]')
-            shutil.copy(src=tsp_src, dst=tsp_dst)
+            if path.exists(tsp_src):
+                shutil.copy(src=tsp_src, dst=tsp_dst)
+            else:
+                timber.warning(f'Transportation source file \'{tsp_val}\' not found')
         timber.debug(f'Update transportation part for skin \'{skin_name}\' complete.')
 
     timber.debug(f'Construct image archive for skin \'{skin_name}\' complete.')

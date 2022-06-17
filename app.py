@@ -3,6 +3,9 @@ from util.cfg import Config
 from parse.asp import AspParser
 from parse.sdvx import SdvxParser
 
+from plot.handler.update import update_images
+from plot.img.gen6.dependency import dependency
+
 
 class Application:
     """
