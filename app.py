@@ -18,3 +18,6 @@ class Application:
         self.aspParser = AspParser(cfg=self.cfg, map_size=self.sdvxParser.mapSize)
         self.aspParser.update_lv_vf(music_data_map=self.sdvxParser.musicDataMap)
         self.aspParser.update_aka(aka_data_map=self.sdvxParser.akaDataMap)
+
+    def run(self):
+        pass
