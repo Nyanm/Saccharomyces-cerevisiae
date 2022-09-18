@@ -361,6 +361,8 @@ def plot_b50(_music_map: list = asp.music_map, profile: list = asp.profile) -> s
            '|No.  |VF      |DIFF   |SCORE    |RANK  |GRA   |NAME']
     for index in range(50):
         valid, mid, m_type, score, clear, grade, m_time, exs, lv, vf = music_b50[index][:10]
+        if not valid:
+            break
         inf_ver = npdb.level_table[mid][9]
         diff = get_diff(m_type, inf_ver)
         msg.append('\n|#%-4d|%-6.3f  |%s%-2s  |%-9s|%-6s|%-6s|%s' %

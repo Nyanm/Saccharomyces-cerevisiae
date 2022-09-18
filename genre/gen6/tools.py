@@ -41,8 +41,9 @@ grade_legend = ('N/A', 'D', 'C', 'B', 'A', 'A+', 'AA', 'AA+', 'AAA', 'AAA+', 'S'
 
 level_palette = ('#F7FFF7', '#073B4C', '#118AB2', '#06D6A0', '#FFD166', '#EF476F')
 
-diff_table = [['NOV', 'ADV', 'EXH', '', 'MXM'] for _ in range(4)]
-diff_table[0][3], diff_table[1][3], diff_table[2][3], diff_table[3][3] = 'INF', 'GRV', 'HVN', 'VVD'
+diff_table = [['NOV', 'ADV', 'EXH', '', 'MXM'] for _ in range(5)]
+diff_table[0][3], diff_table[1][3], diff_table[2][3], diff_table[3][3], diff_table[4][3] = \
+    'INF', 'GRV', 'HVN', 'VVD', 'XCD'
 diff_text_table = {1: 'nov', 2: 'adv', 3: 'exh', 4: 'inf', 5: 'grv', 6: 'hvn', 7: 'vvd', 8: 'mxm'}
 
 vf_level = (0.0, 10.0, 12.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 24.0)
@@ -210,9 +211,11 @@ def load_level(refactor: float or int) -> list:
     level_grv = cv2.imread(img_archive + '/psd_level/level_small_grv.png', cv2.IMREAD_UNCHANGED)
     level_hvn = cv2.imread(img_archive + '/psd_level/level_small_hvn.png', cv2.IMREAD_UNCHANGED)
     level_vvd = cv2.imread(img_archive + '/psd_level/level_small_vvd.png', cv2.IMREAD_UNCHANGED)
+    level_xcd = cv2.imread(img_archive + '/psd_level/level_small_xcd.png', cv2.IMREAD_UNCHANGED)
     level_mxm = cv2.imread(img_archive + '/psd_level/level_small_mxm.png', cv2.IMREAD_UNCHANGED)
 
-    level_list = [level_nov, level_adv, level_exh, None, level_mxm, level_inf, level_grv, level_hvn, level_vvd]
+    level_list = \
+        [level_nov, level_adv, level_exh, None, level_mxm, level_inf, level_grv, level_hvn, level_vvd, level_xcd]
     if refactor:
         for level in level_list:
             if level:
