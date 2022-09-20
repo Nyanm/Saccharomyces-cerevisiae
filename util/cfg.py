@@ -9,7 +9,7 @@ from .local import local_dir
 class Config:
     """
     Config is the base configuration class of whole project, which provides the very rudimentary data for all other
-    modules. Currently Config class has demodulated with any other part, and works as an individual module.
+    modules. Currently, Config class has demodulated with any other part, and works as an individual module.
     It provides data in 4 parts:
     [Search] specifies user's card number.
     [Directory] collects paths of necessary files or folders.

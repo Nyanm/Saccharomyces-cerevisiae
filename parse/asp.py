@@ -89,13 +89,13 @@ class AspParser:
                     self.apCard = json_dict['appeal']
                     self._aka_index = json_dict['akaname']
 
-            # skill record, maintains highest skill you've achieved
+            # skill record, maintains the highest skill you've achieved
             elif line_type == 'skill':
                 if cur_time > skill_time:
                     skill_time = cur_time
                     self.skill = max(json_dict['base'], self.skill)
 
-            # param record, use a uncanny way to store the crew
+            # param record, use an uncanny way to store the crew
             elif line_type == 'param':
                 if json_dict['type'] == 2 and json_dict['id'] == 1:
                     if cur_time > crew_time:
