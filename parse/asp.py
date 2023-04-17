@@ -145,7 +145,7 @@ class ASPParser:
                 lv = int(level_table[mid][10 + m_type * 3])
             except ValueError:
                 lv = 0
-            vf = lv * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade]
+            vf = int(lv * 20 * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade]) / 20
             self.music_map[index][lv_i], self.music_map[index][vf_i] = lv, vf
 
     @property
