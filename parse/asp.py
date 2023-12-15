@@ -133,7 +133,7 @@ class ASPParser:
 
         :param lv_i: index of level
         :param vf_i: index of volforce
-        :param vf_i: index of weighted volforce, used for B50 sorting
+        :param wvf_i: index of weighted volforce, used for B50 sorting
         """
         if self.music_map[self.last_index][lv_i] or self.music_map[self.last_index][vf_i]:
             timber.error('Designed index has been occupied, try another index.')
@@ -147,7 +147,7 @@ class ASPParser:
             except ValueError:
                 lv = 0
             vf = int(lv * 20 * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade]) / 20
-            wvf = vf * 1000000000 + score
+            wvf = (vf * 10000 + lv) * 100000000 + score
             self.music_map[index][lv_i], self.music_map[index][vf_i], self.music_map[index][wvf_i] = lv, vf, wvf
 
     @property
