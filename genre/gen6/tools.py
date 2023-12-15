@@ -124,13 +124,16 @@ def get_diff(m_type: int, inf_ver: str) -> str:
 def get_ap_card(ap_card: int) -> str:
     ap_card = str(ap_card).zfill(4)
     card_file = 'ap_'
-    card_ver, is_r, is_s = int(ap_card[0]) + 1, (ap_card[1] == '5'), (ap_card[1] == '9')
+    card_ver, is_r, is_s = int(ap_card[0]) + 1, (ap_card[1] == '5') | (ap_card[1] == '6'), (ap_card[1] == '9')
     if card_ver == 1:
         pass
     else:
         card_file += ('0%s_' % card_ver)
     if is_r:
-        card_file += ('R%s' % ap_card[2:].zfill(4))
+        if (ap_card[1] == '5'):
+            card_file += ('R%s' % ap_card[2:].zfill(4))
+        else:
+            card_file += ('R%s' % '01'+ap_card[2:])
     elif is_s:
         card_file += ('S%s' % ap_card[2:].zfill(4))
     else:
