@@ -365,7 +365,7 @@ def plot_b50(_music_map: list = asp.music_map, profile: list = asp.profile) -> s
             break
         inf_ver = npdb.level_table[mid][9]
         diff = get_diff(m_type, inf_ver)
-        msg.append('\n|#%-4d|%-6.1f  |%s%-2s  |%-9s|%-6s|%-6s|%s' %
+        msg.append('\n|#%-4d|%-6.2f  |%s%-2s  |%-9s|%-6s|%-6s|%s' %
                    ((index + 1), vf, diff, lv, score, clear_table[clear], grade_table[grade], npdb.level_table[mid][1]))
     msg = ''.join(msg)
     timber.debug('Generate B50 data complete.\n%s' % msg)
@@ -497,7 +497,7 @@ def plot_b50(_music_map: list = asp.music_map, profile: list = asp.profile) -> s
             res_vf_field = Anchor(bg, 'respective vf field', free=(53, 488), father=box_anc)  # res = respective
             res_vf_text_anc = AnchorText(bg, 'res vf text', 'VF   #%02d' % (index + 1),
                                          pen, vf_str_font, (0, 1), res_vf_field)
-            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.1f' % vf, pen, vf_num_font, (20, -5), res_vf_field)
+            res_vf_num_anc = AnchorText(bg, 'res vf num', '%.2f' % vf, pen, vf_num_font, (20, -5), res_vf_field)
 
             res_vf_text_anc.plot(color_black)
             res_vf_num_anc.plot(get_vf_level(vf, is_darker=True, is_color=True))
