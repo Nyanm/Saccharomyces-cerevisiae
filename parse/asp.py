@@ -147,7 +147,7 @@ class ASPParser:
             except ValueError:
                 lv = 0
             vf = int(lv * 20 * (score / 10000000) * sheet.clear_factor[clear] * sheet.grade_factor[grade]) / 20
-            wvf = vf * 10000000 + score
+            wvf = vf * 1000000000 + score
             self.music_map[index][lv_i], self.music_map[index][vf_i], self.music_map[index][wvf_i] = lv, vf, wvf
 
     @property
